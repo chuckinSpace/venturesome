@@ -5,11 +5,10 @@ import firebase from "../firebase_config/config"
 
 const FirebaseAuth = () => {
 
-    
     const uiConfig =
         {
             signInFlow: 'popup',
-            signInSuccessUrl: "/admin",
+            signInSuccessUrl: "/home",
             signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID
             ],
         }

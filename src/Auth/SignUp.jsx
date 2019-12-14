@@ -20,7 +20,7 @@ const SignUp = ({history}) => {
         
         try { 
            const user = await signup(email,password)   
-           const add =  await addUserInfo(user.uid, fName,lName,email)     
+            addUserInfo(user.uid, fName,lName,email)     
             
          
          
