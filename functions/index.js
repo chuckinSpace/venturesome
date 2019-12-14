@@ -1,8 +1,22 @@
 const functions = require('firebase-functions');
+const admin = require("firebase-admin")
+var serviceAccount = require('./serviceAccountKey.json');
+admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
+const db = admin.firestore()
+/* 
+const createUser = ({email,uid}) =>{
+    console.log("in create user")
+    db.collection("users")
+                       .doc(uid)
+                       .set({email})
+                       .then(()=> console.log("success adding user to firestore"))
+                       .catch((err)=>console.log("error adding user to firestore"))
+    return null
+}
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//  response.send("Hello from Firebase!");
-// });
+exports.newUser = functions.auth.user()
+                    .onCreate( user => {
+                        createUser(user)
+                    }) */
+   
+    
