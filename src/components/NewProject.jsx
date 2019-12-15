@@ -13,7 +13,7 @@ const NewProject = () => {
     const db = firebase.firestore()
 
         const [error,setError] = useState(false)  
-        const [currentNumber, setCurrentNumber] = useState("")
+        const [currentNumber, setCurrentNumber] = useState(0)
         const [clients,setClients] = useState("")
         const [clientId,setClientId] = useState("")
         const [clientName,setClientName] = useState("")
@@ -23,6 +23,7 @@ const NewProject = () => {
         const [managerId,setManagerId] = useState("")
         const [managerName,setManagerName] = useState("")
         const [managerEmail, setManagerEmail] = useState("")
+        const [clientProjectNumber,setClientProjectNumber] = useState(0)
         
         
          const reset =()=>{
@@ -36,7 +37,8 @@ const NewProject = () => {
             setManagerName("")
             setManagerEmail("")
             setError(false)
-            setCurrentNumber("")
+            setCurrentNumber(0)
+            setClientProjectNumber(0)
          }
       
 
@@ -139,7 +141,8 @@ const NewProject = () => {
     setClientId(e.target.value)
     setClientName(clientObj.data().name)
     setClientIdNumber(clientObj.data().idNumber)
-    setClientEmail(clientObj.data().email)   
+    setClientEmail(clientObj.data().email)
+    setClientProjectNumber(clientObj.data().clientProjectNumber+1)   
   }
   
  
@@ -158,7 +161,10 @@ const NewProject = () => {
             <h4>Creating new Project</h4>
            
                 <Grid item xs={12}>
-                    <span>Project Number Assigned : {currentNumber}</span>
+                    <span>Internal Project Number : {currentNumber}</span>
+                </Grid>
+                <Grid item xs={12}>
+                    <span>Client Project Number : {clientProjectNumber}</span>
                 </Grid>
                 <Grid item xs={12} container justify="flex-start" alignItems="flex-start" alignContent="flex-start">
                 <InputLabel id="client">Client</InputLabel>

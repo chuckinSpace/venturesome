@@ -49,7 +49,7 @@ const NewClient = () => {
         try {
             if(!error){
               
-                const client = {name,email,street,zipCode,city,idNumber:currentNumber}
+                const client = {name,email,street,zipCode,city,idNumber:currentNumber, clientProjectNumber:0}
                 const path = "clients"
                 addFirestoreDocument(path,client)
                 reset()
