@@ -1,6 +1,8 @@
 import React, {useState} from 'react'
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
 import {Redirect} from "react-router-dom"
 import { useAuth } from '../helpers/useAuth';
@@ -8,20 +10,50 @@ import { addUserInfo } from '../helpers/firestore';
 
 const SignUp = ({history}) => {
     
-    const [fName,setFName] = useState("")
-    const [lName,setLName] = useState("")
-    const [email,setEmail] = useState("")
-    const [password, setPassword] = useState("")
+
+    const initialState= {
+        fName:"",
+        lName:"",
+        email:"",
+        password:""
+    }
+
+    const [
+        { 
+         fName, 
+         lName,
+         email, 
+         password,
+      
+          }, setForm] = useState(initialState);
+
+          
+    const [isManager,setIsManager] = useState(false)
     const [error,setError] = useState(false)
     const {user,signup} = useAuth()
     
-    const handleSubmit = async ()=>{     
-        if(!!fName || !!lName || !!email || password) setError(true)
+    
+    const reset = () => {
+        setForm({ ...initialState });
+    };
+
+    const onChange = e => {
+        const { name, value } = e.target;
+        setForm(prevState => ({ ...prevState, [name]: value }));
+    };
+
+
+
+    const handleSubmit = async (e)=>{     
+        console.log(isManager)
+        e.preventDefault();
+        if(!!fName || !!lName || !!email || !!password) setError(true)
         
         try { 
-           const user = await signup(email,password)   
-            addUserInfo(user.uid, fName,lName,email)     
-            
+            const user = await signup(email,password)   
+            console.log(isManager)
+            addUserInfo(user.uid, fName,lName,email, isManager)     
+            reset()
          
          
         } catch (error) {
@@ -33,11 +65,12 @@ const SignUp = ({history}) => {
        history.push("/")
     }
 
-    if(!!user && user.uid) return <Redirect to="/home"/>  
     
+    if(!!user && user.uid) return <Redirect to="/home"/>  
+   
     return (
         
-        <Grid container justify="center" direction="column" style={{width:"30%", margin:"auto", marginTop:"20%"}}>
+        <Grid container justify="center" direction="column" style={{width:"30%", margin:"auto", marginTop:"2%"}}>
             
            
                     <TextField 
@@ -48,7 +81,8 @@ const SignUp = ({history}) => {
                         type="text"
                         value={fName} 
                         label="First Name" 
-                        onChange={(e)=>setFName(e.target.value)}
+                        name="fName"
+                        onChange={onChange}
                     >First Name
                     </TextField>
          
@@ -58,17 +92,20 @@ const SignUp = ({history}) => {
                         required type="text" 
                         value={lName} 
                         label="Last Name"  
-                        onChange={(e)=>setLName(e.target.value)}
+                        name="lName"
+                        onChange={onChange}
                     >Last Name
                     </TextField>
      
                     <TextField 
                         error={error && email === ""} 
                         helperText="required" 
-                        required type="email" 
+                        required
+                        type="email" 
                         value={email} 
                         label="Email"  
-                        onChange={(e)=>setEmail(e.target.value)}
+                        name="email"
+                        onChange={onChange}
                     >Email
                     </TextField>
                 
@@ -79,11 +116,18 @@ const SignUp = ({history}) => {
                         required type="password" 
                         value={password}  
                         label="Password"  
-                        onChange={(e)=>setPassword(e.target.value)}
+                        name="password"
+                        onChange={onChange}
                         >Password
                     </TextField>
+                    <FormControlLabel
+                    control={
+                         <Checkbox checked={isManager} onChange={(e)=> setIsManager(e.target.checked)} value={isManager} />
+                            }
+                        label="Are You A Project Manager?"
+                    />
                 
-                <Button variant="outlined" size="large" onClick={handleSubmit}>Create</Button>
+                <Button variant="outlined" size="large" onClick={e=>handleSubmit(e)}>Create</Button>
                 <Button variant="outlined" size="large" onClick={handleLogin}>Login</Button>
             </Grid>
 

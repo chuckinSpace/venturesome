@@ -6,11 +6,14 @@ import { useAuth } from '../helpers/useAuth';
  const NavBar= () => {
 
     const {user,signout} = useAuth()
+ 
 
     return (
         <Grid container >
+            
             <Grid item xs={12} container justify="flex-end" alignItems="center" alignContent="center">
-                {!!user && user.email}
+                <Button size="large" variant="text" onClick={signout}>Login/SignUp</Button>
+                {!!user && <strong style={{fontSize:"1.1rem", paddingBottom:4}}>{user.email}</strong>}
                 <Button size="large" variant="text" onClick={signout}>Logout</Button>
             </Grid>
            

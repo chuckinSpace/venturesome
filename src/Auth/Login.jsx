@@ -33,7 +33,7 @@ const Login = ({history}) => {
   
     return (
         
-        <Grid container justify="center" direction="column" style={{width:"30%", margin:"auto", marginTop:"20%"}}>
+        <Grid container justify="center" direction="column" style={{width:"30%", margin:"auto", marginTop:"2%"}}>
              <FirebaseAuth/>
 
                     <TextField 
