@@ -5,11 +5,11 @@ import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-import {addFirestoreDocument, getDocument} from "../helpers/firestore" 
+import {addFirestoreDocument, getDocument, updateFirestoreDocument} from "../helpers/firestore" 
 import firebase from "../firebase_config/config"
 
 
-const NewProject = () => {
+const NewProject = ({closeProject}) => {
     const db = firebase.firestore()
 
         const [error,setError] = useState(false)  
@@ -27,12 +27,12 @@ const NewProject = () => {
         
         
          const reset =()=>{
-          
+           /*  setClients("") */
             setClientId("")
             setClientName("")
             setClientIdNumber("")
             setClientEmail("")
-            
+           /*  setManagers("") */
             setManagerId("")
             setManagerName("")
             setManagerEmail("")
@@ -52,16 +52,17 @@ const NewProject = () => {
         }
         try {
             if(!error){
-                const project = {managerName,createdAt:new Date(),managerEmail, idNumber:currentNumber, clientIdNumber, clientEmail, clientName}
+                const project = {managerName,createdAt:new Date(),managerEmail, idNumber:currentNumber, clientIdNumber, clientEmail, clientName, clientProjectNumber}
                 addFirestoreDocument("projects",project)
-                 reset() 
+                updateFirestoreDocument("clients", clientId,{clientProjectNumber})
+                reset() 
                 setError(false)      
             }
           
         } catch (error) {
             console.log(error)
         }
-
+        closeProject()
     }
     
  useEffect(() => {
@@ -79,6 +80,7 @@ const NewProject = () => {
                 setCurrentNumber(1)
             }
          });
+         console.log("projects listener")
      return () => {
         console.log("detaching listener") 
         unsubscribe()
@@ -103,13 +105,13 @@ const NewProject = () => {
             }
          });
      });
-   
+     console.log("clients listener")
      return () => {
         console.log("detaching listener") 
         unsubscribe()
      };
 
-   
+
  }, [db])
 
  useEffect(() => {
@@ -127,7 +129,7 @@ const NewProject = () => {
             }
          });
      });
-   
+     console.log("managers listener")
      return () => {
         console.log("detaching listener") 
         unsubscribe()

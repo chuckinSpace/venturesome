@@ -23,7 +23,12 @@ const CreateForm = () => {
         setNewProject(true)
     }
 
-
+    const closeClient = ()=>{
+        setNewClient(false)
+    }
+    const closeProject=()=>{
+        setNewProject(false)
+    }
     if(!user) return <Redirect to="/"/>  
     
     return (
@@ -48,8 +53,8 @@ const CreateForm = () => {
                     </Button>
                     <Grid container>
                         <Grid item xs={12}>
-                           {newProject && <NewProject/>}
-                           {newClient && <NewClient/>}
+                           {newProject && <NewProject closeProject={closeProject}/>}
+                           {newClient && <NewClient closeClient={closeClient}/>}
                         </Grid>
                     </Grid>
                     

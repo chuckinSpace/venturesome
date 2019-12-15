@@ -46,7 +46,13 @@ export const addFirestoreDocument=(path, object)=>{
     .catch((err)=> console.log("error adding data",err))
 }
 
-
+export const updateFirestoreDocument=(path,docId, object)=>{
+    console.log(path,docId, object)
+    db.collection(path).doc(docId)
+    .update(object)
+    .then(()=>console.log("sucess updating data",path,docId, object))
+    .catch((err)=> console.log("error updating data",err))
+}
 export const getDocument= async (collection,docId)=>{
    
     var doc = {}

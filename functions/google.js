@@ -11,10 +11,12 @@ const SCOPES = ["https://www.googleapis.com/auth/drive"];
 const TOKEN_PATH = 'token.json';
 console.log("in server google")
 // Load client secrets from a local file.
-
+var data = {}
 module.exports ={
-  runFolder: function runFolder (){
-    fs.readFile('credentials.json', (err, content) => {
+  runFolder: function runFolder (info){
+    newFunction(info);
+    console.log("info coming",info)
+    fs.readFile('./credentials.json', (err, content) => {
       console.log("running gogle script")
       if (err) return console.log('Error loading client secret file:', err);
       // Authorize a client with credentials, then call the Google Drive API.
@@ -25,6 +27,10 @@ module.exports ={
  
   
 
+
+function newFunction(info) {
+  data = info;
+}
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -84,28 +90,31 @@ function getAccessToken(oAuth2Client, callback) {
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
 
-   function createFolder(auth) {
-    console.log("on create folder")
-    const drive = google.drive('v3');
-    console.log('auth:', auth);
-    var fileMetadata = {
-        'name': 'Venturesome testing',
-        'mimeType': 'application/vnd.google-apps.folder'
-      };
-      drive.files.create({
-        auth:auth,
-        resource: fileMetadata,
-        fields: 'id'
-      }, function (err, file) {
-        if (err) {
-          // Handle error
-          console.error(err);
-        } else {
-          console.log('Folder Id: ', file.id);
-        }
-      });
+  async function createFolder(auth) {
+      const folderId = "1x3PWWbqwPprWScO_qlVh5oFGHJ05OAFW"
+      console.log("on create folder", data)
+      const drive = google.drive('v3');
+      console.log('auth:', auth);
+      console.log("text to insert on folder",data.clientName,data.internalProjectNumber,data.clientProjectNumber)
+      var fileMetadata = {
+          'name': `${data.internalProjectNumber}_${data.clientName}_${data.clientProjectNumber}`,
+          'mimeType': 'application/vnd.google-apps.folder',
+          parents:[folderId]
+        };
+     await drive.files.create({
+          auth:auth,
+          resource: fileMetadata,
+          fields: 'id'
+        }, function (err, file) {
+          if (err) {
+            // Handle error
+            console.error(err);
+          } else {
+            console.log('File Id: ', file.data.id);
+          }
+        });
   }
-
+}
 
 
 
