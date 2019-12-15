@@ -3,6 +3,7 @@ const admin = require("firebase-admin")
 var serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
 const db = admin.firestore()
+const createFolder = require("./google")
 /* 
 const createUser = ({email,uid}) =>{
     console.log("in create user")
@@ -18,5 +19,18 @@ exports.newUser = functions.auth.user()
                     .onCreate( user => {
                         createUser(user)
                     }) */
+   exports.createDriveFolders= functions.firestore.document("projects/{projectId}")
    
-    
+   .onCreate((snap, context) => {
+    // Get an object representing the document
+    // e.g. {'name': 'Marie', 'age': 66}
+    const newValue = snap.data();
+    console.log("in trigger")
+    console.log(context)
+
+    // access a particular field as you would any JS property
+    const name = newValue.name;
+    console.log(createFolder.runFolder, typeof createFolder.runFolder, createFolder )
+    // perform desired operations ...
+    createFolder.runFolder()
+  });

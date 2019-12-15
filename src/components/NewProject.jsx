@@ -27,12 +27,12 @@ const NewProject = () => {
         
         
          const reset =()=>{
-            setClients("")
+          
             setClientId("")
             setClientName("")
             setClientIdNumber("")
             setClientEmail("")
-            setManagers("")
+            
             setManagerId("")
             setManagerName("")
             setManagerEmail("")
