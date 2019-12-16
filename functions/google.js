@@ -1,6 +1,6 @@
 const fs = require('fs');
 const readline = require('readline');
-const {google} = require('googleapis');
+const { google } = require('googleapis');
 
 
 // If modifying these scopes, delete token.json.
@@ -12,10 +12,10 @@ const TOKEN_PATH = 'token.json';
 console.log("in server google")
 // Load client secrets from a local file.
 var data = {}
-module.exports ={
-  runFolder: function runFolder (info){
+module.exports = {
+  runFolder: function runFolder(info) {
     newFunction(info);
-    console.log("info coming",info)
+    console.log("info coming", info)
     fs.readFile('./credentials.json', (err, content) => {
       console.log("running gogle script")
       if (err) return console.log('Error loading client secret file:', err);
@@ -23,9 +23,9 @@ module.exports ={
       authorize(JSON.parse(content), createFolder);
     })
   }
-}  
- 
-  
+}
+
+
 
 
 function newFunction(info) {
@@ -40,11 +40,11 @@ function newFunction(info) {
  */
 
 
- 
+
 function authorize(credentials, callback) {
-  const {client_secret, client_id, redirect_uris} = credentials.installed;
+  const { client_secret, client_id, redirect_uris } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
-      client_id, client_secret, redirect_uris[0]);
+    client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, (err, token) => {
@@ -90,31 +90,35 @@ function getAccessToken(oAuth2Client, callback) {
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
 
-  async function createFolder(auth) {
-      const folderId = "1x3PWWbqwPprWScO_qlVh5oFGHJ05OAFW"
-      console.log("on create folder", data)
-      const drive = google.drive('v3');
-      console.log('auth:', auth);
-      console.log("text to insert on folder",data.clientName,data.internalProjectNumber,data.clientProjectNumber)
-      var fileMetadata = {
-          'name': `${data.internalProjectNumber}_${data.clientName}_${data.clientProjectNumber}`,
-          'mimeType': 'application/vnd.google-apps.folder',
-          parents:[folderId]
-        };
-     await drive.files.create({
-          auth:auth,
-          resource: fileMetadata,
-          fields: 'id'
-        }, function (err, file) {
-          if (err) {
-            // Handle error
-            console.error(err);
-          } else {
-            console.log('File Id: ', file.data.id);
-          }
-        });
-  }
+
+async function createFolder(auth) {
+  const teamDriveId = "0AL55Wodbq-0HUk9PVA"
+  /*    const folderId = "1x3PWWbqwPprWScO_qlVh5oFGHJ05OAFW" */
+  console.log("on create folder", data)
+  const drive = google.drive('v3');
+  console.log('auth:', auth);
+  console.log("text to insert on folder", data.clientName, data.internalProjectNumber, data.clientProjectNumber)
+  var fileMetadata = {
+    'name': `${data.internalProjectNumber}_${data.clientName}_${data.clientProjectNumber}`,
+    'mimeType': 'application/vnd.google-apps.folder',
+    "parents": [teamDriveId],
+    "driveId": teamDriveId
+  };
+  await drive.files.create({
+    auth: auth,
+    resource: fileMetadata,
+    fields: 'id',
+    "supportsAllDrives": true,
+  }, function (err, file) {
+    if (err) {
+      // Handle error
+      console.error(err);
+    } else {
+      console.log('File Id: ', file.data.id);
+    }
+  });
 }
+
 
 
 
