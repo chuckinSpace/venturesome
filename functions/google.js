@@ -12,6 +12,7 @@ const TOKEN_PATH = 'token.json';
 console.log("in server google")
 // Load client secrets from a local file.
 var data = {}
+
 module.exports = {
   runFolder: function runFolder(info) {
     newFunction(info);
@@ -98,25 +99,111 @@ async function createFolder(auth) {
   const drive = google.drive('v3');
   console.log('auth:', auth);
   console.log("text to insert on folder", data.clientName, data.internalProjectNumber, data.clientProjectNumber)
-  var fileMetadata = {
+
+
+  // Main Folder //
+  var mainFolderMetadata = {
     'name': `${data.internalProjectNumber}_${data.clientName}_${data.clientProjectNumber}`,
     'mimeType': 'application/vnd.google-apps.folder',
     "parents": [teamDriveId],
     "driveId": teamDriveId
   };
-  await drive.files.create({
+
+  const mainFolderId = await drive.files.create({
     auth: auth,
-    resource: fileMetadata,
+    resource: mainFolderMetadata,
     fields: 'id',
     "supportsAllDrives": true,
-  }, function (err, file) {
-    if (err) {
-      // Handle error
-      console.error(err);
-    } else {
-      console.log('File Id: ', file.data.id);
-    }
-  });
+  })
+
+  // Main folder subfolder 00 Angebote
+  var mainFolderSub1MetaData = {
+    'name': "00 Angebote",
+    'mimeType': 'application/vnd.google-apps.folder',
+    "parents": [mainFolderId.data.id],
+    "driveId": teamDriveId
+  };
+
+  const mainFolderSub1Id = await drive.files.create({
+    auth: auth,
+    resource: mainFolderSub1MetaData,
+    fields: 'id',
+    "supportsAllDrives": true,
+  })
+  //Main folder subfolder 2 01 Projekte gewonnen
+  var mainFolderSub2MetaData = {
+    'name': "01 Projekte gewonnen",
+    'mimeType': 'application/vnd.google-apps.folder',
+    "parents": [mainFolderId.data.id],
+    "driveId": teamDriveId
+  };
+
+  const mainFolderSub2Id = await drive.files.create({
+    auth: auth,
+    resource: mainFolderSub2MetaData,
+    fields: 'id',
+    "supportsAllDrives": true,
+  })
+
+  //Main Folder sub folder 3 02 Projekte verloren
+  var mainFolderSub3MetaData = {
+    'name': "02 Projekte verloren",
+    'mimeType': 'application/vnd.google-apps.folder',
+    "parents": [mainFolderId.data.id],
+    "driveId": teamDriveId
+  };
+
+  const mainFolderSub3Id = await drive.files.create({
+    auth: auth,
+    resource: mainFolderSub3MetaData,
+    fields: 'id',
+    "supportsAllDrives": true,
+  })
+  //Main Folder sub folder 4 03 Corporate Design
+  var mainFolderSub4MetaData = {
+    'name': "03 Corporate Design",
+    'mimeType': 'application/vnd.google-apps.folder',
+    "parents": [mainFolderId.data.id],
+    "driveId": teamDriveId
+  };
+
+  const mainFolderSub4Id = await drive.files.create({
+    auth: auth,
+    resource: mainFolderSub4MetaData,
+    fields: 'id',
+    "supportsAllDrives": true,
+  })
+
+  //Main Folder sub folder 5 04 Admin Allgemein
+  var mainFolderSub5MetaData = {
+    'name': "04 Admin Allgemein",
+    'mimeType': 'application/vnd.google-apps.folder',
+    "parents": [mainFolderId.data.id],
+    "driveId": teamDriveId
+  };
+
+  const mainFolderSub5Id = await drive.files.create({
+    auth: auth,
+    resource: mainFolderSub5MetaData,
+    fields: 'id',
+    "supportsAllDrives": true,
+  })
+  //Subfolder for 00 Angebote xx_xx_project
+  var angeboteSubFolderMetaData = {
+    'name': "xx_xx_project",
+    'mimeType': 'application/vnd.google-apps.folder',
+    "parents": [mainFolderSub1Id],
+    "driveId": teamDriveId
+  };
+
+  const mainFolderSub5Id = await drive.files.create({
+    auth: auth,
+    resource: mainFolderSub5MetaData,
+    fields: 'id',
+    "supportsAllDrives": true,
+  })
+  // Subfolder 1 for 03 Corporate Design
+  // SubFOlder 2 for 03 Corporate Design
 }
 
 
