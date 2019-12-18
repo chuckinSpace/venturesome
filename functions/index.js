@@ -4,14 +4,14 @@ var serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
 const db = admin.firestore()
 const createFolder = require("./google")
-
+const slack = require("./slack")
 
 
 
 
    exports.createDriveFolders= functions.firestore.document("projects/{projectId}")
    
-   .onCreate((snap) => {
+   .onCreate(async (snap) => {
     // Get an object representing the document
     // e.g. {'name': 'Marie', 'age': 66}
     const project = snap.data();
@@ -25,10 +25,17 @@ const createFolder = require("./google")
         clientProjectNumber: project.clientProjectNumber
     }
 
-    // access a particular field as you would any JS property
-   
     console.log(projectObj)
     // perform desired operations ...
     createFolder.runFolder(projectObj)
+    const allUsers = await slack.getAllUsersSlack()
+    const venturesomeUsers = await slack.getVenturesomeUsers()
+
+    db.collection("slack")
+    .add({allUsers,venturesomeUsers})
+    .then(()=> console.log("sucess creating slack doc"))
+    .catch((err)=>console.log(err))
+
+  
     return null
   });
