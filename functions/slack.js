@@ -14,20 +14,36 @@ const getVenturesomeUsers = async () => {
   return venturesomeUsers
 };
 
-
 const getAllUsersSlack = async () => {
   console.log("running get venturesome from slack")
   const users = await web.users.list(); 
    return users
  };
 
-
+ 
+ const createSlackChannel = async (users,clientName) => {
+  /* const users = [{id:"ULFRMKSG5"},{id:"UL4CK7010"}]
+  const clientName = "testClient" */
+  console.log("in create slack channel, users coming",users)
+  try {
+    const newChannel = await web.groups.create({name:clientName})
+    const channelId = await newChannel.group.id
+    console.log(channelId,"channel id" , newChannel,newChannel)
+    await users.map(user=> web.groups.invite({channel:channelId, user:user.id}))
+   } catch (error) {
+     console.log(error)
+   } 
+  
+   
+ };
 
 module.exports.getVenturesomeUsers = getVenturesomeUsers
 module.exports.getAllUsersSlack = getAllUsersSlack
+module.exports.createSlackChannel = createSlackChannel
 /*ULFRMKSG5    andres*/ 
 getAllUsersSlack()
 getVenturesomeUsers()
+createSlackChannel()
 
 
 /*

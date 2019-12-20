@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState,useEffect } from 'react'
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import {Redirect} from "react-router-dom"
 import { useAuth } from '../helpers/useAuth';
+import {updateFirestoreDocument } from "../helpers/firestore"
 import NewProject from "./NewProject"
 import NewClient from "./NewClient"
 
@@ -12,6 +13,12 @@ const CreateForm = () => {
     const [newProject,setNewProject]  = useState(false)
     const [newClient,setNewClient]  = useState(false)
     
+    useEffect(() => {
+        updateFirestoreDocument("slack",)
+        return () => {
+            cleanup
+        };
+    }, [input])
     
     const handleClient=()=>{
         setNewProject(false)

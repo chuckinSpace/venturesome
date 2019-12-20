@@ -53,6 +53,9 @@ export const updateFirestoreDocument=(path,docId, object)=>{
     .then(()=>console.log("sucess updating data",path,docId, object))
     .catch((err)=> console.log("error updating data",err))
 }
+
+
+
 export const getDocument= async (collection,docId)=>{
    
     var doc = {}

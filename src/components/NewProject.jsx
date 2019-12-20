@@ -7,7 +7,7 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import {addFirestoreDocument, getDocument, updateFirestoreDocument} from "../helpers/firestore" 
 import firebase from "../firebase_config/config"
-
+import Slack from "../components/Slack"
 
 const NewProject = ({closeProject}) => {
     const db = firebase.firestore()
@@ -24,15 +24,14 @@ const NewProject = ({closeProject}) => {
         const [managerName,setManagerName] = useState("")
         const [managerEmail, setManagerEmail] = useState("")
         const [clientProjectNumber,setClientProjectNumber] = useState(0)
+        var slackUsers= []
         
         
          const reset =()=>{
-           /*  setClients("") */
             setClientId("")
             setClientName("")
             setClientIdNumber("")
             setClientEmail("")
-           /*  setManagers("") */
             setManagerId("")
             setManagerName("")
             setManagerEmail("")
@@ -52,7 +51,7 @@ const NewProject = ({closeProject}) => {
         }
         try {
             if(!error){
-                const project = {managerName,createdAt:new Date(),managerEmail, idNumber:currentNumber, clientIdNumber, clientEmail, clientName, clientProjectNumber}
+                const project = {managerName,createdAt:new Date(),managerEmail, idNumber:currentNumber, clientIdNumber, clientEmail, clientName, slackUsers }
                 addFirestoreDocument("projects",project)
                 updateFirestoreDocument("clients", clientId,{clientProjectNumber})
                 reset() 
@@ -152,24 +151,27 @@ const NewProject = ({closeProject}) => {
     const managerObj = await getDocument("users", e.target.value)
     setManagerId(e.target.value)
     setManagerName(managerObj.data().fName)
-    setManagerEmail(managerObj.data().email)
-    
-     
+    setManagerEmail(managerObj.data().email)  
   }
-   
+
+
+   const handleSlackUsers=(e)=>{
+    slackUsers= e
+    console.log(slackUsers)
+   }
     return (
         
-        <Grid container justify="center" direction="column" spacing={2} style={{width:"70%", margin:"auto", marginTop:"2%"}}>
+        <Grid container justify="center" direction="column" spacing={2} style={{ margin:"auto", marginTop:"2%"}}>
             <h4>Creating new Project</h4>
-           
+          
                 <Grid item xs={12}>
                     <span>Internal Project Number : {currentNumber}</span>
                 </Grid>
                 <Grid item xs={12}>
                     <span>Client Project Number : {clientProjectNumber}</span>
                 </Grid>
-                <Grid item xs={12} container justify="flex-start" alignItems="flex-start" alignContent="flex-start">
-                <InputLabel id="client">Client</InputLabel>
+                    <Grid item xs={12} container justify="flex-start" alignItems="flex-start" alignContent="flex-start">
+                        <InputLabel id="client">Client</InputLabel>
                         <Select
                             labelId="client"
                             id="client"
@@ -201,7 +203,9 @@ const NewProject = ({closeProject}) => {
                         </Select>
                     </Grid>
            
-           
+                    <Grid item xs={12}>
+                        <Slack setSlackUsers={(userComing)=>handleSlackUsers(userComing)}/>
+                    </Grid>
           
             <TextField 
                     error={error && clientName === ""} 

@@ -92,7 +92,7 @@ function getAccessToken(oAuth2Client, callback) {
 
 async function createFolder(auth) {
 
-  const teamDriveId = process.env.REACT_APP_DEV_TEAM_DRIVE_ID
+  const teamDriveId = process.env.TEAM_DRIVE_ID
   
   const fileMetadata = (name,parent)=>{
   

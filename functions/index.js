@@ -7,8 +7,6 @@ const createFolder = require("./google")
 const slack = require("./slack")
 
 
-
-
    exports.createDriveFolders= functions.firestore.document("projects/{projectId}")
    
    .onCreate(async (snap) => {
@@ -22,20 +20,26 @@ const slack = require("./slack")
         internalProjectNumber: project.idNumber,
         managerEmail: project.managerEmail,
         managerName: project.managerName,
-        clientProjectNumber: project.clientProjectNumber
+        clientProjectNumber: project.clientProjectNumber,
+        slackUsers: project.slackUsers
     }
 
     console.log(projectObj)
     // perform desired operations ...
     createFolder.runFolder(projectObj)
-    const allUsers = await slack.getAllUsersSlack()
-    const venturesomeUsers = await slack.getVenturesomeUsers()
+    await slack.createSlackChannel(projectObj.slackUsers,projectObj.clientName)
 
-    db.collection("slack")
-    .add({allUsers,venturesomeUsers})
-    .then(()=> console.log("sucess creating slack doc"))
-    .catch((err)=>console.log(err))
+    return null
+  });
 
-  
+  exports.fetchSlackUsers = functions.firestore.document("slack").onUpdate(async (change, context) => {
+   console.log("started fetch slack users")
+   const allUsers = await slack.getAllUsersSlack()
+   const venturesomeUsers = await slack.getVenturesomeUsers()
+
+   db.collection("slack").doc()
+   .add({allUsers,venturesomeUsers})
+   .then(()=> console.log("sucess creating slack doc"))
+   .catch((err)=>console.log(err))
     return null
   });
