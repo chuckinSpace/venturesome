@@ -5,7 +5,7 @@ admin.initializeApp({ credential: admin.credential.cert(serviceAccount) })
 const db = admin.firestore()
 const createFolder = require("./google")
 const slack = require("./slack")
-
+const monday = require("./monday")
 
    exports.createDriveFolders= functions.firestore.document("projects/{projectId}")
    
@@ -32,7 +32,7 @@ const slack = require("./slack")
     return null
   });
 
-  exports.fetchSlackUsers = functions.firestore.document("slack").onUpdate(async (change, context) => {
+/*    exports.fetchSlackUsers = functions.firestore.document("slack").onUpdate(async (change, context) => {
    console.log("started fetch slack users")
    const allUsers = await slack.getAllUsersSlack()
    const venturesomeUsers = await slack.getVenturesomeUsers()
@@ -41,5 +41,27 @@ const slack = require("./slack")
    .add({allUsers,venturesomeUsers})
    .then(()=> console.log("sucess creating slack doc"))
    .catch((err)=>console.log(err))
+    return null
+  });  */
+
+
+  exports.mondayEvent = functions.https.onRequest(async (req, res) => {
+  /*   if (!!req) {
+      const challenge = req.body
+      res.send(challenge)
+      console.log(challenge); */
+
+    try {
+      const boardId = req.body.event.boardId
+      const itemId =  req.body.event.pulseId
+      console.log(boardId,"boardId", itemId, "itemId")  
+
+      const mondayObj = await monday.getResult(boardId,itemId)  
+      console.log(mondayObj); 
+    } catch (error) {
+      console.log(error)
+    } 
+  
+    
     return null
   });

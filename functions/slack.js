@@ -1,12 +1,14 @@
 require('dotenv').config()
+
 const { WebClient } = require('@slack/web-api');
 // Create a new instance of the WebClient class with the token read from your environment variable
+
 const web = new WebClient(process.env.SLACK_TOKEN);
 
 const getVenturesomeUsers = async () => {
 
  console.log("running get users from slack")
- const venturesomeTeamChannel = "CL9EBB99P"
+ const venturesomeTeamChannel = process.env.SLACK_TEAM_CHANNEL 
  const users = await web.channels.info({
      channel: venturesomeTeamChannel
  }); 
