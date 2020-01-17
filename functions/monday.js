@@ -141,75 +141,77 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
 /* getResult() */
 
 const updateForms =async (forms)=>{
-  console.log("forms from monday script", forms);
-
-  const body = {
-    query: `
-    mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
-      create_item (
-        board_id: $boardId,
-        group_id: $groupId,
-        item_name: $itemName,
-        column_values: $columnValues
-      ) {
-        id
-      }
-    }
-    `,
-    variables: {
-    boardId: 415921614,
-    groupId: "new_group",
-    itemName: "New item",
-    columnValues: JSON.stringify({"text": "myLink"})
-    }
-  }
-  axios.post(`https://api.monday.com/v2`, body, {
-      headers: {
-        Authorization: process.env.MONDAY_TOKEN
-      }
-    })
-    .catch(err => {
-      console.error(err.data)
-    })
-    .then(res => {
-      console.log(res.data)
-    })
-
-
-
-
-
-
-
-
-
-
-
-/* 
-
-  const variables = {
-    columnValues: JSON.stringify({"text": "myLink"})
-  }
-  //"text4" :"Hello world2"
-  const query = ` mutation {
-    create_item(board_id: 415921614, 
-                group_id: "new_group",  
-                item_name: "new item",
-                column_values:${variables.columnValues}
-                ) {
-      id
-    }
-  },
-  `;
-
-  try {
-   const data = await client.request(query,variables)
+/*   console.log("forms from monday script", forms); */
+  // get current ids for form from board to avoid duplicates, return an array of strings of ids
   
-     console.log(data);
-   
-  } catch (error) {
-    console.log(error);
-  } */
+  const query = `query {
+    boards(ids: 415921614) {
+      name
+      items {
+        name
+        id
+        column_values {
+          id
+         value
+        }
+      }
+     
+    }
+  }
+    `;
+
+   try {
+    const data = await client.request(query);
+    const ids = data.boards[0].items.map(form=>form.column_values[1].value.replace(/['"]+/g, ''));
+    //filter the forms using ids already on the board, returnin only new forms
+    forms = forms.filter(item => {
+      return !ids.includes(item.id); 
+    })
+  }
+  catch (err) {
+    return console.log(err);
+  }
+
+  
+  // populate the formsBoard with the forms from typeForm
+  forms.map(form=>{
+    
+    const body = {
+      query: `
+      mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
+        create_item (
+          board_id: $boardId,
+          group_id: $groupId,
+          item_name: $itemName,
+          column_values: $columnValues
+        ) {
+          id
+        }
+      }
+      `,
+      variables: {
+      boardId: 415921614,
+      groupId: "new_group",
+      itemName: form.title,
+      columnValues: JSON.stringify({"text": form.link,"text4": form.id})
+      }
+    }
+
+   return axios.post(`https://api.monday.com/v2`, body, {
+        headers: {
+          Authorization: process.env.MONDAY_TOKEN
+        }
+      })
+      .catch(err => {
+        console.error(err.data)
+      })
+      .then(res => {
+        console.log(res.data)
+      })
+
+  })
+
+
 }
 
 module.exports.getResult = getResult;
