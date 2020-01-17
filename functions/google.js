@@ -9,7 +9,9 @@ const SCOPES = ["https://www.googleapis.com/auth/drive"];
 // created automatically when the authorization flow completes for the first
 // time.
 const TOKEN_PATH = 'token.json';
+
 console.log("in server google")
+
 // Load client secrets from a local file.
 var data = {}
 
@@ -130,16 +132,16 @@ try {
     const angeboteId = await generateFolder(angebote) 
 
     const projekteGewonnen = fileMetadata( `01 Projekte Gewonnen`,mainFolderId)
-    const projekteGewonnenId = await generateFolder(projekteGewonnen) 
+    await generateFolder(projekteGewonnen) 
 
     const projekteVerloren = fileMetadata( `02 Projekte Verloren`,mainFolderId)
-    const projekteVerlorenId = await generateFolder(projekteVerloren) 
+    await generateFolder(projekteVerloren) 
 
     const corporateDesign = fileMetadata( `03 Corporate Design`,mainFolderId)
     const corporateDesignId = await generateFolder(corporateDesign) 
 
     const adminAllgemein = fileMetadata( `04 Admin Allgemein`,mainFolderId)
-    const adminAllgemeinId = await generateFolder(adminAllgemein) 
+    await generateFolder(adminAllgemein) 
 
     // angebote Subfolder
 
@@ -148,46 +150,46 @@ try {
 
     // Corporate Design subfolders
     const guidelines = fileMetadata( `Guidelines`,corporateDesignId.data.id)
-    const guidelinesId = await generateFolder(guidelines) 
+    await generateFolder(guidelines) 
 
     const logo = fileMetadata( `Logo`,corporateDesignId.data.id)
-    const logoId = await generateFolder(logo) 
+    await generateFolder(logo) 
 
     // xx_xx Projects subfolder
     const pitch = fileMetadata( `01 Pitch`,xxProjectId.data.id)
-    const pitchId = await generateFolder(pitch) 
+    await generateFolder(pitch) 
 
     const contracts = fileMetadata( `02 Contracts`,xxProjectId.data.id)
-    const contractsId = await generateFolder(contracts) 
+    await generateFolder(contracts) 
 
     const briefing = fileMetadata( `03 Briefing`,xxProjectId.data.id)
-    const briefingId = await generateFolder(briefing) 
+    await generateFolder(briefing) 
 
     const content = fileMetadata( `04 Content`,xxProjectId.data.id)
-    const contentId = await generateFolder(content) 
+    await generateFolder(content) 
 
     const preprod = fileMetadata( `05 Preprod`,xxProjectId.data.id)
     const preprodId = await generateFolder(preprod) 
 
     const finalContent = fileMetadata( `06 Final Content`,xxProjectId.data.id)
-    const finalContentId = await generateFolder(finalContent) 
+    await generateFolder(finalContent) 
 
 
     //Pre Prod sub folders
     const script = fileMetadata( `01 Script`,preprodId.data.id)
-    const scriptId = await generateFolder(script) 
+    await generateFolder(script) 
 
     const storyboard = fileMetadata( `02 Storyboard`,preprodId.data.id)
-    const storyboardId = await generateFolder(storyboard) 
+    await generateFolder(storyboard) 
 
     const scouting = fileMetadata( `03 Scouting`,preprodId.data.id)
-    const scoutingId = await generateFolder(scouting) 
+    await generateFolder(scouting) 
 
     const shotlist = fileMetadata( `04 Shotlist`,preprodId.data.id)
-    const shotlistId = await generateFolder(shotlist) 
+    await generateFolder(shotlist) 
 
     const callsheet = fileMetadata( `05 Call Sheet`,preprodId.data.id)
-    const callsheetId = await generateFolder(callsheet) 
+    await generateFolder(callsheet) 
 
   } catch (error) {
     console.log(error)

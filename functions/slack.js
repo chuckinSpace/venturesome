@@ -13,12 +13,14 @@ const getVenturesomeUsers = async () => {
      channel: venturesomeTeamChannel
  }); 
   const venturesomeUsers = users.channel.members
+/*   console.log(venturesomeUsers); */
   return venturesomeUsers
 };
 
 const getAllUsersSlack = async () => {
   console.log("running get venturesome from slack")
   const users = await web.users.list(); 
+
    return users
  };
 
@@ -43,9 +45,21 @@ module.exports.getVenturesomeUsers = getVenturesomeUsers
 module.exports.getAllUsersSlack = getAllUsersSlack
 module.exports.createSlackChannel = createSlackChannel
 /*ULFRMKSG5    andres*/ 
-getAllUsersSlack()
-getVenturesomeUsers()
-createSlackChannel()
+/* getAllUsersSlack()
+
+getVenturesomeUsers() */
+
+const getUser = async()=>{
+  try {
+    const user = await web.users.lookupByEmail({email:"nick.metzger@venturesome.ch"}); 
+    console.log(user);
+  } catch (error) {
+    console.log(error);
+  }
+}
+/* getUser() */
+
+/* createSlackChannel() */
 
 
 /*
