@@ -1,6 +1,15 @@
+/*
+TODO: delete forms that are not on TypeForm anymore when update
+      format for url to send with personalized params that we get from sales pipeline contact name and client name
+      https://venturesome.typeform.com/to/OK160Z?clientname=SuperClient&contactname=Tom
+*/
 const { GraphQLClient } = require('graphql-request');
 require('dotenv').config();
 const axios = require('axios')
+
+const formsDataBoard = 415921614
+
+
 //Create connection called 'client' that connects to Monday.com's API
 const client = new GraphQLClient('https://api.monday.com/v2/', {
     headers: {
@@ -141,11 +150,11 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
 /* getResult() */
 
 const updateForms =async (forms)=>{
-/*   console.log("forms from monday script", forms); */
-  // get current ids for form from board to avoid duplicates, return an array of strings of ids
+
+  // get current ids for all the forms from form board to avoid duplicates, return an array of strings with ids
   
   const query = `query {
-    boards(ids: 415921614) {
+    boards(ids: ${formsDataBoard}) {
       name
       items {
         name
@@ -161,9 +170,11 @@ const updateForms =async (forms)=>{
     `;
 
    try {
+    
     const data = await client.request(query);
     const ids = data.boards[0].items.map(form=>form.column_values[1].value.replace(/['"]+/g, ''));
-    //filter the forms using ids already on the board, returnin only new forms
+    
+    //filter the forms using ids already on the board, returning only new forms
     forms = forms.filter(item => {
       return !ids.includes(item.id); 
     })
@@ -173,9 +184,9 @@ const updateForms =async (forms)=>{
   }
 
   
-  // populate the formsBoard with the forms from typeForm
+  // populate the formsBoard with the forms from typeForm after they were filtered by Id on monday board
   forms.map(form=>{
-    
+
     const body = {
       query: `
       mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
@@ -190,7 +201,7 @@ const updateForms =async (forms)=>{
       }
       `,
       variables: {
-      boardId: 415921614,
+      boardId: formsDataBoard,
       groupId: "new_group",
       itemName: form.title,
       columnValues: JSON.stringify({"text": form.link,"text4": form.id})
@@ -210,8 +221,6 @@ const updateForms =async (forms)=>{
       })
 
   })
-
-
 }
 
 module.exports.getResult = getResult;
