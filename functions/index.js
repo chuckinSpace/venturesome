@@ -61,7 +61,7 @@ const mondayPros = async ()=>{
       const boardId = 413267102
       const itemId =  413267104
   const mondayObj = await monday.getResult(boardId,itemId)  
-      console.log(mondayObj, mondayObj.slackUsers); 
+      console.log(mondayObj); 
 }
 mondayPros()
 

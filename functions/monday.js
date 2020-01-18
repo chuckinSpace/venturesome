@@ -80,7 +80,8 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
           formLink : "",
           pmEmail : "",
           pmName : "",
-          slackUsers:[]
+          slackUsers:[],
+          isNewClient : true
        };
     
    
@@ -102,8 +103,13 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
       try {
         const data  = await client.request(query);
         const values = await data.boards[0].items[0].column_values;
+        console.log(values);
         
         mondayObj.itemId = itemId;
+        
+        const isNewClientItem = values.find(item=> item.id === "text86")
+        const isNewClient = !!isNewClientItem.value ? false : true
+        mondayObj.isNewClient = isNewClient
 
         const emailObj = values.find(item => item.id === "email");
         mondayObj.email = JSON.parse(emailObj.value).email;
@@ -114,8 +120,15 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
         const phoneObj = values.find(item => item.id === "phone_number");
         mondayObj.phone = JSON.parse(phoneObj.value).phone;
         
-        const companyAssignedObj = values.find(item => item.id === "company_assigned0");
-        mondayObj.companyAssigned = companyAssignedObj.value.replace(/['"]+/g, '');
+        const companyAssignedObj = values.find(item => item.id === "dropdown1");
+        const companyAssignedParse = JSON.parse(companyAssignedObj.value)
+        const companyAssigned = companyAssignedParse.ids[0]
+        if(companyAssigned === 1){
+          mondayObj.companyAssigned = "Venturesome"
+        }else if (companyAssigned === 2){
+          mondayObj.companyAssigned = "MoneyTree"
+        }
+     
   
         const projectNameObj = values.find(item => item.id === "project_name");
         mondayObj.projectName = projectNameObj.value.replace(/['"]+/g, '');
@@ -135,10 +148,10 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
         }
      
         var slackEmails=[]
-        
+
         getUsers()
-       .then(data => slackEmails.push(data.map(user=> user.email))
-       .then(() => mondayObj.slackUsers = slackEmails))
+       .then(data => slackEmails.push(data.map(user=>user.email)))
+       .then(() => mondayObj.slackUsers = slackEmails)
        .catch(err=>console.log(err))
         
        //getting itemIdfor the correct Form 
