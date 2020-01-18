@@ -12,17 +12,17 @@ const typeForm = require("./typeForm")
  //https://us-central1-{FIREBASE_PROJECT_ID}.cloudfunctions.net/fetchForms
 
  exports.fetchForms = functions.https.onRequest(async(req,res)=>{
+  console.log("on Fetch Forms");
+/*   console.log(req.body.form_response.definition);
+  console.log(req.body.form_response.answers);   */
 
-  /*console.log(req.body.form_response.definition);
-  console.log(req.body.form_response.answers);  */
 
-
-  //call function that fetch all forms form typeform and return array of objects {formOd: "",formName: "", formLink: ""} to send to monday
+  //call function that fetch all forms form typeform and return array of objects {formId: "",formName: "", formLink: ""} to send to monday
   const forms = await typeForm.getFormsData()  
   
   // call monday function that will update the forms board 415921614 (Onboarding Codes) with all the forms on typeForm 
   monday.updateForms(forms)
-  console.log("in cloud",forms);
+ 
   
   return null
   
@@ -31,13 +31,15 @@ const typeForm = require("./typeForm")
 
   //webhook for monday.com triggered on status change to "Signed" on boardId 413267102
   //https://us-central1-{FIREBASE_PROJECT_ID}.cloudfunctions.net/onClientSigned
- /* exports.onClientSigned = functions.https.onRequest(async (req, res) => {
+  exports.onClientSigned = functions.https.onRequest(async (req, res) => {
     
-    challenge for monday.com to activate new Wehbhook 
-       if (!!req) {
+   /*   challenge for monday.com to activate new Wehbhook  */
+    /*    if (!!req) {
       const challenge = req.body
       res.send(challenge)
-      console.log(challenge); 
+      console.log(challenge);  
+       
+    } */
     
 
     try {
@@ -45,8 +47,8 @@ const typeForm = require("./typeForm")
       const itemId =  req.body.event.pulseId
       console.log(boardId,"boardId", itemId, "itemId")  
 
-      const mondayObj = await monday.getResult(boardId,itemId)  
-      console.log(mondayObj); 
+  /*     const mondayObj = await monday.getResult(boardId,itemId)  
+      console.log(mondayObj);  */
     } catch (error) {
       console.log(error)
     } 
@@ -54,8 +56,14 @@ const typeForm = require("./typeForm")
     
     return null
   });
-  */
-
+  
+const mondayPros = async ()=>{
+      const boardId = 413267102
+      const itemId =  413267104
+  const mondayObj = await monday.getResult(boardId,itemId)  
+      console.log(mondayObj, mondayObj.slackUsers); 
+}
+mondayPros()
 
   /*    exports.fetchSlackUsers = functions.firestore.document("slack").onUpdate(async (change, context) => {
    console.log("started fetch slack users")

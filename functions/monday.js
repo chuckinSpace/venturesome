@@ -1,7 +1,8 @@
 /*
-TODO: delete forms that are not on TypeForm anymore when update
-      format for url to send with personalized params that we get from sales pipeline contact name and client name
-      https://venturesome.typeform.com/to/OK160Z?clientname=SuperClient&contactname=Tom
+TODO: - delete forms that are not on TypeForm anymore when update
+      - format for url to send with personalized params that we get from sales pipeline contact name and client name
+        https://venturesome.typeform.com/to/OK160Z?clientname=SuperClient&contactname=Tom
+      - 
 */
 const { GraphQLClient } = require('graphql-request');
 require('dotenv').config();
@@ -18,11 +19,11 @@ const client = new GraphQLClient('https://api.monday.com/v2/', {
     },
 });
 
-const getLink = async (pulseId) => {
+const getLink = async (itemId) => {
 
   const query = `query {
-    boards (ids:415921614) {
-      items (ids:${pulseId}) {
+    boards (ids:${formsDataBoard}) {
+      items (ids:${itemId}) {
         id
         name
         column_values {
@@ -36,7 +37,7 @@ const getLink = async (pulseId) => {
     `;
    try {
     const data = await client.request(query);
-    return  data.boards[0].items[0].column_values[0].value.toString();
+    return  data.boards[0].items[0].column_values[0].value.toString().replace(/['"]+/g, '');
   
   }
   catch (err) {
@@ -44,20 +45,22 @@ const getLink = async (pulseId) => {
   }
 };
 
+
 const getPmInfo = async (pmId) =>{
     // get name too
   const query = ` {
-      users(ids: [${pmId}]) {
+      users(ids: [${pmId}] ) {
         email
+        name
       }
     }
       `;
-try {
-  const data = await client.request(query);
-  return data.users[0].email;
-} catch (error) {
-  console.log(error);
-}
+  try {
+    const data = await client.request(query);
+    return data.users[0];
+  } catch (error) {
+    console.log(error);
+  }
 
 };
 
@@ -73,10 +76,11 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
           companyAssigned : "",
           projectName :"",
           managerId :"",
-          pulseId:"",
+          itemId:"",
           formLink : "",
           pmEmail : "",
-          pmName : ""
+          pmName : "",
+          slackUsers:[]
        };
     
    
@@ -99,33 +103,55 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
         const data  = await client.request(query);
         const values = await data.boards[0].items[0].column_values;
         
+        mondayObj.itemId = itemId;
+
         const emailObj = values.find(item => item.id === "email");
         mondayObj.email = JSON.parse(emailObj.value).email;
   
         const clientNameObj = values.find(item => item.id === "text");
-        mondayObj.clientName = clientNameObj.value;
+        mondayObj.clientName = clientNameObj.value.replace(/['"]+/g, '');
         
         const phoneObj = values.find(item => item.id === "phone_number");
         mondayObj.phone = JSON.parse(phoneObj.value).phone;
         
         const companyAssignedObj = values.find(item => item.id === "company_assigned0");
-        mondayObj.companyAssigned = companyAssignedObj.value;
+        mondayObj.companyAssigned = companyAssignedObj.value.replace(/['"]+/g, '');
   
         const projectNameObj = values.find(item => item.id === "project_name");
-        mondayObj.projectName = projectNameObj.value;
+        mondayObj.projectName = projectNameObj.value.replace(/['"]+/g, '');
   
         const managerObj = values.find(item => item.id === "person");
         mondayObj.managerId = JSON.parse(managerObj.value).personsAndTeams[0].id.toString();
 
-        //add manager name
+       
         //get slackUsers emails array
-       /*  const formLinkObj = values.find(item => item.id === "link_to_item");
-        mondayObj.pulseId = JSON.parse(formLinkObj.value).linkedPulseIds[0].linkedPulseId.toString(); */
+        const slackItem = values.find(item => item.id === "people")
+        const slackObj = JSON.parse(slackItem.value)
+        const slackUsers = slackObj.personsAndTeams
+        const slackIds = slackUsers.map(user=> user.id)
         
-        console.log(values);
+        const getUsers = async () => {
+         return Promise.all(slackIds.map(id => getPmInfo(id)));
+        }
+     
+        var slackEmails=[]
         
-        mondayObj.formLink = await getLink(mondayObj.pulseId.toString());
-        mondayObj.pmEmail = await getPmInfo(mondayObj.managerId.toString());
+        getUsers()
+       .then(data => slackEmails.push(data.map(user=> user.email))
+       .then(() => mondayObj.slackUsers = slackEmails))
+       .catch(err=>console.log(err))
+        
+       //getting itemIdfor the correct Form 
+       const linkItem = values.find(item=> item.id === "link_to_item")
+       const linkObj = JSON.parse(linkItem.value)
+       const formItemId = linkObj.linkedPulseIds[0].linkedPulseId;
+       mondayObj.formLink =  await getLink(formItemId);
+        
+        
+        const pmInfo = await getPmInfo(mondayObj.managerId.toString());
+        mondayObj.pmEmail = pmInfo.email
+        mondayObj.pmName = pmInfo.name 
+       
         return mondayObj;
        
       } catch (error) {
@@ -147,7 +173,15 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
   
   
  }; 
-/* getResult() */
+
+
+
+
+
+
+
+
+ //Update forms from type form functions
 
 const updateForms =async (forms)=>{
 
@@ -172,6 +206,7 @@ const updateForms =async (forms)=>{
    try {
     
     const data = await client.request(query);
+    //column_value 1 represent form Id column on the board
     const ids = data.boards[0].items.map(form=>form.column_values[1].value.replace(/['"]+/g, ''));
     
     //filter the forms using ids already on the board, returning only new forms
