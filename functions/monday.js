@@ -167,10 +167,11 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
        const linkObj = JSON.parse(linkItem.value)
        const formItemId = linkObj.linkedPulseIds[0].linkedPulseId;
        mondayObj.formLink =  await getLink(formItemId);
-       if(!!mondayObj.clientId){
+       
+     /*   if(!!mondayObj.clientId){
          mondayObj.formLink = `${mondayObj.formLink}?clientid=${mondayObj.clientId}`
        }
-        
+         */
         const pmInfo = await getPmInfo(mondayObj.managerId.toString());
         mondayObj.pmEmail = pmInfo.email
         mondayObj.pmName = pmInfo.name 
@@ -183,9 +184,8 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
     
     };
 
- const getResult = async (/* boardId,itemId  */)=>{
-      const boardId = "413267102";
-      const itemId = "413267104"; 
+ const getResult = async (boardId,itemId)=>{
+     
   try {
     console.log("get result ", boardId,itemId); 
     return await getValuesFromMonday(boardId,itemId);

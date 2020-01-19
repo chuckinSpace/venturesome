@@ -18,9 +18,10 @@ const ONBOARDING_TEMPLATE_ID = "d-61e27a20903f47f7bb06b49b12710526"
 const getClientId= async () =>{
     console.log("in firebase functions getClient");
     try {
-        var lastId = ""
+        var lastId = 1
         const querySnapshot = await db.collection("clients").orderBy("idNumber", "desc").limit(1).get();
         querySnapshot.forEach((doc) => lastId = doc.data().idNumber + 1)
+        
         return lastId
     }
     catch (err) {
@@ -31,7 +32,7 @@ const getClientId= async () =>{
 const getInternalProjectId= async () =>{
     console.log("in firebase functions getInternalProjectId");
     try {
-        var lastId = ""
+        var lastId = 1
         const querySnapshot = await db.collection("projects").orderBy("idNumber", "desc").limit(1).get();
         querySnapshot.forEach((doc) => lastId = doc.data().idNumber + 1)
         return lastId
@@ -105,12 +106,12 @@ const createProject=async (project)=>{
 }
 
 
-const sendEmail= async (clientEmail,clientName,formLink, companyAssigned)=>{
+const sendEmail = async (clientEmail,clientName,formLink, companyAssigned)=>{
     console.log("sending email", clientEmail,clientName,formLink, companyAssigned);
-    
+  /*   
     const msg =  {
         to:clientEmail,
-        from: "carlosmoyanor@gmail.com",
+        from: "carlos.moyano@venturesome.ch",
         templateId: ONBOARDING_TEMPLATE_ID,
         dynamic_template_data:{
             companyAssigned: companyAssigned,
@@ -122,10 +123,29 @@ const sendEmail= async (clientEmail,clientName,formLink, companyAssigned)=>{
         return sgMail.send(msg)
     } catch (error) {
         console.log(error);
-    }
+    } */
   
+//firebase extension emails
+
+
+ db.collection('mail').add({
+    to: clientEmail,
+    message: {
+      subject: `Welcome to ${companyAssigned}`,
+      html: `<code>
+      <h2>Hi ${clientName}</h2>
+      <h3>We thank you for becoming a client with ${companyAssigned}</h3></br>
+      please follow this link to start the onboarding process ${formLink} </code>`,
+    }
+  })
+  .then(() => console.log('Queued email for delivery!'))
+  .catch((err)=>console.log("error when sending onboarding email", err))
+
+
+
 
 }
+
 
 
 module.exports.getClientId = getClientId
