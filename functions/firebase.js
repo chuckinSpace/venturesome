@@ -39,17 +39,21 @@ const getInternalProjectId= async () =>{
 
 const getClientProjectId= async (clientId) =>{
     console.log("in firebase functions getInternalProjectId");
+    var parsedClientId = parseInt(clientId)
     try {
-        
         var clientData = ""
         var clientProjectId = ""
         const querySnapshot = await db.collection("clients").get();
         querySnapshot.forEach((doc) => {
-            if(doc.data().idNumber === clientId){
+            if(doc.data().idNumber === parsedClientId){
                 clientData = doc.data()
             }
         })
+        
         clientProjectId = clientData.clientProjectNumber + 1
+        if(clientData === ""){
+            throw new Error(`Error trying to find the Client's project number,Client ${clientId} not found on the database`)
+        } 
         return clientProjectId
     }
     catch (err) {

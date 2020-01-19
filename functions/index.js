@@ -82,11 +82,17 @@ const mondayPros = async ()=>{
       const boardId = 413267102
       const itemId =  413267104
 try {
-      const mondayObj = await monday.getResult(boardId,itemId)  
+      const mondayObj = await monday.getResult(boardId,itemId) 
+      console.log("mondayObj from indexjs",mondayObj);
+
       const clientId = await firebase.getClientId()
       const internalProjectId = await firebase.getInternalProjectId()
-      const clientProjectId = await firebase.getClientProjectId(3)
-      console.log(clientId, internalProjectId,clientProjectId);
+      if(!mondayObj.isNewClient){
+        const clientProjectId = await firebase.getClientProjectId(mondayObj.clientId)
+        console.log("clientProjectId : ",clientProjectId);
+      }
+     
+      console.log(clientId, internalProjectId);
 } catch (error) {
     console.log(error);
 }      
