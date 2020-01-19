@@ -2,7 +2,7 @@
 TODO: - delete forms that are not on TypeForm anymore when update
       - format for url to send with personalized params that we get from sales pipeline contact name and client name
         https://venturesome.typeform.com/to/OK160Z?clientname=SuperClient&contactname=Tom
-      - 
+      - change status on board, error and success
 */
 const { GraphQLClient } = require('graphql-request');
 require('dotenv').config();
@@ -18,6 +18,19 @@ const client = new GraphQLClient('https://api.monday.com/v2/', {
     'Authorization': process.env.MONDAY_TOKEN
     },
 });
+
+
+const changeMondayStatus=(status)=>{
+//0 sucess
+//1 missing information
+
+
+
+
+}
+
+
+
 
 const getLink = async (itemId) => {
 
@@ -175,11 +188,15 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
         const pmInfo = await getPmInfo(mondayObj.managerId.toString());
         mondayObj.pmEmail = pmInfo.email
         mondayObj.pmName = pmInfo.name 
-       
+        
+     
+
+
         return mondayObj;
        
       } catch (error) {
-        console.log(error);
+        console.log("Error when reading mondayObj",error)
+        changeMondayStatus(1)
       }
     
     };

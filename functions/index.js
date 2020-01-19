@@ -31,9 +31,9 @@ const firebase = require("./firebase")
   // call monday function that will update the forms board 415921614 (Onboarding Codes) with all the forms on typeForm 
   monday.updateForms(forms)
 
-  
+  console.log(req.body.form_response.hidden.clientid);
   //assign id from submission webhook, hidden param clientid to assign to firebase client
-  submissionObj.clientId = req.body.form_response.hidden.clientid
+/*   submissionObj.clientId = req.body.form_response.hidden.clientid */
 
   
   return null
@@ -119,20 +119,20 @@ const firebase = require("./firebase")
       if(mondayObj.isNewClient){
         await firebase.createClient(clientObj)
         await firebase.createProject(projectObj)
-        await firebase.sendEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
+        await firebase.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
       }else{
         await firebase.createProject(projectObj)
       }
      
     } catch (error) {
-      console.log(error)
+      console.log("Error in main script",error)
     } 
      
     
     return null
   
   });
-  
+  /* 
 const mondayPros = async ()=>{
       const boardId = 413267102
       const itemId =  414105909
@@ -140,7 +140,6 @@ const mondayPros = async ()=>{
       var clientId = ""
 try {
       
-
       const mondayObj = await monday.getResult(boardId,itemId) 
       console.log("mondayObj from indexjs",mondayObj);
 
@@ -196,7 +195,7 @@ try {
       if(mondayObj.isNewClient){
         await firebase.createClient(clientObj)
         await firebase.createProject(projectObj)
-        await firebase.sendEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
+        await firebase.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
       }else{
         await firebase.createProject(projectObj)
       }
@@ -204,11 +203,12 @@ try {
   
       
 } catch (error) {
-    console.log(error);
+  console.log("Error in main script",error)
+  firebase.sendEmail()
 }      
       
 }
-mondayPros() 
+mondayPros()  */
 
   /*    exports.fetchSlackUsers = functions.firestore.document("slack").onUpdate(async (change, context) => {
    console.log("started fetch slack users")

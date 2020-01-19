@@ -106,7 +106,7 @@ const createProject=async (project)=>{
 }
 
 
-const sendEmail = async (clientEmail,clientName,formLink, companyAssigned)=>{
+const sendOnboardingEmail = async (clientEmail,clientName,formLink, companyAssigned)=>{
     console.log("sending email", clientEmail,clientName,formLink, companyAssigned);
   /*   
     const msg =  {
@@ -153,4 +153,4 @@ module.exports.getInternalProjectId = getInternalProjectId
 module.exports.getClientProjectId = getClientProjectId
 module.exports.createClient = createClient
 module.exports.createProject = createProject
-module.exports.sendEmail = sendEmail
+module.exports.sendOnboardingEmail = sendOnboardingEmail
