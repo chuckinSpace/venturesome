@@ -13,41 +13,50 @@ const db = admin.firestore();
 
 const getClientId= async () =>{
     console.log("in firebase functions getClient");
-
     try {
-        const querySnapshot = await db.collection("clients")
-            .orderBy("idNumber", "desc")
-            .limit(1)
-            .get();
-           const number =  querySnapshot.forEach(async (doc) => {
-            await doc.data().idNumber;
-            
-           
-        });
+        var lastId = ""
+        const querySnapshot = await db.collection("clients").orderBy("idNumber", "desc").limit(1).get();
+        querySnapshot.forEach((doc) => lastId = doc.data().idNumber + 1)
+        return lastId
     }
     catch (err) {
         return console.log(err);
     }
-
-
-
-/* 
-    db.collection("clients")
-    .get()
-     .orderBy("idNumber", "desc")
-    .limit(1) 
-    .then((data)=> console.log(data))
-    .catch(err => console.log(err)) */
-   /*  .onSnapshot(function(querySnapshot) {
-    
-        querySnapshot.forEach(async function(doc) {
-           const number = await doc.data().idNumber
-           return number + 1
-        });
-        
-    }); */
 }
 
+const getInternalProjectId= async () =>{
+    console.log("in firebase functions getInternalProjectId");
+    try {
+        var lastId = ""
+        const querySnapshot = await db.collection("projects").orderBy("idNumber", "desc").limit(1).get();
+        querySnapshot.forEach((doc) => lastId = doc.data().idNumber + 1)
+        return lastId
+    }
+    catch (err) {
+        return console.log(err);
+    }
+}
 
+const getClientProjectId= async (clientId) =>{
+    console.log("in firebase functions getInternalProjectId");
+    try {
+        
+        var clientData = ""
+        var clientProjectId = ""
+        const querySnapshot = await db.collection("clients").get();
+        querySnapshot.forEach((doc) => {
+            if(doc.data().idNumber === clientId){
+                clientData = doc.data()
+            }
+        })
+        clientProjectId = clientData.clientProjectNumber + 1
+        return clientProjectId
+    }
+    catch (err) {
+        return console.log(err);
+    }
+}
 
 module.exports.getClientId = getClientId
+module.exports.getInternalProjectId = getInternalProjectId
+module.exports.getClientProjectId = getClientProjectId

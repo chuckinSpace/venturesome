@@ -84,7 +84,9 @@ const mondayPros = async ()=>{
 try {
       const mondayObj = await monday.getResult(boardId,itemId)  
       const clientId = await firebase.getClientId()
-      console.log(clientId);
+      const internalProjectId = await firebase.getInternalProjectId()
+      const clientProjectId = await firebase.getClientProjectId(3)
+      console.log(clientId, internalProjectId,clientProjectId);
 } catch (error) {
     console.log(error);
 }      
