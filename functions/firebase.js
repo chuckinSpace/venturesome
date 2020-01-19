@@ -1,7 +1,7 @@
 /*
-TODO: get id from firebase for client, save the client on database.
+TODO: get cleintProject NUmber from number of projects on database (also clients?)
 */
-
+const sgMail = require("@sendgrid/mail")
 const admin = require("firebase-admin");
 require('dotenv').config();
 var serviceAccount = require('./serviceAccountKey.json');
@@ -9,7 +9,11 @@ admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: process.env.DATABASE_URL
   });
-const db = admin.firestore(); 
+const db = admin.firestore();
+
+sgMail.setApiKey(process.env.SG_API_KEY)
+const ONBOARDING_TEMPLATE_ID = "d-61e27a20903f47f7bb06b49b12710526"
+
 
 const getClientId= async () =>{
     console.log("in firebase functions getClient");
@@ -38,16 +42,18 @@ const getInternalProjectId= async () =>{
 }
 
 const getClientProjectId= async (clientId) =>{
-    console.log("in firebase functions getInternalProjectId");
+    console.log("in firebase functions getClientProjectId", clientId);
     var parsedClientId = parseInt(clientId)
     try {
         var clientData = ""
         var clientProjectId = ""
         const querySnapshot = await db.collection("clients").get();
         querySnapshot.forEach((doc) => {
-            if(doc.data().idNumber === parsedClientId){
+            if(doc.data().idNumber === clientId){
                 clientData = doc.data()
+                console.log("client found", doc.data());
             }
+            console.log(doc.data());
         })
         
         clientProjectId = clientData.clientProjectNumber + 1
@@ -61,6 +67,70 @@ const getClientProjectId= async (clientId) =>{
     }
 }
 
+const createClient= async (client)=>{
+    db.collection("clients").add({
+        idNumber: client.idNumber,
+        name:client.name,
+        email: client.email,
+        phone: client.phone,
+        clientProjectNumber: client.clientProjectNumber,
+        street:client.street,
+        zipCode:client.zipCode,
+        city:client.city,
+        mondayItemIdDeal:client.mondayItemIdDeal,
+        formLink: client.formLink,
+        createdAt: client.createdAt,
+    })
+    .then((doc)=> console.log("success creating client on firebase", doc.id))
+    .catch(err=>console.log("error creating client on firebase"))
+}
+
+const createProject=async (project)=>{
+    db.collection("projects").add({
+        clientId : project.clientId,
+        clientEmail:project.clientEmail,
+        clientName:project.clientName,
+        createdAt: project.createdAt,
+        idNumber: project.idNumber,
+        pmEmail: project.pmEmail,
+        pmName: project.pmName,
+        slackUsers: project.slackUsers,
+        companyAssigned: project.companyAssigned,
+        name:project.name,
+        clientPhone:project.clientPhone,
+        clientProjectNumber:project.clientProjectNumber
+    })
+    .then((doc)=> console.log("success creating project on firebase", doc.id))
+    .catch(err=>console.log("error creating project on firebase",err))
+}
+
+
+const sendEmail= async (clientEmail,clientName,formLink, companyAssigned)=>{
+    console.log("sending email", clientEmail,clientName,formLink, companyAssigned);
+    
+    const msg =  {
+        to:clientEmail,
+        from: "carlosmoyanor@gmail.com",
+        templateId: ONBOARDING_TEMPLATE_ID,
+        dynamic_template_data:{
+            companyAssigned: companyAssigned,
+            name:clientName,
+            formLink:formLink
+        }
+    }
+    try {
+        return sgMail.send(msg)
+    } catch (error) {
+        console.log(error);
+    }
+  
+
+}
+
+
 module.exports.getClientId = getClientId
 module.exports.getInternalProjectId = getInternalProjectId
 module.exports.getClientProjectId = getClientProjectId
+module.exports.createClient = createClient
+module.exports.createProject = createProject
+module.exports.sendEmail = sendEmail

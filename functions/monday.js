@@ -111,7 +111,7 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
         const isNewClientItem = values.find(item=> item.id === "text86")
         const isNewClient = !!isNewClientItem.value ? false : true
         if(!!isNewClientItem.value){
-          mondayObj.clientId = isNewClientItem.value.replace(/['"]+/g, '')
+          mondayObj.clientId = parseInt(isNewClientItem.value.replace(/['"]+/g, ''))
         }
         mondayObj.isNewClient = isNewClient
 
@@ -157,7 +157,9 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
 
         getUsers()
        .then(data => slackEmails.push(data.map(user=>user.email)))
-       .then(() => mondayObj.slackUsers = slackEmails)
+       .then(() => mondayObj.slackUsers = slackEmails.map(user=>{
+         return {email:user}
+        }))
        .catch(err=>console.log(err))
         
        //getting itemIdfor the correct Form 
