@@ -1,28 +1,40 @@
 const functions = require('firebase-functions');
-const admin = require("firebase-admin");
+/* const admin = require("firebase-admin");
 var serviceAccount = require('./serviceAccountKey.json');
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+admin.initializeApp({ credential: admin.credential.cert(serviceAccount) }); */
 /* const db = admin.firestore(); */
 const createFolder = require("./google");
 const slack = require("./slack");
 const monday = require("./monday");
 const typeForm = require("./typeForm")
-  
+const firebase = require("./firebase") 
  //webhook for monday.com triggered on new item (new form submission) on boardId 411284598 (form submissions)
  //https://us-central1-{FIREBASE_PROJECT_ID}.cloudfunctions.net/fetchForms
 
  exports.fetchForms = functions.https.onRequest(async(req,res)=>{
   console.log("on Fetch Forms");
-/*   console.log(req.body.form_response.definition);
-  console.log(req.body.form_response.answers);   */
+/*    console.log(req.body.form_response.definition);
+  console.log(req.body.form_response.answers);   
+  console.log(req.body.form_response.hidden.clientid);   */
 
-
+  const submissionObj = {
+    clientId: "",
+    birthDay:"",
+    email:"",
+    dateJoined:"",
+    slack:"",
+    phoneNumber:""
+  }
   //call function that fetch all forms form typeform and return array of objects {formId: "",formName: "", formLink: ""} to send to monday
   const forms = await typeForm.getFormsData()  
   
   // call monday function that will update the forms board 415921614 (Onboarding Codes) with all the forms on typeForm 
   monday.updateForms(forms)
- 
+
+  
+  //assign id from submission webhook, hidden param clientid to assign to firebase client
+  submissionObj.clientId = req.body.form_response.hidden.clientid
+
   
   return null
   
@@ -45,10 +57,19 @@ const typeForm = require("./typeForm")
     try {
       const boardId = req.body.event.boardId
       const itemId =  req.body.event.pulseId
-      console.log(boardId,"boardId", itemId, "itemId")  
 
-  /*     const mondayObj = await monday.getResult(boardId,itemId)  
-      console.log(mondayObj);  */
+      const mondayObj = await monday.getResult(boardId,itemId)  
+      
+      //get id for client from firebase
+      const clientId = await firebase.getClientId()
+      //create client only with id
+
+      //get id for companyProject
+      //assign copnay project id to obj
+      //get id for project for this client if client is not new
+      //create project on db with id
+
+      console.log(mondayObj); 
     } catch (error) {
       console.log(error)
     } 
@@ -60,8 +81,14 @@ const typeForm = require("./typeForm")
 const mondayPros = async ()=>{
       const boardId = 413267102
       const itemId =  413267104
-  const mondayObj = await monday.getResult(boardId,itemId)  
-      console.log(mondayObj); 
+try {
+      const mondayObj = await monday.getResult(boardId,itemId)  
+      const clientId = await firebase.getClientId()
+      console.log(clientId);
+} catch (error) {
+    console.log(error);
+}      
+      
 }
 mondayPros()
 

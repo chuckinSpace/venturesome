@@ -81,7 +81,8 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
           pmEmail : "",
           pmName : "",
           slackUsers:[],
-          isNewClient : true
+          isNewClient : true,
+          clientId:""
        };
     
    
@@ -103,13 +104,18 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
       try {
         const data  = await client.request(query);
         const values = await data.boards[0].items[0].column_values;
-        console.log(values);
+       
         
         mondayObj.itemId = itemId;
         
         const isNewClientItem = values.find(item=> item.id === "text86")
         const isNewClient = !!isNewClientItem.value ? false : true
+        if(!!isNewClientItem.value){
+          mondayObj.clientId = isNewClientItem.value.replace(/['"]+/g, '')
+        }
         mondayObj.isNewClient = isNewClient
+
+       
 
         const emailObj = values.find(item => item.id === "email");
         mondayObj.email = JSON.parse(emailObj.value).email;
@@ -159,7 +165,9 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
        const linkObj = JSON.parse(linkItem.value)
        const formItemId = linkObj.linkedPulseIds[0].linkedPulseId;
        mondayObj.formLink =  await getLink(formItemId);
-        
+       if(!!mondayObj.clientId){
+         mondayObj.formLink = `${mondayObj.formLink}?clientid=${mondayObj.clientId}`
+       }
         
         const pmInfo = await getPmInfo(mondayObj.managerId.toString());
         mondayObj.pmEmail = pmInfo.email
