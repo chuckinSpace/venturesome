@@ -170,13 +170,13 @@ const getStagedClientId = async () =>{
 
 const deleteStagedClient = async(clientId) =>{
     
-    var jobskill_query = db.collection('staging').where('clientId','==',clientId);
-jobskill_query.get().then(function(querySnapshot) {
-  querySnapshot.forEach(function(doc) {
+    var stagedClient= db.collection('staging').where('clientId','==',clientId);
+    stagedClient.get().then(function(querySnapshot) {
+    querySnapshot.forEach(function(doc) {
     doc.ref.delete();
-  });
+    });
 })
-.then(()=>console.log("Sitem succesfully removed"))
+.then(()=>console.log("item succesfully removed"))
 .catch((err)=> console.log("error removing staged client",err));
     
    /*  
@@ -187,17 +187,17 @@ jobskill_query.get().then(function(querySnapshot) {
     }); */
 }
 const saveSubmissionObj = async (submissionObj)=>{
-    console.log(submissionObj, "submissionObj");
+   
     try {
         const getClientSnap =  db.collection('clients').where('idNumber','==',submissionObj.clientId);
         const clientObj =await getClientSnap.get()
         clientObj.forEach((doc)=>{
               doc.ref.update({
                   birthday:submissionObj.birthday,
-                  email:submissionObj.email,
-                  onboardingCompletedOn:submissionObj.onboardingCompletedOn,
+                  contactEmail:submissionObj.email,
+                  onboardingCompletedOn:new Date(),
                   slack:submissionObj.slack,
-                  preferredPhone:submissionObj.phone
+                  contactPhone:submissionObj.phone
                 })
             });
     

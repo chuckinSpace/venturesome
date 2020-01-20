@@ -50,12 +50,10 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
   setTimeout(async()=> {
     console.log("in timeout");
     const clientId = await firebase.getStagedClientId()
-    console.log("saved clientId",clientId);
     await firebase.deleteStagedClient(clientId)
-    //get info from submission board
-    await monday.getSubmissionData(boardId,itemId)
-    //build submission obj
-    //add info to client using client id
+    const submissionObj = await monday.getSubmissionData(boardId,itemId)
+    submissionObj.clientId = clientId
+    await firebase.saveSubmissionObj(submissionObj)
     res.send({message: "success"})
   },5000)
 
@@ -160,7 +158,7 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
   
   });
 
- const testStaging=async()=>{
+ /* const testStaging=async()=>{
   const docId = await firebase.saveIdstaging(4)
   const boardId=411284598
   const itemId=431948691
@@ -176,7 +174,7 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
   },5000)
   
 }
- testStaging() 
+ testStaging()  */
 
 
 

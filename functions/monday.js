@@ -178,8 +178,11 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
        //getting itemIdfor the correct Form 
        const linkItem = values.find(item=> item.id === "link_to_item")
        const linkObj = JSON.parse(linkItem.value)
-       const formItemId = linkObj.linkedPulseIds[0].linkedPulseId;
-       mondayObj.formLink =  await getLink(formItemId);
+       if(mondayObj.isNewClient){
+        const formItemId = linkObj.linkedPulseIds[0].linkedPulseId;
+        mondayObj.formLink =  await getLink(formItemId);
+       }
+     
        
      /*   if(!!mondayObj.clientId){
          mondayObj.formLink = `${mondayObj.formLink}?clientid=${mondayObj.clientId}`
@@ -316,31 +319,32 @@ const getSubmissionData=async(boardId,itemId)=>{
     `;
     const submissionObj = {
       birthday : "",
-      email:"",
-      onboardingCompletedOn:"",
+      email:"",  
       slack:false,
       phone:"",
       clientId:0
     }
-    const data  = await client.request(query);
+
+    try {
+      const data  = await client.request(query);
     const values = await data.boards[0].items[0].column_values;
-  
+    console.log(values);
     
     const emailObj = values.find(item => item.id === "email");
     submissionObj.email = JSON.parse(emailObj.value).email;
 
-    const onboardingDateObj = values.find(item => item.id === "date");
-    submissionObj.onboardingCompletedOn = JSON.parse(onboardingDateObj.value).date;
 
     const birthdayObj = values.find(item => item.id === "date4");
     submissionObj.birthday = JSON.parse(birthdayObj.value).date;
 
     const slackObj = values.find(item => item.id === "check");
-    console.log(JSON.parse(slackObj.value).checked);
-    const slackString = JSON.parse(slackObj.value).checked
-    if(slackString === "true"){
-      submissionObj.slack = true
-    }else if(slackString === "false"){
+    if(!!slackObj.value){
+      const slackString = JSON.parse(slackObj.value).checked
+      if(slackString === "true"){
+        submissionObj.slack = true
+      }
+    }
+    else{
       submissionObj.slack = false
     }
   
@@ -349,6 +353,10 @@ const getSubmissionData=async(boardId,itemId)=>{
 
 
     return submissionObj
+    } catch (error) {
+      console.log("error when creating submission obj",error);
+    }
+    
 }
 
 module.exports.getResult = getResult;
