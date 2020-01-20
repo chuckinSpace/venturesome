@@ -3,6 +3,7 @@ TODO: - delete forms that are not on TypeForm anymore when update
       - format for url to send with personalized params that we get from sales pipeline contact name and client name
         https://venturesome.typeform.com/to/OK160Z?clientname=SuperClient&contactname=Tom
       - change status on board, error and success
+      - send new client id to sales pipeline board
 */
 const { GraphQLClient } = require('graphql-request');
 require('dotenv').config();
