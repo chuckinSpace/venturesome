@@ -298,5 +298,59 @@ const updateForms =async (forms)=>{
   })
 }
 
+const getSubmissionData=async(boardId,itemId)=>{
+  
+  const query = ` query {
+    boards (ids:${boardId}) {
+      items (ids:${itemId}) {
+        id
+        name
+        column_values {
+          id
+          title
+          value
+        }
+      }
+    }
+  }
+    `;
+    const submissionObj = {
+      birthday : "",
+      email:"",
+      onboardingCompletedOn:"",
+      slack:false,
+      phone:"",
+      clientId:0
+    }
+    const data  = await client.request(query);
+    const values = await data.boards[0].items[0].column_values;
+  
+    
+    const emailObj = values.find(item => item.id === "email");
+    submissionObj.email = JSON.parse(emailObj.value).email;
+
+    const onboardingDateObj = values.find(item => item.id === "date");
+    submissionObj.onboardingCompletedOn = JSON.parse(onboardingDateObj.value).date;
+
+    const birthdayObj = values.find(item => item.id === "date4");
+    submissionObj.birthday = JSON.parse(birthdayObj.value).date;
+
+    const slackObj = values.find(item => item.id === "check");
+    console.log(JSON.parse(slackObj.value).checked);
+    const slackString = JSON.parse(slackObj.value).checked
+    if(slackString === "true"){
+      submissionObj.slack = true
+    }else if(slackString === "false"){
+      submissionObj.slack = false
+    }
+  
+    const phoneObj = values.find(item => item.id === "phone1");
+    submissionObj.phone = phoneObj.value.replace(/['"]+/g, '')
+
+
+    return submissionObj
+}
+
 module.exports.getResult = getResult;
 module.exports.updateForms = updateForms;
+module.exports.getSubmissionData = getSubmissionData;

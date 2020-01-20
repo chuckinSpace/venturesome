@@ -1,13 +1,13 @@
 const functions = require('firebase-functions');
-/* const admin = require("firebase-admin");
-var serviceAccount = require('./serviceAccountKey.json');
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) }); */
-/* const db = admin.firestore(); */
 const createFolder = require("./google");
 const slack = require("./slack");
 const monday = require("./monday");
 const typeForm = require("./typeForm")
 const firebase = require("./firebase") 
+
+
+
+
 
 //webhook from Typeform trigerred on submission, sending clientid 
 
@@ -16,13 +16,13 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
   //assign id from submission webhook, hidden param clientid to assign to firebase client
     try {
       const clientId = req.body.form_response.hidden.clientid
-      await firebase.saveIdstaging(parseInt(clientId))
+      const docId = await firebase.saveIdstaging(parseInt(clientId))
     } catch (error) {
       console.log("error staging client id");
     }
     
     
-   
+   res.send({message: "success"})
 
 })
 
@@ -34,15 +34,34 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
   console.log(req.body.form_response.answers);   
   console.log(req.body.form_response.hidden.clientid);   */
 
- 
+
+  //save board and itemId from webhook req
+  const boardId = req.body.event.boardId
+  const itemId =  req.body.event.pulseId
+
   //call function that fetch all forms form typeform and return array of objects {formId: "",formName: "", formLink: ""} to send to monday
   const forms = await typeForm.getFormsData()  
   
   // call monday function that will update the forms board 415921614 (Onboarding Codes) with all the forms on typeForm 
   monday.updateForms(forms)  
-  const clientId = await firebase.getStagedClientId()
-  console.log(clientId);
-  return null
+
+
+  
+  setTimeout(async()=> {
+    console.log("in timeout");
+    const clientId = await firebase.getStagedClientId()
+    console.log("saved clientId",clientId);
+    await firebase.deleteStagedClient(clientId)
+    //get info from submission board
+    await monday.getSubmissionData(boardId,itemId)
+    //build submission obj
+    //add info to client using client id
+    res.send({message: "success"})
+  },5000)
+
+  
+  
+ 
   
 /*   const submission = monday.getSubmissionInfo() */
 
@@ -137,9 +156,31 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
     } 
      
     
-    return null
+    res.send({message: "success"})
   
   });
+
+ const testStaging=async()=>{
+  const docId = await firebase.saveIdstaging(4)
+  const boardId=411284598
+  const itemId=431948691
+  setTimeout(async()=> {
+    console.log("in timeout");
+    const clientId = await firebase.getStagedClientId()
+    console.log("saved clientId",clientId);
+    await firebase.deleteStagedClient(clientId)
+    const submissionObj = await monday.getSubmissionData(boardId,itemId)
+    submissionObj.clientId = clientId
+    console.log(submissionObj);
+    await firebase.saveSubmissionObj(submissionObj)
+  },5000)
+  
+}
+ testStaging() 
+
+
+
+
   /* 
 const mondayPros = async ()=>{
       const boardId = 413267102

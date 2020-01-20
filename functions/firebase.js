@@ -148,23 +148,65 @@ const sendOnboardingEmail = async (clientEmail,clientName,formLink, companyAssig
 }
 
 const saveIdstaging=async(clientId) =>{
-    db.collection("staging").add({
-       clientId : clientId,
-       createdAt: new Date()
-    })
-    .then((doc)=> console.log("success staging clientId on firebase", doc.id))
-    .catch(err=>console.log("error staging clientId on firebase"))
+  try {
+    const doc =await db.collection("staging").add({
+        clientId : clientId,
+        createdAt: new Date()
+     })
+     const docId = doc.id
+     return docId
+  } catch (error) {
+      console.log("Error when stagind client id ", error);
+  }
 }
 
 const getStagedClientId = async () =>{
     var clientId = ""
     const querySnapshot = await db.collection("staging").orderBy("createdAt", "asc").limit(1).get();
-    querySnapshot.forEach((doc) => clientId = doc.data().clientId)
+    const docId =  querySnapshot.forEach((doc) => clientId = doc.data().clientId)
     // delete staged client
     return clientId
 }
 
-
+const deleteStagedClient = async(clientId) =>{
+    
+    var jobskill_query = db.collection('staging').where('clientId','==',clientId);
+jobskill_query.get().then(function(querySnapshot) {
+  querySnapshot.forEach(function(doc) {
+    doc.ref.delete();
+  });
+})
+.then(()=>console.log("Sitem succesfully removed"))
+.catch((err)=> console.log("error removing staged client",err));
+    
+   /*  
+    db.collection("staging").doc(docId).delete().then(function() {
+        console.log("Document successfully deleted!");
+    }).catch(function(error) {
+        console.error("Error removing document: ", error);
+    }); */
+}
+const saveSubmissionObj = async (submissionObj)=>{
+    console.log(submissionObj, "submissionObj");
+    try {
+        const getClientSnap =  db.collection('clients').where('idNumber','==',submissionObj.clientId);
+        const clientObj =await getClientSnap.get()
+        clientObj.forEach((doc)=>{
+              doc.ref.update({
+                  birthday:submissionObj.birthday,
+                  email:submissionObj.email,
+                  onboardingCompletedOn:submissionObj.onboardingCompletedOn,
+                  slack:submissionObj.slack,
+                  preferredPhone:submissionObj.phone
+                })
+            });
+    
+       
+    } catch (error) {
+        console.log(error);
+    }
+    
+}
 module.exports.getClientId = getClientId
 module.exports.getInternalProjectId = getInternalProjectId
 module.exports.getClientProjectId = getClientProjectId
@@ -173,3 +215,5 @@ module.exports.createProject = createProject
 module.exports.sendOnboardingEmail = sendOnboardingEmail
 module.exports.saveIdstaging = saveIdstaging
 module.exports.getStagedClientId = getStagedClientId
+module.exports.deleteStagedClient = deleteStagedClient
+module.exports.saveSubmissionObj = saveSubmissionObj
