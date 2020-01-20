@@ -8,36 +8,44 @@ const slack = require("./slack");
 const monday = require("./monday");
 const typeForm = require("./typeForm")
 const firebase = require("./firebase") 
+
+//webhook from Typeform trigerred on submission, sending clientid 
+
+exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
+  console.log("staging client id",req.body.form_response.hidden.clientid);  
+  //assign id from submission webhook, hidden param clientid to assign to firebase client
+    try {
+      const clientId = req.body.form_response.hidden.clientid
+      await firebase.saveIdstaging(parseInt(clientId))
+    } catch (error) {
+      console.log("error staging client id");
+    }
+    
+    
+   
+
+})
+
  //webhook for monday.com triggered on new item (new form submission) on boardId 411284598 (form submissions)
  //https://us-central1-{FIREBASE_PROJECT_ID}.cloudfunctions.net/fetchForms
-
  exports.fetchForms = functions.https.onRequest(async(req,res)=>{
   console.log("on Fetch Forms");
 /*    console.log(req.body.form_response.definition);
   console.log(req.body.form_response.answers);   
   console.log(req.body.form_response.hidden.clientid);   */
 
-  const submissionObj = {
-    clientId: "",
-    birthDay:"",
-    email:"",
-    dateJoined:"",
-    slack:"",
-    phoneNumber:""
-  }
+ 
   //call function that fetch all forms form typeform and return array of objects {formId: "",formName: "", formLink: ""} to send to monday
   const forms = await typeForm.getFormsData()  
   
   // call monday function that will update the forms board 415921614 (Onboarding Codes) with all the forms on typeForm 
-  monday.updateForms(forms)
-
-  console.log(req.body.form_response.hidden.clientid);
-  //assign id from submission webhook, hidden param clientid to assign to firebase client
-/*   submissionObj.clientId = req.body.form_response.hidden.clientid */
-
-  
+  monday.updateForms(forms)  
+  const clientId = await firebase.getStagedClientId()
+  console.log(clientId);
   return null
   
+/*   const submission = monday.getSubmissionInfo() */
+
 }) 
 
 

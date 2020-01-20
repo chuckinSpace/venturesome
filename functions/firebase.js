@@ -1,5 +1,6 @@
 /*
 TODO: get cleintProject NUmber from number of projects on database (also clients?)
+      - delete staged client
 */
 const sgMail = require("@sendgrid/mail")
 const admin = require("firebase-admin");
@@ -146,6 +147,22 @@ const sendOnboardingEmail = async (clientEmail,clientName,formLink, companyAssig
 
 }
 
+const saveIdstaging=async(clientId) =>{
+    db.collection("staging").add({
+       clientId : clientId,
+       createdAt: new Date()
+    })
+    .then((doc)=> console.log("success staging clientId on firebase", doc.id))
+    .catch(err=>console.log("error staging clientId on firebase"))
+}
+
+const getStagedClientId = async () =>{
+    var clientId = ""
+    const querySnapshot = await db.collection("staging").orderBy("createdAt", "asc").limit(1).get();
+    querySnapshot.forEach((doc) => clientId = doc.data().clientId)
+    // delete staged client
+    return clientId
+}
 
 
 module.exports.getClientId = getClientId
@@ -154,3 +171,5 @@ module.exports.getClientProjectId = getClientProjectId
 module.exports.createClient = createClient
 module.exports.createProject = createProject
 module.exports.sendOnboardingEmail = sendOnboardingEmail
+module.exports.saveIdstaging = saveIdstaging
+module.exports.getStagedClientId = getStagedClientId
