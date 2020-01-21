@@ -4,6 +4,7 @@ TODO: get cleintProject NUmber from number of projects on database (also clients
 */
 const sgMail = require("@sendgrid/mail")
 const admin = require("firebase-admin");
+
 require('dotenv').config();
 var serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({

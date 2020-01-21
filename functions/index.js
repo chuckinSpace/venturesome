@@ -5,10 +5,6 @@ const monday = require("./monday");
 const typeForm = require("./typeForm")
 const firebase = require("./firebase") 
 
-
-
-
-
 //webhook from Typeform trigerred on submission, sending clientid 
 
 exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
@@ -16,14 +12,11 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
   //assign id from submission webhook, hidden param clientid to assign to firebase client
     try {
       const clientId = req.body.form_response.hidden.clientid
-      const docId = await firebase.saveIdstaging(parseInt(clientId))
+      await firebase.saveIdstaging(parseInt(clientId))
     } catch (error) {
       console.log("error staging client id");
     }
-    
-    
    res.send({message: "success"})
-
 })
 
  //webhook for monday.com triggered on new item (new form submission) on boardId 411284598 (form submissions)
@@ -91,171 +84,183 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
 
       const mondayObj = await monday.getResult(boardId,itemId) 
       console.log("mondayObj from indexjs",mondayObj);
-
-      const firebaseClientId = await firebase.getClientId()
-      const internalProjectId = await firebase.getInternalProjectId()
       
-      // if client is old client Id is taken from mondayObj, that comes from monday sales pipeline board, else client Id will be generated from 
-      // the last id from firebase database
-      if(!mondayObj.isNewClient){
-        clientProjectNumber = await firebase.getClientProjectId(mondayObj.clientId)
-        clientId = mondayObj.clientId
-        console.log("clientProjectNumber : ",clientProjectNumber);
+      if(mondayObj === 0){
+       
+        throw new Error("error with mondayObj ending program")
+   /*      res.send({message: "success"}) */
       }else{
-        //if client its a new client, client Id will come from firebase Id and we append the client id to the form link to send the email
-        clientId = firebaseClientId
-        const urlName = encodeURIComponent(mondayObj.clientName.trim())
-        mondayObj.formLink = `${mondayObj.formLink}?clientid=${firebaseClientId}&clientname=${urlName}`
-      }
-     
-      console.log("firebaseId",firebaseClientId, internalProjectId);
-
-      const clientObj = {
         
-        idNumber: clientId,
-        name:mondayObj.clientName,
-        email: mondayObj.email,
-        phone: mondayObj.phone,
-        clientProjectNumber: clientProjectNumber,
-        street:"",
-        zipCode:"",
-        city:"",
-        mondayItemIdDeal:mondayObj.itemId,
-        formLink: mondayObj.formLink,
-        createdAt: new Date(),
+        const firebaseClientId = await firebase.getClientId()
+        const internalProjectId = await firebase.getInternalProjectId()
+        
+        // if client is old client Id is taken from mondayObj, that comes from monday sales pipeline board, else client Id will be generated from 
+        // the last id from firebase database
+        if(!mondayObj.isNewClient){
+          clientProjectNumber = await firebase.getClientProjectId(mondayObj.clientId)
+          if(clientProjectNumber === undefined){
+            await monday.changeMondayStatus(3,boardId,itemId)
+            res.send({message: "success"})
+            throw new Error("client not found")
+          }
+          clientId = mondayObj.clientId
+          console.log("clientProjectNumber : ",clientProjectNumber);
+        }else{
+          //if client its a new client, client Id will come from firebase Id and we append the client id to the form link to send the email
+          clientId = firebaseClientId
+          const urlName = encodeURIComponent(mondayObj.clientName.trim())
+          mondayObj.formLink = `${mondayObj.formLink}?clientid=${firebaseClientId}&clientname=${urlName}`
+        }
+       
+         const clientObj = {
+          
+          idNumber: clientId,
+          name:mondayObj.clientName,
+          email: mondayObj.email,
+          phone: mondayObj.phone,
+          clientProjectNumber: clientProjectNumber,
+          street:"",
+          zipCode:"",
+          city:"",
+          mondayItemIdDeal:mondayObj.itemId,
+          formLink: mondayObj.formLink,
+          createdAt: new Date(),
+        }
+  
+  
+        const projectObj = {
+          clientId : clientId,
+          clientEmail:mondayObj.email,
+          clientName:mondayObj.clientName,
+          createdAt: new Date(),
+          idNumber: clientProjectNumber,
+          pmEmail: mondayObj.pmEmail,
+          pmName: mondayObj.pmName,
+          slackUsers: mondayObj.slackUsers,
+          companyAssigned: mondayObj.companyAssigned,
+          name:mondayObj.projectName,
+          clientPhone:mondayObj.phone,
+          clientProjectNumber:clientProjectNumber
+        }
+  
+        if(mondayObj.isNewClient){
+          await firebase.createClient(clientObj)
+          await firebase.createProject(projectObj)
+          await firebase.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
+          await monday.changeMondayStatus(0,boardId,itemId)
+          await monday.setMondayClientId(boardId,itemId,clientObj.idNumber)
+        }else{
+          await firebase.createProject(projectObj)
+          await monday.changeMondayStatus(2,boardId,itemId)
+        }
+       
+        res.send({message: "success"})
+       
       }
-
-
-      const projectObj = {
-        clientId : clientId,
-        clientEmail:mondayObj.email,
-        clientName:mondayObj.clientName,
-        createdAt: new Date(),
-        idNumber: clientProjectNumber,
-        pmEmail: mondayObj.pmEmail,
-        pmName: mondayObj.pmName,
-        slackUsers: mondayObj.slackUsers,
-        companyAssigned: mondayObj.companyAssigned,
-        name:mondayObj.projectName,
-        clientPhone:mondayObj.phone,
-        clientProjectNumber:clientProjectNumber
-      }
-
-      if(mondayObj.isNewClient){
-        await firebase.createClient(clientObj)
-        await firebase.createProject(projectObj)
-        await firebase.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
-      }else{
-        await firebase.createProject(projectObj)
-      }
-     
     } catch (error) {
+      res.send({message: "success"})
       console.log("Error in main script",error)
     } 
-     
     
-    res.send({message: "success"})
+  
   
   });
 
- /* const testStaging=async()=>{
-  const docId = await firebase.saveIdstaging(4)
-  const boardId=411284598
-  const itemId=431948691
-  setTimeout(async()=> {
-    console.log("in timeout");
-    const clientId = await firebase.getStagedClientId()
-    console.log("saved clientId",clientId);
-    await firebase.deleteStagedClient(clientId)
-    const submissionObj = await monday.getSubmissionData(boardId,itemId)
-    submissionObj.clientId = clientId
-    console.log(submissionObj);
-    await firebase.saveSubmissionObj(submissionObj)
-  },5000)
+ 
+  const test=async ()=> {
   
-}
- testStaging()  */
-
-
-
-
-  /* 
-const mondayPros = async ()=>{
+    
+    try {
+      
       const boardId = 413267102
       const itemId =  414105909
+
       var clientProjectNumber = 1
       var clientId = ""
-try {
-      
+
       const mondayObj = await monday.getResult(boardId,itemId) 
       console.log("mondayObj from indexjs",mondayObj);
-
-      const firebaseClientId = await firebase.getClientId()
-      const internalProjectId = await firebase.getInternalProjectId()
       
-      // if client is old client Id is taken from mondayObj, that comes from monday sales pipeline board, else client Id will be generated from 
-      // the last id from firebase database
-      if(!mondayObj.isNewClient){
-        clientProjectNumber = await firebase.getClientProjectId(mondayObj.clientId)
-        clientId = mondayObj.clientId
-        console.log("clientProjectNumber : ",clientProjectNumber);
+      if(mondayObj === 0){
+      /*   res.send({message: "success"}) */
+        throw new Error("error with mondayObj ending program")
       }else{
-        //if client its a new client, client Id will come from firebase Id and we append the client id to the form link to send the email
-        clientId = firebaseClientId
-        const urlName = encodeURIComponent(mondayObj.clientName.trim())
-        mondayObj.formLink = `${mondayObj.formLink}?clientid=${firebaseClientId}&clientname=${urlName}`
-      }
-     
-      console.log("firebaseId",firebaseClientId, internalProjectId);
-
-      const clientObj = {
         
-        idNumber: clientId,
-        name:mondayObj.clientName,
-        email: mondayObj.email,
-        phone: mondayObj.phone,
-        clientProjectNumber: clientProjectNumber,
-        street:"",
-        zipCode:"",
-        city:"",
-        mondayItemIdDeal:mondayObj.itemId,
-        formLink: mondayObj.formLink,
-        createdAt: new Date(),
-      }
-
-
-      const projectObj = {
-        clientId : clientId,
-        clientEmail:mondayObj.email,
-        clientName:mondayObj.clientName,
-        createdAt: new Date(),
-        idNumber: clientProjectNumber,
-        pmEmail: mondayObj.pmEmail,
-        pmName: mondayObj.pmName,
-        slackUsers: mondayObj.slackUsers,
-        companyAssigned: mondayObj.companyAssigned,
-        name:mondayObj.projectName,
-        clientPhone:mondayObj.phone,
-        clientProjectNumber:clientProjectNumber
-      }
-
-      if(mondayObj.isNewClient){
-        await firebase.createClient(clientObj)
-        await firebase.createProject(projectObj)
-        await firebase.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
-      }else{
-        await firebase.createProject(projectObj)
-      }
-     
+        const firebaseClientId = await firebase.getClientId()
+        const internalProjectId = await firebase.getInternalProjectId()
+        
+        // if client is old client Id is taken from mondayObj, that comes from monday sales pipeline board, else client Id will be generated from 
+        // the last id from firebase database
+        if(!mondayObj.isNewClient){
+          clientProjectNumber = await firebase.getClientProjectId(mondayObj.clientId)
+          if(clientProjectNumber === undefined){
+            await monday.changeMondayStatus(3,boardId,itemId)
+          /*   res.send({message: "success"}) */
+            throw new Error("client not found")
+          }
+          clientId = mondayObj.clientId
+          console.log("clientProjectNumber : ",clientProjectNumber);
+        }else{
+          //if client its a new client, client Id will come from firebase Id and we append the client id to the form link to send the email
+          clientId = firebaseClientId
+          const urlName = encodeURIComponent(mondayObj.clientName.trim())
+          mondayObj.formLink = `${mondayObj.formLink}?clientid=${firebaseClientId}&clientname=${urlName}`
+        }
+       
+         const clientObj = {
+          
+          idNumber: clientId,
+          name:mondayObj.clientName,
+          email: mondayObj.email,
+          phone: mondayObj.phone,
+          clientProjectNumber: clientProjectNumber,
+          street:"",
+          zipCode:"",
+          city:"",
+          mondayItemIdDeal:mondayObj.itemId,
+          formLink: mondayObj.formLink,
+          createdAt: new Date(),
+        }
   
-      
-} catch (error) {
-  console.log("Error in main script",error)
-  firebase.sendEmail()
-}      
-      
+  
+        const projectObj = {
+          clientId : clientId,
+          clientEmail:mondayObj.email,
+          clientName:mondayObj.clientName,
+          createdAt: new Date(),
+          idNumber: clientProjectNumber,
+          pmEmail: mondayObj.pmEmail,
+          pmName: mondayObj.pmName,
+          slackUsers: mondayObj.slackUsers,
+          companyAssigned: mondayObj.companyAssigned,
+          name:mondayObj.projectName,
+          clientPhone:mondayObj.phone,
+          clientProjectNumber:clientProjectNumber
+        }
+  
+        if(mondayObj.isNewClient){
+          await firebase.createClient(clientObj)
+          await firebase.createProject(projectObj)
+          await firebase.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
+          await monday.changeMondayStatus(0,boardId,itemId)
+          await monday.setMondayClientId(boardId,itemId,clientObj.idNumber)
+        }else{
+          await firebase.createProject(projectObj)
+          await monday.changeMondayStatus(2,boardId,itemId)
+        }
+       
+      /*   res.send({message: "success"})
+        */
+      }
+    } catch (error) {
+     /*  res.send({message: "success"}) */
+      console.log("Error in main script",error)
+    } 
+  
 }
-mondayPros()  */
+/*  test()   */  
+
+
 
   /*    exports.fetchSlackUsers = functions.firestore.document("slack").onUpdate(async (change, context) => {
    console.log("started fetch slack users")

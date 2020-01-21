@@ -1,16 +1,15 @@
 /*
 TODO: - delete forms that are not on TypeForm anymore when update
-      - format for url to send with personalized params that we get from sales pipeline contact name and client name
-        https://venturesome.typeform.com/to/OK160Z?clientname=SuperClient&contactname=Tom
-      - change status on board, error and success
-      - send new client id to sales pipeline board
+      - check error when clint not found
 */
 const { GraphQLClient } = require('graphql-request');
 require('dotenv').config();
 const axios = require('axios')
 
-const formsDataBoard = 415921614
+// const data from MONDAY
 
+const formsDataBoard = 415921614
+const CLIENT_ID_ID = "text86"
 
 //Create connection called 'client' that connects to Monday.com's API
 const client = new GraphQLClient('https://api.monday.com/v2/', {
@@ -20,15 +19,106 @@ const client = new GraphQLClient('https://api.monday.com/v2/', {
     },
 });
 
+const setMondayClientId=(boardId,itemId,clientId)=>{
+console.log("returning client id to monday",clientId );
+const stringId = clientId.toString() 
 
-const changeMondayStatus=(status)=>{
+const body = {
+    query: `
+    mutation ($boardId: Int!, $itemId: Int!,$columnId :String!, $value: JSON!, ) {
+      change_column_value(
+        board_id: $boardId, item_id: $itemId, column_id: $columnId, value: $value) {
+        id
+      }
+    }
+    `,
+    variables: {
+    boardId: boardId,
+    itemId: itemId,
+    columnId: CLIENT_ID_ID,
+    value: JSON.stringify(stringId)
+    
+    
+    }
+  }
+
+
+  return axios.post(`https://api.monday.com/v2`, body, {
+    headers: {
+      Authorization: process.env.MONDAY_TOKEN
+    }
+  })
+  
+  .then(res => {
+    console.log("sucess setting client Id on item",res.data)
+  })
+  .catch(err => {
+    console.log("error setting client Id status",err)
+  })
+}
+
+const changeMondayStatus=(status, boardId,itemId)=>{
 //0 sucess
 //1 missing information
+  console.log("changing status", status,boardId,itemId);
 
-
-
-
+try {
+  
+} catch (error) {
+  
 }
+  var statusText = ""
+  if(status === 0){
+    statusText = "Onboarding Sent!"
+   
+  }else if(status === 1){
+    statusText ="Missing Info"
+  }else if(status === 2){
+    statusText = "Project Created"
+  }else if(status === 3){
+    statusText = "Client Not Found"
+  }
+ 
+  const body = {
+    query: `
+    mutation ($boardId: Int!, $itemId: Int!, $columnValues: JSON!, $columnId :String!) {
+      change_column_value(
+        board_id: $boardId, item_id: $itemId, column_id: $columnId, value: $columnValues) {
+        id
+      }
+    }
+    `,
+    variables: {
+    boardId: boardId,
+    itemId: itemId,
+    columnValues: JSON.stringify({"label": statusText}),
+    columnId: "status"
+    
+    }
+  }
+
+  
+
+
+
+  return axios.post(`https://api.monday.com/v2`, body, {
+    headers: {
+      Authorization: process.env.MONDAY_TOKEN
+    }
+  })
+  
+  .then(res => {
+    console.log("sucess changing status on item",res.data)
+  })
+  .catch(err => {
+    console.log("error changing status",err)
+  })
+}
+
+
+
+
+
 
 
 
@@ -122,14 +212,12 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
         
         mondayObj.itemId = itemId;
         
-        const isNewClientItem = values.find(item=> item.id === "text86")
+        const isNewClientItem = values.find(item=> item.id === CLIENT_ID_ID)
         const isNewClient = !!isNewClientItem.value ? false : true
         if(!!isNewClientItem.value){
           mondayObj.clientId = parseInt(isNewClientItem.value.replace(/['"]+/g, ''))
         }
         mondayObj.isNewClient = isNewClient
-
-       
 
         const emailObj = values.find(item => item.id === "email");
         mondayObj.email = JSON.parse(emailObj.value).email;
@@ -141,47 +229,68 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
         mondayObj.phone = JSON.parse(phoneObj.value).phone;
         
         const companyAssignedObj = values.find(item => item.id === "dropdown1");
+        
+        //check company assigned, if empty error
         const companyAssignedParse = JSON.parse(companyAssignedObj.value)
         const companyAssigned = companyAssignedParse.ids[0]
-        if(companyAssigned === 1){
+        console.log(companyAssigned);
+        if(!!companyAssigned && companyAssigned === 1){
           mondayObj.companyAssigned = "Venturesome"
-        }else if (companyAssigned === 2){
+        }else if (!!companyAssigned && companyAssigned === 2){
           mondayObj.companyAssigned = "MoneyTree"
         }
-     
+        else{
+          throw new Error("missing company Assigned")
+        }
   
         const projectNameObj = values.find(item => item.id === "project_name");
         mondayObj.projectName = projectNameObj.value.replace(/['"]+/g, '');
-  
+
         const managerObj = values.find(item => item.id === "person");
+       if(!!JSON.parse(managerObj.value).personsAndTeams[0]){
         mondayObj.managerId = JSON.parse(managerObj.value).personsAndTeams[0].id.toString();
 
+       }else{
+         throw new Error("missing Pm info")
+       }
+       
        
         //get slackUsers emails array
         const slackItem = values.find(item => item.id === "people")
         const slackObj = JSON.parse(slackItem.value)
         const slackUsers = slackObj.personsAndTeams
         const slackIds = slackUsers.map(user=> user.id)
+        console.log(slackIds);
+        if(slackIds.length === 0){
+          throw new Error("missing Slack Users")
+        }else{
+          const getUsers = async () => {
+            return Promise.all(slackIds.map(id => getPmInfo(id)));
+           }
         
-        const getUsers = async () => {
-         return Promise.all(slackIds.map(id => getPmInfo(id)));
+           var slackEmails=[]
+   
+           getUsers()
+          .then(data => slackEmails.push(data.map(user=>user.email)))
+          .then(() => mondayObj.slackUsers = slackEmails.map(user=>{
+            return {email:user}
+           }))
+          .catch(err=>console.log(err))
         }
-     
-        var slackEmails=[]
-
-        getUsers()
-       .then(data => slackEmails.push(data.map(user=>user.email)))
-       .then(() => mondayObj.slackUsers = slackEmails.map(user=>{
-         return {email:user}
-        }))
-       .catch(err=>console.log(err))
+        
         
        //getting itemIdfor the correct Form 
        const linkItem = values.find(item=> item.id === "link_to_item")
        const linkObj = JSON.parse(linkItem.value)
+       console.log(linkObj);
        if(mondayObj.isNewClient){
-        const formItemId = linkObj.linkedPulseIds[0].linkedPulseId;
-        mondayObj.formLink =  await getLink(formItemId);
+        if(!linkObj.linkedPulseIds){
+          throw new Error("missing Form Info")
+        }else{
+          const formItemId = linkObj.linkedPulseIds[0].linkedPulseId;
+          mondayObj.formLink =  await getLink(formItemId);
+        }
+     
        }
      
        
@@ -190,6 +299,7 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
        }
          */
         const pmInfo = await getPmInfo(mondayObj.managerId.toString());
+       
         mondayObj.pmEmail = pmInfo.email
         mondayObj.pmName = pmInfo.name 
         
@@ -200,7 +310,8 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
        
       } catch (error) {
         console.log("Error when reading mondayObj",error)
-        changeMondayStatus(1)
+        changeMondayStatus(1, boardId,itemId)
+        return 0
       }
     
     };
@@ -360,6 +471,10 @@ const getSubmissionData=async(boardId,itemId)=>{
     
 }
 
+
+
 module.exports.getResult = getResult;
 module.exports.updateForms = updateForms;
 module.exports.getSubmissionData = getSubmissionData;
+module.exports.changeMondayStatus = changeMondayStatus
+module.exports.setMondayClientId = setMondayClientId
