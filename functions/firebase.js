@@ -1,11 +1,10 @@
 /*
 TODO: get cleintProject NUmber from number of projects on database (also clients?)
-      - delete staged client
+      
 */
 
+//firebase authentication
 const admin = require("firebase-admin");
-
-
 require('dotenv').config();
 var serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
@@ -15,6 +14,8 @@ admin.initializeApp({
 const db = admin.firestore();
 
 
+
+//get last id from firebase and return the next id
 const getClientId= async () =>{
     console.log("in firebase functions getClient");
     try {
@@ -29,8 +30,9 @@ const getClientId= async () =>{
     }
 }
 
+//get the number of project for the company overall
 const getInternalProjectId= async () =>{
-    console.log("in firebase functions getInternalProjectId");
+   
     try {
         var lastId = 1
         const querySnapshot = await db.collection("projects").orderBy("idNumber", "desc").limit(1).get();
@@ -42,9 +44,8 @@ const getInternalProjectId= async () =>{
     }
 }
 
+//when client is not new, get the last project id and return the next project id for this client
 const getClientProjectId= async (clientId) =>{
-    console.log("in firebase functions getClientProjectId", clientId);
-    var parsedClientId = parseInt(clientId)
     try {
         var clientData = ""
         var clientProjectId = ""
@@ -68,6 +69,7 @@ const getClientProjectId= async (clientId) =>{
     }
 }
 
+//creates the client on firebase "clients" collection using the client Obj
 const createClient= async (client)=>{
     db.collection("clients").add({
         idNumber: client.idNumber,
@@ -85,7 +87,7 @@ const createClient= async (client)=>{
     .then((doc)=> console.log("success creating client on firebase", doc.id))
     .catch(err=>console.log("error creating client on firebase"))
 }
-
+//creates the project on firebase "projects" collection using the project obj
 const createProject=async (project)=>{
     db.collection("projects").add({
         clientId : project.clientId,
@@ -105,30 +107,7 @@ const createProject=async (project)=>{
     .catch(err=>console.log("error creating project on firebase",err))
 }
 
-
-
-  
-//firebase extension emails
-
-
- /* db.collection('mail').add({
-    to: clientEmail,
-    message: {
-      subject: `Welcome to ${companyAssigned}`,
-      html: `<code>
-      <h2>Hi ${clientName}</h2>
-      <h3>We thank you for becoming a client with ${companyAssigned}</h3></br>
-      please follow this link to start the onboarding process ${formLink} </code>`,
-    }
-  })
-  .then(() => console.log('Queued email for delivery!'))
-  .catch((err)=>console.log("error when sending onboarding email", err)) */
-
-
-
-
-
-
+//saves the client id on "staging" collection on firebase
 const saveIdstaging=async(clientId) =>{
   try {
     const doc =await db.collection("staging").add({
@@ -142,14 +121,15 @@ const saveIdstaging=async(clientId) =>{
   }
 }
 
+// retrieves the client id from "staging"
 const getStagedClientId = async () =>{
     var clientId = ""
     const querySnapshot = await db.collection("staging").orderBy("createdAt", "asc").limit(1).get();
-    const docId =  querySnapshot.forEach((doc) => clientId = doc.data().clientId)
+    querySnapshot.forEach((doc) => clientId = doc.data().clientId)
     // delete staged client
     return clientId
 }
-
+// deletes the client id from staging
 const deleteStagedClient = async(clientId) =>{
     
     var stagedClient= db.collection('staging').where('clientId','==',clientId);
@@ -161,15 +141,11 @@ const deleteStagedClient = async(clientId) =>{
 .then(()=>console.log("item succesfully removed"))
 .catch((err)=> console.log("error removing staged client",err));
     
-   /*  
-    db.collection("staging").doc(docId).delete().then(function() {
-        console.log("Document successfully deleted!");
-    }).catch(function(error) {
-        console.error("Error removing document: ", error);
-    }); */
-}
-const saveSubmissionObj = async (submissionObj)=>{
    
+}
+
+//saves the submission obj adding it to the corresponding client, stored as clientId inside the coming obj on firebase
+const saveSubmissionObj = async (submissionObj)=>{
     try {
         const getClientSnap =  db.collection('clients').where('idNumber','==',submissionObj.clientId);
         const clientObj =await getClientSnap.get()
@@ -182,13 +158,12 @@ const saveSubmissionObj = async (submissionObj)=>{
                   contactPhone:submissionObj.phone
                 })
             });
-    
-       
     } catch (error) {
         console.log(error);
     }
-    
 }
+
+//exports
 module.exports.getClientId = getClientId
 module.exports.getInternalProjectId = getInternalProjectId
 module.exports.getClientProjectId = getClientProjectId
@@ -198,3 +173,24 @@ module.exports.saveIdstaging = saveIdstaging
 module.exports.getStagedClientId = getStagedClientId
 module.exports.deleteStagedClient = deleteStagedClient
 module.exports.saveSubmissionObj = saveSubmissionObj
+
+
+
+
+
+
+
+//firebase extension to send emails to use generic emails for testing
+
+ /* db.collection('mail').add({
+    to: clientEmail,
+    message: {
+      subject: `Welcome to ${companyAssigned}`,
+      html: `<code>
+      <h2>Hi ${clientName}</h2>
+      <h3>We thank you for becoming a client with ${companyAssigned}</h3></br>
+      please follow this link to start the onboarding process ${formLink} </code>`,
+    }
+  })
+  .then(() => console.log('Queued email for delivery!'))
+  .catch((err)=>console.log("error when sending onboarding email", err)) */
