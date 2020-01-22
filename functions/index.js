@@ -4,6 +4,7 @@ const slack = require("./slack");
 const monday = require("./monday");
 const typeForm = require("./typeForm")
 const firebase = require("./firebase") 
+const sendGrid = require("./sendGrid")
 
 //webhook from Typeform trigerred on submission, sending clientid 
 
@@ -146,7 +147,7 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
         if(mondayObj.isNewClient){
           await firebase.createClient(clientObj)
           await firebase.createProject(projectObj)
-          await firebase.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
+          await sendGrid.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
           await monday.changeMondayStatus(0,boardId,itemId)
           await monday.setMondayClientId(boardId,itemId,clientObj.idNumber)
         }else{
@@ -241,7 +242,7 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
         if(mondayObj.isNewClient){
           await firebase.createClient(clientObj)
           await firebase.createProject(projectObj)
-          await firebase.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
+          await sendGrid.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
           await monday.changeMondayStatus(0,boardId,itemId)
           await monday.setMondayClientId(boardId,itemId,clientObj.idNumber)
         }else{

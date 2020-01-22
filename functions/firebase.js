@@ -2,8 +2,9 @@
 TODO: get cleintProject NUmber from number of projects on database (also clients?)
       - delete staged client
 */
-const sgMail = require("@sendgrid/mail")
+
 const admin = require("firebase-admin");
+
 
 require('dotenv').config();
 var serviceAccount = require('./serviceAccountKey.json');
@@ -12,9 +13,6 @@ admin.initializeApp({
     databaseURL: process.env.DATABASE_URL
   });
 const db = admin.firestore();
-
-sgMail.setApiKey(process.env.SG_API_KEY)
-const ONBOARDING_TEMPLATE_ID = "d-61e27a20903f47f7bb06b49b12710526"
 
 
 const getClientId= async () =>{
@@ -108,29 +106,12 @@ const createProject=async (project)=>{
 }
 
 
-const sendOnboardingEmail = async (clientEmail,clientName,formLink, companyAssigned)=>{
-    console.log("sending email", clientEmail,clientName,formLink, companyAssigned);
-  /*   
-    const msg =  {
-        to:clientEmail,
-        from: "carlos.moyano@venturesome.ch",
-        templateId: ONBOARDING_TEMPLATE_ID,
-        dynamic_template_data:{
-            companyAssigned: companyAssigned,
-            name:clientName,
-            formLink:formLink
-        }
-    }
-    try {
-        return sgMail.send(msg)
-    } catch (error) {
-        console.log(error);
-    } */
+
   
 //firebase extension emails
 
 
- db.collection('mail').add({
+ /* db.collection('mail').add({
     to: clientEmail,
     message: {
       subject: `Welcome to ${companyAssigned}`,
@@ -141,12 +122,12 @@ const sendOnboardingEmail = async (clientEmail,clientName,formLink, companyAssig
     }
   })
   .then(() => console.log('Queued email for delivery!'))
-  .catch((err)=>console.log("error when sending onboarding email", err))
+  .catch((err)=>console.log("error when sending onboarding email", err)) */
 
 
 
 
-}
+
 
 const saveIdstaging=async(clientId) =>{
   try {
@@ -213,7 +194,6 @@ module.exports.getInternalProjectId = getInternalProjectId
 module.exports.getClientProjectId = getClientProjectId
 module.exports.createClient = createClient
 module.exports.createProject = createProject
-module.exports.sendOnboardingEmail = sendOnboardingEmail
 module.exports.saveIdstaging = saveIdstaging
 module.exports.getStagedClientId = getStagedClientId
 module.exports.deleteStagedClient = deleteStagedClient
