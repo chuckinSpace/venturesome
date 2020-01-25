@@ -50,7 +50,7 @@ const getInternalProjectId= async () =>{
 const getClientProjectId= async (clientId) =>{
     try {
         let clientData = ""
-        let clientProjectId = ""
+        let clientProjectId = 1
         const querySnapshot = await db.collection("clients").get();
         querySnapshot.forEach((doc) => {
             if(doc.data().idNumber === clientId){
