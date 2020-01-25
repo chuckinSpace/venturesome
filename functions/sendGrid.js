@@ -15,21 +15,31 @@ const sendOnboardingEmail = async (clientEmail,clientName,formLink, companyAssig
         templateId  = MONEYTREE_TEMPLATE_ID
         emailFrom = "office@moneytree.ch"
     }
-    //change for permament emails
+  
     const msg =  {
-        to:clientEmail,
         from:emailFrom,
         templateId: templateId,
-        dynamic_template_data:{
-            companyAssigned: companyAssigned,
-            name:clientName,
-            formLink:formLink
-        }
+        personalizations: [
+            {
+                to:[
+                    {
+                        email:clientEmail
+                    }
+                ],
+                dynamic_template_data:{
+                    "companyAssigned": companyAssigned,
+                    "name":clientName,
+                    "formLink":formLink
+                }
+
+            }
+      
+        ]
     }
     try {
         return sgMail.send(msg)
     } catch (error) {
-        console.log(error);
+        console.log("error on sendgrip api",error);
     }
 } 
 

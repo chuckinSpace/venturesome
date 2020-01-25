@@ -1,8 +1,10 @@
 /*
 TODO: - delete forms that are not on TypeForm anymore when update
       - check error when client not found
-      -change getPmInfo function name
-      -change all column ids to CONST
+      - change getPmInfo function name
+      - change all column ids to CONST
+    
+ BUG: - error when submitting form check cloud funciotns
 */
 /* const { GraphQLClient } = require('graphql-request'); */
 require('dotenv').config();
@@ -10,6 +12,7 @@ const axios = require('axios')
 
 // const data from MONDAY
 const formsDataBoard = 415921614
+// contant id in sales pipeline
 const CLIENT_ID_ID = "text86"
 const STATUS_ID_SALES_PIPELINE = "status"
 
@@ -25,7 +28,7 @@ const client = new GraphQLClient('https://api.monday.com/v2/', {
 
 
 const postMonday = (body,action) => {
-  console.log(body)
+ 
   return axios.post(`https://api.monday.com/v2`, body, {
     headers: {
       Authorization: process.env.MONDAY_TOKEN
@@ -406,7 +409,7 @@ const getSubmissionData=async(boardId,itemId)=>{
     try {
       const response  = await postMonday(body,"getSubmissionData");
       const values = await response.data.boards[0].items[0].column_values;
-    
+
       const emailObj = values.find(item => item.id === "email");
       submissionObj.email = JSON.parse(emailObj.value).email;
 
@@ -427,7 +430,7 @@ const getSubmissionData=async(boardId,itemId)=>{
     
       const phoneObj = values.find(item => item.id === "phone1");
       submissionObj.phone = phoneObj.value.replace(/['"]+/g, '')
-
+      console.log("sucess creating submission obj", submissionObj)
 
       return submissionObj
     } catch (error) {

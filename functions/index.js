@@ -28,28 +28,32 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
   console.log(req.body.form_response.answers);   
   console.log(req.body.form_response.hidden.clientid);   */
 
+try {
+//save board and itemId from webhook req
+const boardId = req.body.event.boardId
+const itemId =  req.body.event.pulseId
 
-  //save board and itemId from webhook req
-  const boardId = req.body.event.boardId
-  const itemId =  req.body.event.pulseId
+//call function that fetch all forms form typeform and return array of objects {formId: "",formName: "", formLink: ""} to send to monday
+const forms = await typeForm.getFormsData()  
 
-  //call function that fetch all forms form typeform and return array of objects {formId: "",formName: "", formLink: ""} to send to monday
-  const forms = await typeForm.getFormsData()  
+// call monday function that will update the forms board 415921614 (Onboarding Codes) with all the forms on typeForm 
+monday.updateForms(forms)  
+
+
+
+setTimeout(async()=> {
+  console.log("in timeout");
+  const clientId = await firebase.getStagedClientId()
+  await firebase.deleteStagedClient(clientId)
+  const submissionObj = await monday.getSubmissionData(boardId,itemId)
+  submissionObj.clientId = clientId
+  await firebase.saveSubmissionObj(submissionObj)
+  res.send({message: "success"})
+},5000)
+} catch (error) {
+console.log(error)
+}
   
-  // call monday function that will update the forms board 415921614 (Onboarding Codes) with all the forms on typeForm 
-  monday.updateForms(forms)  
-
-
-  
-  setTimeout(async()=> {
-    console.log("in timeout");
-    const clientId = await firebase.getStagedClientId()
-    await firebase.deleteStagedClient(clientId)
-    const submissionObj = await monday.getSubmissionData(boardId,itemId)
-    submissionObj.clientId = clientId
-    await firebase.saveSubmissionObj(submissionObj)
-    res.send({message: "success"})
-  },5000)
 
   
   
@@ -80,16 +84,14 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
       const boardId = req.body.event.boardId
       const itemId =  req.body.event.pulseId
 
-      var clientProjectNumber = 1
-      var clientId = ""
+      let clientProjectNumber = 1
+      let clientId = ""
 
       const mondayObj = await monday.getResult(boardId,itemId) 
       console.log("mondayObj from indexjs",mondayObj);
       
       if(mondayObj === 0){
-       
         throw new Error("error with mondayObj ending program")
-   /*      res.send({message: "success"}) */
       }else{
         
         const firebaseClientId = await firebase.getClientId()
@@ -99,9 +101,8 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
         // the last id from firebase database
         if(!mondayObj.isNewClient){
           clientProjectNumber = await firebase.getClientProjectId(mondayObj.clientId)
-          if(clientProjectNumber === undefined){
+          if( clientProjectNumber === undefined){
             await monday.changeMondayStatus(3,boardId,itemId)
-            res.send({message: "success"})
             throw new Error("client not found")
           }
           clientId = mondayObj.clientId
@@ -176,8 +177,8 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
       const boardId = 413267102
       const itemId =  414105909
 
-      var clientProjectNumber = 1
-      var clientId = ""
+      let clientProjectNumber = 1
+      let clientId = ""
 
       const mondayObj = await monday.getResult(boardId,itemId) 
       console.log("mondayObj from indexjs",mondayObj);
