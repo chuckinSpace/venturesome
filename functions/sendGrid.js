@@ -10,15 +10,15 @@ const sendOnboardingEmail = async (clientEmail,clientName,formLink, companyAssig
     var emailFrom= ""
     if(companyAssigned === "Venturesome"){
         templateId = VENTURESOME_TEMPLATE_ID
-        emailFrom= "venturesome@venturesome.ch"
+        emailFrom= "office@venturesome.ch"
     }else if(companyAssigned === "MoneyTree"){
         templateId  = MONEYTREE_TEMPLATE_ID
-        emailFrom = "moneytree@moneytree.ch"
+        emailFrom = "office@moneytree.ch"
     }
     //change for permament emails
     const msg =  {
         to:clientEmail,
-        from:"carlosmoyanor@gmail.com" ,
+        from:emailFrom,
         templateId: templateId,
         dynamic_template_data:{
             companyAssigned: companyAssigned,

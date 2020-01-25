@@ -1,16 +1,18 @@
 /*
 TODO: get cleintProject NUmber from number of projects on database (also clients?)
-      
+      check client by email to reject new client with emaikl already on the database
 */
 
 //firebase authentication
 const admin = require("firebase-admin");
 require('dotenv').config();
-var serviceAccount = require('./serviceAccountKey.json');
+let serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: process.env.DATABASE_URL
   });
+
+
 const db = admin.firestore();
 
 
@@ -19,7 +21,7 @@ const db = admin.firestore();
 const getClientId= async () =>{
     console.log("in firebase functions getClient");
     try {
-        var lastId = 1
+        let lastId = 1
         const querySnapshot = await db.collection("clients").orderBy("idNumber", "desc").limit(1).get();
         querySnapshot.forEach((doc) => lastId = doc.data().idNumber + 1)
         
@@ -34,7 +36,7 @@ const getClientId= async () =>{
 const getInternalProjectId= async () =>{
    
     try {
-        var lastId = 1
+        let lastId = 1
         const querySnapshot = await db.collection("projects").orderBy("idNumber", "desc").limit(1).get();
         querySnapshot.forEach((doc) => lastId = doc.data().idNumber + 1)
         return lastId
@@ -47,8 +49,8 @@ const getInternalProjectId= async () =>{
 //when client is not new, get the last project id and return the next project id for this client
 const getClientProjectId= async (clientId) =>{
     try {
-        var clientData = ""
-        var clientProjectId = ""
+        let clientData = ""
+        let clientProjectId = ""
         const querySnapshot = await db.collection("clients").get();
         querySnapshot.forEach((doc) => {
             if(doc.data().idNumber === clientId){
@@ -123,7 +125,7 @@ const saveIdstaging=async(clientId) =>{
 
 // retrieves the client id from "staging"
 const getStagedClientId = async () =>{
-    var clientId = ""
+    let clientId = ""
     const querySnapshot = await db.collection("staging").orderBy("createdAt", "asc").limit(1).get();
     querySnapshot.forEach((doc) => clientId = doc.data().clientId)
     // delete staged client
@@ -132,7 +134,7 @@ const getStagedClientId = async () =>{
 // deletes the client id from staging
 const deleteStagedClient = async(clientId) =>{
     
-    var stagedClient= db.collection('staging').where('clientId','==',clientId);
+    let stagedClient= db.collection('staging').where('clientId','==',clientId);
     stagedClient.get().then(function(querySnapshot) {
     querySnapshot.forEach(function(doc) {
     doc.ref.delete();
