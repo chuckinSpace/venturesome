@@ -6,8 +6,8 @@ const MONEYTREE_TEMPLATE_ID = "d-e1874833f3814ed0a1b8b540f18f24ba"
 
 const sendOnboardingEmail = async (clientEmail,clientName,formLink, companyAssigned)=>{
     console.log("sending email", clientEmail,clientName,formLink, companyAssigned);
-    var templateId = ""
-    var emailFrom= ""
+    let templateId = ""
+    let emailFrom= ""
     if(companyAssigned === "Venturesome"){
         templateId = VENTURESOME_TEMPLATE_ID
         emailFrom= "office@venturesome.ch"

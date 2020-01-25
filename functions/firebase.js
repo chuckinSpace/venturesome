@@ -165,6 +165,35 @@ const saveSubmissionObj = async (submissionObj)=>{
     }
 }
 
+
+const getSlackUsers = async(clientId) =>{
+    console.log("in get users starting", clientId)
+    let slackUsers = ""
+    try {
+        const getClientSnap =  db.collection('projects').where('clientId','==',clientId);
+        const clientObj = await getClientSnap.get()
+        clientObj.forEach((doc)=>{
+              slackUsers = doc.data().slackUsers
+            });
+           return slackUsers
+    } catch (error) {
+        console.log(error);
+    }
+}
+const getSlackOption = async(clientId) =>{
+    console.log("getSlackOption starting", clientId)
+    let slackOption = ""
+    try {
+        const getClientSnap =  db.collection('clients').where('idNumber','==',clientId);
+        const clientObj = await getClientSnap.get()
+        clientObj.forEach((doc)=>{
+            slackOption = doc.data().slack
+            });
+           return slackOption
+    } catch (error) {
+        console.log(error);
+    }
+}
 //exports
 module.exports.getClientId = getClientId
 module.exports.getInternalProjectId = getInternalProjectId
@@ -175,8 +204,8 @@ module.exports.saveIdstaging = saveIdstaging
 module.exports.getStagedClientId = getStagedClientId
 module.exports.deleteStagedClient = deleteStagedClient
 module.exports.saveSubmissionObj = saveSubmissionObj
-
-
+module.exports.getSlackUsers = getSlackUsers
+module.exports.getSlackOption= getSlackOption
 
 
 

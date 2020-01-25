@@ -13,7 +13,7 @@ const TOKEN_PATH = 'token.json';
 console.log("in server google")
 
 // Load client secrets from a local file.
-var data = {}
+let data = {}
 
  module.exports = {
   runFolder:  function runFolder(info) {
@@ -120,7 +120,7 @@ const generateFolder= async (fileMetadata)=>{
 }
 
 try {
-    var mainFolderId = ""  
+    let mainFolderId = ""  
     //Main folder
     const createFolderData = fileMetadata( `${data.internalProjectNumber}_${data.clientName}_${data.clientProjectNumber}`,teamDriveId)
     const mainFolderObj = await generateFolder(createFolderData)

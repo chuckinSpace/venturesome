@@ -1,13 +1,13 @@
 
 // id  3695043
 // workspace 2355444
-var rp = require('request-promise');
+let rp = require('request-promise');
 require('dotenv').config()
 const WID = process.env.TOGGL_WID
 
 const getClients = ()=>{
 
-    var options = {
+    let options = {
         url: 'https://www.toggl.com/api/v8/workspaces/2355444/clients',
         auth: {
             'user': process.env.TOGGL_USER,
@@ -22,7 +22,7 @@ const getClients = ()=>{
 }
 
 const addClient = ()=>{
-    var options = {
+    let options = {
         method: 'POST',
         url: 'https://www.toggl.com/api/v8/clients',
         auth: {
@@ -47,7 +47,7 @@ const addClient = ()=>{
 
 
 const createProject = ()=>{
-    var options = {
+    let options = {
         method: 'POST',
         url: 'https://www.toggl.com/api/v8/projects',
         auth: {

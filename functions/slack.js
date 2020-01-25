@@ -5,7 +5,7 @@ const { WebClient } = require('@slack/web-api');
 
 const web = new WebClient(process.env.SLACK_TOKEN);
 
-const getVenturesomeUsers = async () => {
+/* const getVenturesomeUsers = async () => {
 
  console.log("running get users from slack")
  const venturesomeTeamChannel = process.env.SLACK_TEAM_CHANNEL 
@@ -13,7 +13,7 @@ const getVenturesomeUsers = async () => {
      channel: venturesomeTeamChannel
  }); 
   const venturesomeUsers = users.channel.members
-/*   console.log(venturesomeUsers); */
+
   return venturesomeUsers
 };
 
@@ -23,41 +23,57 @@ const getAllUsersSlack = async () => {
 
    return users
  };
-
+ */
  
  const createSlackChannel = async (users,clientName) => {
+  
   /* const users = [{id:"ULFRMKSG5"},{id:"UL4CK7010"}]
   const clientName = "testClient" */
-  console.log("in create slack channel, users coming",users)
+  console.log("in create slack channel, users coming",users, clientName)
   try {
     const newChannel = await web.groups.create({name:clientName})
     const channelId = await newChannel.group.id
-    console.log(channelId,"channel id" , newChannel,newChannel)
-    await users.map(user=> web.groups.invite({channel:channelId, user:user.id}))
+    console.log(channelId,"channel id" , newChannel,"newChannel")
+    await users.map(user=> web.groups.invite({channel:channelId, user:user.id}).then((data)=> console.log("success creating channel", data)))
    } catch (error) {
      console.log(error)
-   } 
+   }
   
    
  };
 
-module.exports.getVenturesomeUsers = getVenturesomeUsers
-module.exports.getAllUsersSlack = getAllUsersSlack
-module.exports.createSlackChannel = createSlackChannel
-/*ULFRMKSG5    andres*/ 
-/* getAllUsersSlack()
-
-getVenturesomeUsers() */
-
-const getUser = async()=>{
+ const getUserbyEmail = async (userEmail)=>{
   try {
-    const user = await web.users.lookupByEmail({email:"nick.metzger@venturesome.ch"}); 
-    console.log(user);
+    const response = await web.users.lookupByEmail({email:userEmail}); 
+    return {id:response.user.id}
   } catch (error) {
-    console.log(error);
+    console.log("error gettin user by email from slack",error);
   }
 }
-/* getUser() */
+
+const getSlackIds = async (slackObj) =>{
+  const getUsers = async () => {
+    return Promise.all(slackObj.map(email => getUserbyEmail(email)))
+   }
+  return getUsers()
+  .then((data) => {
+    console.log("success getting ids for users from slack",data)
+    return data
+  })
+  .catch(err=>console.log("error getting ids for users from slack",err)) 
+
+}
+
+/* module.exports.getVenturesomeUsers = getVenturesomeUsers
+module.exports.getAllUsersSlack = getAllUsersSlack */
+module.exports.createSlackChannel = createSlackChannel
+module.exports.getUserbyEmail = getUserbyEmail
+module.exports.getSlackIds = getSlackIds
+/*ULFRMKSG5    andres*/ 
+
+
+
+
 
 /* createSlackChannel() */
 

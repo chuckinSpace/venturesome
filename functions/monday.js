@@ -16,17 +16,6 @@ const formsDataBoard = 415921614
 const CLIENT_ID_ID = "text86"
 const STATUS_ID_SALES_PIPELINE = "status"
 
-
-/* 
-//Create connection called 'client' that connects to Monday.com's API
-const client = new GraphQLClient('https://api.monday.com/v2/', {
-    headers: {
-    'Content-Type': 'application/json',
-    'Authorization': process.env.MONDAY_TOKEN
-    },
-}); */
-
-
 const postMonday = (body,action) => {
  
   return axios.post(`https://api.monday.com/v2`, body, {
@@ -44,9 +33,8 @@ const postMonday = (body,action) => {
   })
 }
 
-
-const setMondayClientId= async (boardId,itemId,clientId)=>{
-
+const setMondayClientId = async (boardId,itemId,clientId)=>{
+  
 const stringId = clientId.toString() 
 
 const body = {
@@ -258,10 +246,10 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
            let slackEmails=[]
    
            getUsers()
-          .then(data => slackEmails.push(data.map(user=>user.email)))
-          .then(() => mondayObj.slackUsers = slackEmails.map(user=>{
-            return {email:user}
-           }))
+          .then((data)=> slackEmails = data.map(email=> {
+            return email.email
+          }))
+          .then(() => mondayObj.slackUsers = slackEmails) 
           .catch(err=>console.log(err))
         }
         
