@@ -12,6 +12,9 @@ const axios = require('axios')
 
 // const data from MONDAY
 const formsDataBoard = 415921614
+const SALES_PIPELINE_BOARD_ID = 413267102
+const PROJECTS_OVERVIEW_BOARD_ID= 403775339
+const GROUP_ID_P_OVER_CURR_VIDEO_PROJ = "duplicate_of_043___bruno_s_bes10603"
 // contant id in sales pipeline
 const CLIENT_ID_ID = "text86"
 const STATUS_ID_SALES_PIPELINE = "status"
@@ -69,6 +72,8 @@ const changeMondayStatus= async (status, boardId,itemId)=>{
     statusText = "Project Created"
   }else if(status === 3){
     statusText = "Client Not Found"
+  }else if(status === 4){
+    statusText = "Onboarding Complete"
   }
  
   const body = {
@@ -152,7 +157,7 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
           phone : "",
           companyAssigned : "",
           projectName :"",
-          managerId :"",
+          pmId :"",
           itemId:"",
           formLink : "",
           pmEmail : "",
@@ -222,8 +227,9 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
         mondayObj.projectName = projectNameObj.value.replace(/['"]+/g, '');
 
         const managerObj = values.find(item => item.id === "person");
-       if(!!JSON.parse(managerObj.value).personsAndTeams[0]){
-        mondayObj.managerId = JSON.parse(managerObj.value).personsAndTeams[0].id.toString();
+        if(!!JSON.parse(managerObj.value).personsAndTeams[0]){
+        console.log("asiggning manager id",managerObj)
+          mondayObj.pmId = JSON.parse(managerObj.value).personsAndTeams[0].id.toString();
 
        }else{
          throw new Error("missing Pm info")
@@ -268,7 +274,7 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
      
        }
      
-        const pmInfo = await getPmInfo(mondayObj.managerId.toString());
+        const pmInfo = await getPmInfo(mondayObj.pmId.toString());
        
         mondayObj.pmEmail = pmInfo.email
         mondayObj.pmName = pmInfo.name 
@@ -425,6 +431,105 @@ const getSubmissionData=async(boardId,itemId)=>{
       console.log("error when creating submission obj",error);
     }
 }
+const getBoardByClientId = async (clientId) =>{
+  console.log(clientId, typeof clientId)
+
+  const body ={
+                query:
+                ` query {
+                  boards(ids: ${SALES_PIPELINE_BOARD_ID}) {
+
+                    items{
+                      id      
+                      name
+                      column_values{
+                        id
+                        value
+                      }
+                    }
+                  }
+                }
+              
+                `
+            }
+try {
+  const response  = await postMonday(body,"get boards");
+  const boardItems =  await response.data.boards[0].items.map(item=> item)
+  const boardData = await boardItems.map(item => {
+    return {
+      id:item.id,
+      idCell: item.column_values.find(value => value.id ==="text86")
+    }
+  })
+  boardData.map(item=>{
+
+    if(item.idCell.value !== null){
+      item.idCell.value = item.idCell.value.replace(/['"]+/g, '')
+    }
+    return null
+  })
+
+  const itemObj = boardData.find(item=> item.idCell.value === clientId.toString())
+  const itemId = itemObj.id
+  
+  return {boardId: SALES_PIPELINE_BOARD_ID,  itemId:parseInt(itemId)}
+} catch (error) {
+  throw new Error(`client Id ${clientId} not found in monday board`)
+
+}
+   
+
+    
+}
+
+const addVideoProjectBoard = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId)=>{
+  console.log(clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
+  /*use 
+    item name : {clientNumber}_{year}_{clientProjectNumber} | {clientName} | {projectName}
+    board: PROJECTS_OVERVIEW_BOARD_ID 
+    group: GROUP_ID_P_OVER_CURR_VIDEO_PROJ
+    pm cell id : "person" set to pm 
+    status cell id: "status" set to "Done"
+    tag cell id : "tags" format #{clientNumber}{clientName}
+
+  */
+ const body = {
+  query: `
+  mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
+    create_item (
+      board_id: $boardId,
+      group_id: $groupId,
+      item_name: $itemName,
+      column_values: $columnValues
+    ) {
+      id
+    }
+  }
+  `,
+  variables: {
+  boardId: PROJECTS_OVERVIEW_BOARD_ID,
+  groupId: GROUP_ID_P_OVER_CURR_VIDEO_PROJ,
+  itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
+  columnValues: JSON.stringify( {"status":{"label":"Done"}, "person":{"personsAndTeams":[{"id":pmId,"kind":"person"}]}})
+  }
+  
+}
+try {
+  await postMonday(body,"populating form board")
+} catch (error) {
+  console.log(error)
+}  
+
+}
+const test = async ()=>{
+  try {
+    await addVideoProjectBoard(1,20,3,"TESTCLIENT","TESTPROJECT",6083153)
+  } catch (error) {
+    /* console.log(error) */
+  }
+
+}
+
 
 
 
@@ -433,3 +538,5 @@ module.exports.updateForms = updateForms;
 module.exports.getSubmissionData = getSubmissionData;
 module.exports.changeMondayStatus = changeMondayStatus
 module.exports.setMondayClientId = setMondayClientId
+module.exports.getBoardByClientId = getBoardByClientId
+module.exports.addVideoProjectBoard = addVideoProjectBoard

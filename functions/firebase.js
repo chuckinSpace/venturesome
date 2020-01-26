@@ -36,40 +36,39 @@ const getClientId= async () =>{
 const getInternalProjectId= async () =>{
    
     try {
-        let lastId = 1
-        const querySnapshot = await db.collection("projects").orderBy("idNumber", "desc").limit(1).get();
-        querySnapshot.forEach((doc) => lastId = doc.data().idNumber + 1)
-        return lastId
+        let counter = 0
+        const querySnapshot = await db.collection("projects").get();
+        querySnapshot.forEach((doc) => counter += 1)
+        return counter + 1
     }
     catch (err) {
         return console.log(err);
     }
 }
 
-//when client is not new, get the last project id and return the next project id for this client
-const getClientProjectId= async (clientId) =>{
+
+//when client is not new, get the last client project number and return the next client project number for this client
+
+const getClientProjectNumber= async (clientId) =>{
     try {
-        let clientData = ""
-        let clientProjectId = 1
-        const querySnapshot = await db.collection("clients").get();
-        querySnapshot.forEach((doc) => {
-            if(doc.data().idNumber === clientId){
-                clientData = doc.data()
+        let clientData = ""     
+        const querySnapshot = db.collection("clients").where('idNumber','==',clientId);
+        const snapObj = await querySnapshot.get()
+        snapObj.forEach((doc) => {
+            if(doc.exists){
                 console.log("client found", doc.data());
-            }
-            console.log(doc.data());
+                clientData = doc.data().clientProjectNumber + 1
+            }else{
+                throw new Error(`Error trying to find the Client's project number,Client ${clientId} not found on the database`)
+            }    
         })
-        
-        clientProjectId = clientData.clientProjectNumber + 1
-        if(clientData === ""){
-            throw new Error(`Error trying to find the Client's project number,Client ${clientId} not found on the database`)
-        } 
-        return clientProjectId
+        return clientData
     }
     catch (err) {
         return console.log(err);
     }
 }
+
 
 //creates the client on firebase "clients" collection using the client Obj
 const createClient= async (client)=>{
@@ -99,19 +98,22 @@ const createProject=async (project)=>{
         idNumber: project.idNumber,
         pmEmail: project.pmEmail,
         pmName: project.pmName,
+        pmId:project.pmId,
         slackUsers: project.slackUsers,
         companyAssigned: project.companyAssigned,
         name:project.name,
         clientPhone:project.clientPhone,
-        clientProjectNumber:project.clientProjectNumber
+        clientProjectNumber:project.clientProjectNumber,
+        internalProjectId: project.internalProjectId
     })
     .then((doc)=> console.log("success creating project on firebase", doc.id))
     .catch(err=>console.log("error creating project on firebase",err))
 }
 
 //saves the client id on "staging" collection on firebase
-const saveIdstaging=async(clientId) =>{
-  try {
+const saveIdstaging = async (clientId) => {
+  console.log("stagin client id in firebase", clientId)
+    try {
     const doc =await db.collection("staging").add({
         clientId : clientId,
         createdAt: new Date()
@@ -148,11 +150,13 @@ const deleteStagedClient = async(clientId) =>{
 
 //saves the submission obj adding it to the corresponding client, stored as clientId inside the coming obj on firebase
 const saveSubmissionObj = async (submissionObj)=>{
+    let clientFirebase = ""
     try {
         const getClientSnap =  db.collection('clients').where('idNumber','==',submissionObj.clientId);
         const clientObj =await getClientSnap.get()
         clientObj.forEach((doc)=>{
-              doc.ref.update({
+            clientFirebase = doc.data()
+            doc.ref.update({
                   birthday:submissionObj.birthday,
                   contactEmail:submissionObj.email,
                   onboardingCompletedOn:new Date(),
@@ -160,14 +164,40 @@ const saveSubmissionObj = async (submissionObj)=>{
                   contactPhone:submissionObj.phone
                 })
             });
+            return clientFirebase
     } catch (error) {
         console.log(error);
     }
 }
 
+const updateFirebase= async (collection,whereParam,whereIqualTo,objectToStore,consoleText)=>{
+    console.log(collection,whereParam,whereIqualTo,objectToStore,consoleText)
+    try {
+        const getSnapshot =  db.collection(collection).where(whereParam,'==',whereIqualTo);
+        const snapObj = await getSnapshot.get()
+        snapObj.forEach((doc)=>doc.ref.update(objectToStore))
+      } catch (error) {
+          throw new Error(`Error when ${consoleText} `, error)
+      }
+}
 
-const getSlackUsers = async(clientId) =>{
-    console.log("in get users starting", clientId)
+const getSlackUsersByInternal = async(internalProjectId) =>{
+    console.log("getSlackUsersByInternal starting", internalProjectId)
+    let slackUsers = ""
+    try {
+        const getClientSnap =  db.collection('projects').where('internalProjectId','==',internalProjectId);
+        const clientObj = await getClientSnap.get()
+        clientObj.forEach((doc)=>{
+              slackUsers = doc.data().slackUsers
+            });
+           return slackUsers
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const getSlackUsersByClientId = async(clientId) =>{
+    console.log("getSlackUsersByClientId starting", clientId)
     let slackUsers = ""
     try {
         const getClientSnap =  db.collection('projects').where('clientId','==',clientId);
@@ -180,6 +210,7 @@ const getSlackUsers = async(clientId) =>{
         console.log(error);
     }
 }
+
 const getSlackOption = async(clientId) =>{
     console.log("getSlackOption starting", clientId)
     let slackOption = ""
@@ -194,21 +225,53 @@ const getSlackOption = async(clientId) =>{
         console.log(error);
     }
 }
+
+const getProjectObjByInternal = async (internalProjectId) =>{
+    console.log("getProjectObj starting with internal project Id", internalProjectId)
+    let projectObj = ""
+    try {
+        const getProjectSnap =  db.collection('projects').where('internalProjectId','==',internalProjectId);
+        const projectSnap = await getProjectSnap.get()
+        projectSnap.forEach((doc)=>{
+            projectObj = doc.data()
+            });
+           return projectObj
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+const getProjectObjByClientId = async (clientId) =>{
+    console.log("getProjectObjByClientId starting with internal project Id", clientId)
+    let projectObj = ""
+    try {
+        const getProjectSnap =  db.collection('projects').where('clientId','==',clientId);
+        const projectSnap = await getProjectSnap.get()
+        projectSnap.forEach((doc)=>{
+            projectObj = doc.data()
+            });
+           return projectObj
+    } catch (error) {
+        console.log(error);
+    }
+}
 //exports
 module.exports.getClientId = getClientId
 module.exports.getInternalProjectId = getInternalProjectId
-module.exports.getClientProjectId = getClientProjectId
+module.exports.getClientProjectNumber = getClientProjectNumber
 module.exports.createClient = createClient
 module.exports.createProject = createProject
 module.exports.saveIdstaging = saveIdstaging
 module.exports.getStagedClientId = getStagedClientId
 module.exports.deleteStagedClient = deleteStagedClient
 module.exports.saveSubmissionObj = saveSubmissionObj
-module.exports.getSlackUsers = getSlackUsers
+module.exports.getSlackUsersByInternal = getSlackUsersByInternal
+module.exports.getSlackUsersByClientId = getSlackUsersByClientId
 module.exports.getSlackOption= getSlackOption
-
-
-
+module.exports.getProjectObjByInternal= getProjectObjByInternal
+module.exports.getProjectObjByClientId= getProjectObjByClientId
+module.exports.updateFirebase = updateFirebase
 
 
 //firebase extension to send emails to use generic emails for testing

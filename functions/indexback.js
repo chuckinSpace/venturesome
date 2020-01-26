@@ -11,10 +11,22 @@ const typeForm = require("./typeForm")
 const firebase = require("./firebase") 
 const sendGrid = require("./sendGrid")
 
-//designated format for first project number
-const FIRST_PROJECT_NUMBER = 1
+//webhook from Typeform trigered on submission, sending clientid 
 
+exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
+  console.log("staging client id",req.body.form_response.hidden.clientid);  
+  //assign id from submission webhook, hidden param clientid to assign to firebase client
+    try {
+      const clientId = req.body.form_response.hidden.clientid
+      console.log("client is stored",clientId)
+      await firebase.saveIdstaging(parseInt(clientId))
+    } catch (error) {
+      console.log("error staging client id");
+    }
+   res.send({message: "success"})
+})
 
+ 
 //webhook for monday.com triggered on new item (new form submission) on boardId 411284598 (form submissions)
  //https://us-central1-{FIREBASE_PROJECT_ID}.cloudfunctions.net/fetchForms
 
@@ -34,35 +46,96 @@ const FIRST_PROJECT_NUMBER = 1
   // to keep new forms from typeform up to date on our mondays sales pipeline
   monday.updateForms(forms)  
 
-      setTimeout(async()=> {
-        // this section only will be hit by NEW CLIENTS
-        try {
-          const clientId = await firebase.getStagedClientId()
-          await firebase.deleteStagedClient(clientId)
-          /* 
-          we retrieve the information coming from typeForm from client onboarding, that will add 
-          {birthday,contactEmail,onboardingCompletedOn,slack,contactPhone} to that client on firestore, slack will go to project collection
-          */
-          const submissionObj = await monday.getSubmissionData(boardId,itemId)
-          submissionObj.clientId = clientId
-          const clientFirebase = await firebase.saveSubmissionObj(submissionObj)
-          /*  await slack.slackCreationWorkflow(clientFirebase) */
 
-          /* change status on monday where clientId to Onboarding Complete*/
-          const boardObj = await monday.getBoardByClientId(clientId)
-          await monday.changeMondayStatus(4,boardObj.boardId,boardObj.itemId)
-          
-        
-        } catch (e) {
-            console.log(e)
-        }
-        res.send({message: "success"})
-      },7000)
-    } catch (error) {
-      console.log(error)
-    }
+//
+  setTimeout(async()=> {
+    try {
+      const clientId = await firebase.getStagedClientId()
+      await firebase.deleteStagedClient(clientId)
+      /* 
+      we retrieve the information coming from typeForm from client onboarding, that will add 
+      {birthday,contactEmail,onboardingCompletedOn,slack,contactPhone} to that client on firestore
+      */
+      const submissionObj = await monday.getSubmissionData(boardId,itemId)
+      submissionObj.clientId = clientId
+     
+      const clientFirebase = await firebase.saveSubmissionObj(submissionObj)
+      await slackCreationWorkflow(clientFirebase)
+     
+      } catch (e) {
+         console.log(e)
+      }
+    res.send({message: "success"})
+  },7000)
+  } catch (error) {
+  console.log(error)
+  }
 
 }) 
+
+
+const slackCreationWorkflow = async (clientFirebase, projectFirebase)=>{
+  console.log("in slack creation workflow",clientFirebase, projectFirebase) 
+  /*  Now we will create our slack channels, using the users stored in the mondayObj and the client's preference to use it or not  */
+    
+      //if the mondayObj.slack is true (meaning that the client prefers to use slack) we will create 2 private channels
+      //both channels will have all the users selected in the monday board, but we will add the client (by sendinv and invite form slack) to one of the channels
+      //that way the company have a way to speak about the specific project with or without the client with the proper team involved in that project
+      //if client does not want slack we will create only one private channel with the members of the team
+
+      // first we retrieve list of users from firestore (emails)
+      let slackUsers = ""
+      
+      //then we send the emails to our slack function to get back the ids from slack for those user, to later create channels
+      let slackIds = await slack.getSlackIds(slackUsers)
+
+
+      // then we retrieve the slack option from firestore to know the client's preference
+      const slackOption = await firebase.getSlackOption(clientFirebase.idNumber)
+      let projectObj =""
+      if(!!projectFirebase){
+        console.log("projectFirebase exists, old client") 
+        projectObj = await firebase.getProjectObjByInternal(projectFirebase.internalProjectId)
+          // first we retrieve list of users from firestore (emails)
+          slackUsers = await firebase.getSlackUsersByInternal(projectObj.internalProjectId)
+          slackIds = await slack.getSlackIds(slackUsers)
+      }else{
+        console.log("projectFirebase does not exists, new client") 
+        projectObj = await firebase.getProjectObjByClientId(clientFirebase.idNumber)
+        slackUsers = await firebase.getSlackUsersByClientId(clientFirebase.idNumber)
+        slackIds = await slack.getSlackIds(slackUsers)
+      }
+
+      console.log(projectObj,"projectObj returned from lookup")
+       if(slackOption){
+          //create 2 channel add slackUsers to both and invite client to 1 
+            
+          const companyChannelId = await slack.createSlackChannel(slackIds,`TEST5-${projectObj.name}-Company`)
+          const clientChannelId = await slack.createSlackChannel(slackIds,`TEST5-${projectObj.name}-Client`)
+          console.log(companyChannelId,"companyChannelId",clientChannelId,"clientChannelId") 
+          // invite the client to clientChannel just created via email  
+            /* pending admin status on slack  
+          await slack.sendClientInvite(submissionObj.contactEmail) 
+          */
+          await slack.sendWelcomeMessage(companyChannelId,"internal", projectObj.name,clientFirebase.name,projectObj.companyAssigned)
+          await slack.sendWelcomeMessage(clientChannelId,"client", projectObj.name,clientFirebase.name,projectObj.companyAssigned)
+      }else{
+          //create one private channel add slackUsers
+          const companyChannelId = await slack.createSlackChannel(slackIds,`TEST5-${projectObj.name}-Company`)
+          await slack.sendWelcomeMessage(companyChannelId,"internal-only", projectObj.name,clientFirebase.name,projectObj.companyAssigned)
+          console.log(companyChannelId,"companyChannelId",)
+        } 
+}
+
+ 
+   /*   
+    challenge for monday.com to activate new Wehbhook  
+        if (!!req) {
+      const challenge = req.body
+      res.send(challenge)
+      console.log(challenge);     
+    } 
+  */
 
   //webhook for monday.com triggered on status change to "Signed" on boardId 413267102
   //https://us-central1-{FIREBASE_PROJECT_ID}.cloudfunctions.net/onClientSigned
@@ -84,14 +157,14 @@ const FIRST_PROJECT_NUMBER = 1
       const mondayObj = await monday.getResult(boardId,itemId) 
       if(mondayObj === 0){
         throw new Error("error with mondayObj ending program")
+      
       }else{
         // if client is old, client Id woulb be taken from mondayObj, that comes from monday sales pipeline board, else, client Id will be generated from 
         // the last id from firebase database
         /* We first have our tasks depending on if the client its new or already exists on the database */
 
         if(!mondayObj.isNewClient){
-          clientProjectNumber = await firebase.getClientProjectNumber(mondayObj.clientId)
-          console.log("clientProject number", clientProjectNumber)
+          clientProjectNumber = await firebase.getClientProjectId(mondayObj.clientId)
           //check if client exists first
           if(clientProjectNumber === undefined){
             await monday.changeMondayStatus(3,boardId,itemId)
@@ -101,7 +174,6 @@ const FIRST_PROJECT_NUMBER = 1
           clientId = mondayObj.clientId
         }else{
           //if client its a new client, client Id will come from firebase Id 
-          clientProjectNumber = FIRST_PROJECT_NUMBER
           const firebaseClientId = await firebase.getClientId()
           clientId = firebaseClientId
           //We append the client id to the form link to send the email, making sure we format the URL correctly with encodeURIComponent
@@ -126,9 +198,7 @@ const FIRST_PROJECT_NUMBER = 1
         // internal project Id is the overrall project number for the company
         const internalProjectId = await firebase.getInternalProjectId()
         console.log(internalProjectId,"internal project assigned to new project")
-        console.log("pmId",mondayObj.pmId, mondayObj)
         const projectObj = {
-
           clientId : clientId,
           clientEmail:mondayObj.email,
           clientName:mondayObj.clientName,
@@ -136,58 +206,30 @@ const FIRST_PROJECT_NUMBER = 1
           idNumber: clientProjectNumber,
           pmEmail: mondayObj.pmEmail,
           pmName: mondayObj.pmName,
-          pmId: parseInt(mondayObj.pmId),
           slackUsers: mondayObj.slackUsers,
           companyAssigned: mondayObj.companyAssigned,
           name:mondayObj.projectName,
           clientPhone:mondayObj.phone,
           clientProjectNumber:clientProjectNumber,
           internalProjectId:internalProjectId
-          
         }
         //if the client is new, we create the client, then the project for that client, we send the onboarding email,we change the status on the board on monday
         // to onboarding sent (on sucesss only), we already handled the error scenario of missing information inside the monday.js file, after we send back the
         // recently generated clientId to the monday Sales board, else (client is not new) we only create the project and change the status of the board to "Project Created"
         if(mondayObj.isNewClient){
           await firebase.createClient(clientObj)
-          await firebase.createProject(projectObj) 
+          await firebase.createProject(projectObj)
           await sendGrid.sendOnboardingEmail(clientObj.email,clientObj.name,clientObj.formLink,projectObj.companyAssigned)
           await monday.changeMondayStatus(0,boardId,itemId)
           await monday.setMondayClientId(boardId,itemId,clientObj.idNumber)
-          // create google drive entire tree
-          /* if its new client and its Venturesome
-                add item to Video Projects Overview board: 403775339 group: Current Video Projects set 1 onboarding status : Done, and PM to PM, add tag #{clientNumber}{clientName} item name {clientNumber}_{year}_{clientProjectNumber} | {clientName} | {projectName}
-                
-                add item to Project Overview board : 162013046 group: Venturesome PM/AM : PM  
-                create frameio client
-                create toggle client
-                create toggle project
-             if its Moneytree
-                add item add item to Project Overview board : 162013046 group: Moneytree PM/AM : PM item name {clientNumber}_{year}_{clientProjectNumber} | {clientName} | {projectName}
-                add item to Money Tree account board boardId: 416324914 group: Current Accounts AM: PM status Onboarding: Done  tag: #{clientNumber}{clientName}
-          */
-         
-          if(projectObj.companyAssigned === "Venturesome"){
-           await monday.addVideoProjectBoard(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
-         } 
-         
         }else{
           await firebase.createProject(projectObj)
           await monday.changeMondayStatus(2,boardId,itemId)
-         /*  await slack.slackCreationWorkflow(clientObj,projectObj) */
-         // googe drive create only Prejectke genwonned and subfolders on the client
-          /* if venturesome
-               add item to Video Projects Overview board: 403775339 group: Current Video Projects set 1 onboarding status : Done, and PM to PM, add tag #{clientNumber}{clientName} item name {clientNumber}_{year}_{clientProjectNumber} | {clientName} | {projectName}
-               add item to Project Overview board : 162013046 group: Venturesome PM/AM : PM  
-               create toggle project
-            if moneytree
-               add item add item to Project Overview board : 162013046 group: Moneytree PM/AM : PM item name {clientNumber}_{year}_{clientProjectNumber} | {clientName} | {projectName}
-               add item to Money Tree account board boardId: 416324914 group: Current Accounts AM: PM status Onboarding: Done  tag: #{clientNumber}{clientName}
-        */
-       if(projectObj.companyAssigned === "Venturesome"){
-        await monday.addVideoProjectBoard(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
-      } 
+          await slackCreationWorkflow(clientObj,projectObj)
         }
+        
+ 
+
         res.send({message: "success"})
        
       }
@@ -195,26 +237,27 @@ const FIRST_PROJECT_NUMBER = 1
       res.send({message: "success"})
       console.log("Error in main script",error)
     } 
+    
+  
+  
   });
 
 
-//webhook from Typeform trigered on submission, sending clientid 
 
-exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
-  console.log("staging client id",req.body.form_response.hidden.clientid);  
-  //assign id from submission webhook, hidden param clientid to assign to firebase client
-    try {
-      const clientId = req.body.form_response.hidden.clientid
-      console.log("client is stored",clientId)
-      await firebase.saveIdstaging(parseInt(clientId))
-    } catch (error) {
-      console.log("error staging client id");
-    }
-   res.send({message: "success"})
-})
+  /*    exports.fetchSlackUsers = functions.firestore.document("slack").onUpdate(async (change, context) => {
+   console.log("started fetch slack users")
+   const allUsers = await slack.getAllUsersSlack()
+   const venturesomeUsers = await slack.getVenturesomeUsers()
 
-/*
-  exports.createDriveFolders = functions.firestore.document("projects/{projectId}")
+   db.collection("slack").doc()
+   .add({allUsers,venturesomeUsers})
+   .then(()=> console.log("sucess creating slack doc"))
+   .catch((err)=>console.log(err))
+    return null
+  });  */
+
+/* 
+  exports.createDriveFolders= functions.firestore.document("projects/{projectId}")
    
   .onCreate(async (snap) => {
 
@@ -236,14 +279,4 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
    await slack.createSlackChannel(projectObj.slackUsers,projectObj.clientName);
 
    return null;
- }); 
- */
-
-  /*   
-    challenge for monday.com to activate new Wehbhook  
-        if (!!req) {
-      const challenge = req.body
-      res.send(challenge)
-      console.log(challenge);     
-    } 
-  */
+ }); */
