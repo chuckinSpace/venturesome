@@ -484,15 +484,7 @@ try {
 
 const addVideoProjectBoard = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId)=>{
   console.log(clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
-  /*use 
-    item name : {clientNumber}_{year}_{clientProjectNumber} | {clientName} | {projectName}
-    board: PROJECTS_OVERVIEW_BOARD_ID 
-    group: GROUP_ID_P_OVER_CURR_VIDEO_PROJ
-    pm cell id : "person" set to pm 
-    status cell id: "status" set to "Done"
-    tag cell id : "tags" format #{clientNumber}{clientName}
 
-  */
  const body = {
   query: `
   mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
@@ -517,7 +509,7 @@ const addVideoProjectBoard = async (clientNumber,year,clientProjectNumber,client
 try {
   await postMonday(body,"populating form board")
 } catch (error) {
-  console.log(error)
+  throw new Error("error when creating board for Video Project overview",clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
 }  
 
 }
