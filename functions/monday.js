@@ -19,9 +19,13 @@ const GROUP_ID_P_OVER_CURR_VIDEO_PROJ = "duplicate_of_043___bruno_s_bes10603"
 //Project Overview
 const P_OVER_INBOX_GROUP_ID = "neue_gruppe"
 const PROJECT_OVERVIEW_ID = 162013046
+const WITH_US_SINCE_ID = "geschenksdatum"
 // contant id in sales pipeline
 const CLIENT_ID_ID = "text86"
 const STATUS_ID_SALES_PIPELINE = "status"
+// moneyTree accounts
+const MONEY_TREE_ACCOUNTS_BOARD_ID = 416324914
+const MONEY_TREE_ACCOUNTS_GROUP_ID = "duplicate_of_043___bruno_s_bes10603"
 
 const postMonday = (body,action) => {
  
@@ -478,7 +482,7 @@ try {
   
   return {boardId: SALES_PIPELINE_BOARD_ID,  itemId:parseInt(itemId)}
 } catch (error) {
-  throw new Error(`client Id ${clientId} not found in monday board`)
+  throw new Error(`client Id ${clientId} not found in monday board`,error)
 
 }
    
@@ -513,14 +517,14 @@ const addVideoProjectBoard = async (clientNumber,year,clientProjectNumber,client
     try {
       await postMonday(body,"adding board to Video Project Over")
     } catch (error) {
-      throw new Error("error when creating board for Video Project overview",clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
+      throw new Error("error when creating board for Video Project overview",error)
     }  
 
 }
 
-const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId)=>{
+const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId,createdAt)=>{
   console.log(clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
-
+ //"date": "2019-06-03"  format to insert date
   const body = {
       query: `
       mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
@@ -545,7 +549,39 @@ const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientNa
     try {
       await postMonday(body,"adding item to Inboc Project Overview")
     } catch (error) {
-      throw new Error("error when creating board for Video Project overview",clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
+      throw new Error("error when creating board for Video Project overview",error)
+    }  
+
+}
+
+const addMoneyTreeAccount = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId)=>{
+  console.log(clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
+ //"date": "2019-06-03"  format to insert date
+  const body = {
+      query: `
+      mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
+        create_item (
+          board_id: $boardId,
+          group_id: $groupId,
+          item_name: $itemName,
+          column_values: $columnValues
+        ) {
+          id
+        }
+      }
+      `,
+      variables: {
+      boardId: MONEY_TREE_ACCOUNTS_BOARD_ID,
+      groupId: MONEY_TREE_ACCOUNTS_GROUP_ID,
+      itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
+      columnValues: JSON.stringify( { "strategie_session" :{"label":"Done"}, "person":{"personsAndTeams":[{"id":pmId,"kind":"person"}]}})
+      }
+  
+    }
+    try {
+      await postMonday(body,"adding item toMoney Tree account")
+    } catch (error) {
+      throw new Error("error when creating board for Money Tree Account",error)
     }  
 
 }
@@ -557,3 +593,4 @@ module.exports.setMondayClientId = setMondayClientId
 module.exports.getBoardByClientId = getBoardByClientId
 module.exports.addVideoProjectBoard = addVideoProjectBoard
 module.exports.addProjectOverview = addProjectOverview
+module.exports.addMoneyTreeAccount = addMoneyTreeAccount

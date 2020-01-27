@@ -3,6 +3,7 @@ TODO:
       * check error that keeps a staged client on database
       - send invite to client for slack, pendind admin status on slack
       - get the year from created at of project
+      - format date correctly and send to project overview
 */
 const functions = require('firebase-functions');
 const createFolder = require("./google");
@@ -173,32 +174,30 @@ const FIRST_PROJECT_NUMBER = 1
            await monday.addVideoProjectBoard(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
            
          }else if(projectObj.companyAssigned === "MoneyTree"){
-
+            await monday.addMoneyTreeAccount(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
          } 
         
             
          // add to Project overview Inbox always
-        await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId) 
+        await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt) 
         }else{
           await firebase.createProject(projectObj)
           await monday.changeMondayStatus(2,boardId,itemId)
          /*  await slack.slackCreationWorkflow(clientObj,projectObj) */
          // googe drive create only Prejectke genwonned and subfolders on the client
-          /* if venturesome
-               add item to Video Projects Overview board: 403775339 group: Current Video Projects set 1 onboarding status : Done, and PM to PM, add tag #{clientNumber}{clientName} item name {clientNumber}_{year}_{clientProjectNumber} | {clientName} | {projectName}
-               add item to Project Overview board : 162013046 group: Venturesome PM/AM : PM  
-               create toggle project
-            if moneytree
-               add item add item to Project Overview board : 162013046 group: Moneytree PM/AM : PM item name {clientNumber}_{year}_{clientProjectNumber} | {clientName} | {projectName}
-               add item to Money Tree account board boardId: 416324914 group: Current Accounts AM: PM status Onboarding: Done  tag: #{clientNumber}{clientName}
-        */
+     
+             
+          
+               //add item to Money Tree account board boardId: 416324914 group: Current Accounts AM: PM status Onboarding: Done  tag: #{clientNumber}{clientName}
+        
             if(projectObj.companyAssigned === "Venturesome"){
                 await monday.addVideoProjectBoard(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
+                //create toggle project
               }else if(projectObj.companyAssigned === "MoneyTree"){
-                
+                await monday.addMoneyTreeAccount(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
               }
          // add to Project overview Inbox always
-        await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId) 
+         await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt) 
         }
        
         res.send({message: "success"})
