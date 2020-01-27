@@ -3,7 +3,7 @@ TODO:
       * check error that keeps a staged client on database
       - send invite to client for slack, pendind admin status on slack
       - get the year from created at of project
-      - format birthday date correctly coming form typeform
+      - add SM as 
       - ensure correct id number when creating projects for existing clients ? database?
       - how to send onboarding email again in case it got lost
 */
@@ -99,6 +99,7 @@ const test1 = async ()=>{
       // 1st step get the data from the board using getResults from monday file, store it into mondayObj, 
       //if there is any error retrieving these field form the board the program will throw an error to be handled
       const mondayObj = await monday.getResult(boardId,itemId) 
+      console.log("Monday Obj",mondayObj)
       if(mondayObj === 0){
         throw new Error("error with mondayObj ending program")
       }else{
@@ -159,7 +160,8 @@ const test1 = async ()=>{
           name:mondayObj.projectName,
           clientPhone:mondayObj.phone,
           clientProjectNumber:clientProjectNumber,
-          internalProjectId:internalProjectId
+          internalProjectId:internalProjectId,
+          smId: parseInt(mondayObj.smId)
           
         }
         //if the client is new, we create the client, then the project for that client, we send the onboarding email,we change the status on the board on monday
@@ -194,7 +196,7 @@ const test1 = async ()=>{
         
             
          // add to Project overview Inbox always
-        await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt) 
+        await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt,projectObj.smId) 
         }else{
           await firebase.createProject(projectObj)
           await monday.changeMondayStatus(2,boardId,itemId)
@@ -212,7 +214,7 @@ const test1 = async ()=>{
                 await monday.addMoneyTreeAccount(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
               }
          // add to Project overview Inbox always
-         await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt) 
+         await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt,projectObj.smId) 
         }
        
         res.send({message: "success"})

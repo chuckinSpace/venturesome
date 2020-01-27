@@ -90,6 +90,7 @@ const createClient= async (client)=>{
 }
 //creates the project on firebase "projects" collection using the project obj
 const createProject=async (project)=>{
+    console.log("project obj going to firebase",project)
     db.collection("projects").add({
         clientId : project.clientId,
         clientEmail:project.clientEmail,
@@ -104,7 +105,8 @@ const createProject=async (project)=>{
         name:project.name,
         clientPhone:project.clientPhone,
         clientProjectNumber:project.clientProjectNumber,
-        internalProjectId: project.internalProjectId
+        internalProjectId: project.internalProjectId,
+        smId:project.smId
     })
     .then((doc)=> console.log("success creating project on firebase", doc.id))
     .catch(err=>console.log("error creating project on firebase",err))

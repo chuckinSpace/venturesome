@@ -174,7 +174,8 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
           pmName : "",
           slackUsers:[],
           isNewClient : true,
-          clientId:""
+          clientId:"",
+          smId:""
        };
     
    
@@ -245,7 +246,15 @@ const getValuesFromMonday = async ( boardId,itemId ) =>{
          throw new Error("missing Pm info")
        }
        
-       
+       //SM
+       const smObj = values.find(item => item.id === "people7");
+       if(!!JSON.parse(smObj.value).personsAndTeams[0]){
+        console.log("asiggning SM id",managerObj)
+          mondayObj.smId = JSON.parse(smObj.value).personsAndTeams[0].id.toString();
+
+       }else{
+         throw new Error("missing sm info")
+       }
         //get slackUsers emails array
         const slackItem = values.find(item => item.id === "people")
         const slackObj = JSON.parse(slackItem.value)
@@ -533,8 +542,8 @@ const addVideoProjectBoard = async (clientNumber,year,clientProjectNumber,client
 
 }
 
-const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId,createdAt)=>{
- /*  console.log(clientNumber,year,clientProjectNumber,clientName,projectName,pmId,createdAt) */
+const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId,createdAt,smId)=>{
+   console.log("in adding project overview",clientNumber,year,clientProjectNumber,clientName,projectName,pmId,createdAt,smId) 
 
  let dateTime = moment(createdAt).format("YYYY-MM-DD");
 
@@ -557,7 +566,7 @@ const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientNa
       boardId: PROJECT_OVERVIEW_ID,
       groupId: P_OVER_INBOX_GROUP_ID,
       itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
-      columnValues: JSON.stringify( {"person":{"id":pmId},"geschenksdatum":{"date":dateTime}})
+      columnValues: JSON.stringify( {"person":{"id":pmId},"geschenksdatum":{"date":dateTime}, "pm":{"id":smId}})
       }
   
     }
