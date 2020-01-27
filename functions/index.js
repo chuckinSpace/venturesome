@@ -1,7 +1,8 @@
 /*
-TODO: get project name by internalProject id for when multiple projects are present
+TODO: 
       * check error that keeps a staged client on database
       - send invite to client for slack, pendind admin status on slack
+      - get the year from created at of project
 */
 const functions = require('firebase-functions');
 const createFolder = require("./google");
@@ -156,7 +157,7 @@ const FIRST_PROJECT_NUMBER = 1
           await monday.setMondayClientId(boardId,itemId,clientObj.idNumber)
           // create google drive entire tree
           /* if its new client and its Venturesome
-                add item to Video Projects Overview board: 403775339 group: Current Video Projects set 1 onboarding status : Done, and PM to PM, add tag #{clientNumber}{clientName} item name {clientNumber}_{year}_{clientProjectNumber} | {clientName} | {projectName}
+              
                 
                 add item to Project Overview board : 162013046 group: Venturesome PM/AM : PM  
                 create frameio client
@@ -167,10 +168,17 @@ const FIRST_PROJECT_NUMBER = 1
                 add item to Money Tree account board boardId: 416324914 group: Current Accounts AM: PM status Onboarding: Done  tag: #{clientNumber}{clientName}
           */
          
-          if(projectObj.companyAssigned === "Venturesome"){
+        if(projectObj.companyAssigned === "Venturesome"){
+           //add to Video project Overview
            await monday.addVideoProjectBoard(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
+           
+         }else if(projectObj.companyAssigned === "MoneyTree"){
+
          } 
-         
+        
+            
+         // add to Project overview Inbox always
+        await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId) 
         }else{
           await firebase.createProject(projectObj)
           await monday.changeMondayStatus(2,boardId,itemId)
@@ -184,13 +192,19 @@ const FIRST_PROJECT_NUMBER = 1
                add item add item to Project Overview board : 162013046 group: Moneytree PM/AM : PM item name {clientNumber}_{year}_{clientProjectNumber} | {clientName} | {projectName}
                add item to Money Tree account board boardId: 416324914 group: Current Accounts AM: PM status Onboarding: Done  tag: #{clientNumber}{clientName}
         */
-       if(projectObj.companyAssigned === "Venturesome"){
-        await monday.addVideoProjectBoard(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
-      } 
+            if(projectObj.companyAssigned === "Venturesome"){
+                await monday.addVideoProjectBoard(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
+              }else if(projectObj.companyAssigned === "MoneyTree"){
+                
+              }
+         // add to Project overview Inbox always
+        await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId) 
         }
-        res.send({message: "success"})
        
+        res.send({message: "success"})
       }
+       
+     
     } catch (error) {
       res.send({message: "success"})
       console.log("Error in main script",error)

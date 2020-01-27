@@ -13,8 +13,12 @@ const axios = require('axios')
 // const data from MONDAY
 const formsDataBoard = 415921614
 const SALES_PIPELINE_BOARD_ID = 413267102
-const PROJECTS_OVERVIEW_BOARD_ID= 403775339
+//Video Project Overview
+const VIDEO_PROJECTS_OVERVIEW_BOARD_ID= 403775339
 const GROUP_ID_P_OVER_CURR_VIDEO_PROJ = "duplicate_of_043___bruno_s_bes10603"
+//Project Overview
+const P_OVER_INBOX_GROUP_ID = "neue_gruppe"
+const PROJECT_OVERVIEW_ID = 162013046
 // contant id in sales pipeline
 const CLIENT_ID_ID = "text86"
 const STATUS_ID_SALES_PIPELINE = "status"
@@ -485,46 +489,66 @@ try {
 const addVideoProjectBoard = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId)=>{
   console.log(clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
 
- const body = {
-  query: `
-  mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
-    create_item (
-      board_id: $boardId,
-      group_id: $groupId,
-      item_name: $itemName,
-      column_values: $columnValues
-    ) {
-      id
-    }
-  }
-  `,
-  variables: {
-  boardId: PROJECTS_OVERVIEW_BOARD_ID,
-  groupId: GROUP_ID_P_OVER_CURR_VIDEO_PROJ,
-  itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
-  columnValues: JSON.stringify( {"status":{"label":"Done"}, "person":{"personsAndTeams":[{"id":pmId,"kind":"person"}]}})
-  }
+  const body = {
+      query: `
+      mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
+        create_item (
+          board_id: $boardId,
+          group_id: $groupId,
+          item_name: $itemName,
+          column_values: $columnValues
+        ) {
+          id
+        }
+      }
+      `,
+      variables: {
+      boardId: VIDEO_PROJECTS_OVERVIEW_BOARD_ID,
+      groupId: GROUP_ID_P_OVER_CURR_VIDEO_PROJ,
+      itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
+      columnValues: JSON.stringify( {"status":{"label":"Done"}, "person":{"personsAndTeams":[{"id":pmId,"kind":"person"}]}})
+      }
   
-}
-try {
-  await postMonday(body,"populating form board")
-} catch (error) {
-  throw new Error("error when creating board for Video Project overview",clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
-}  
-
-}
-const test = async ()=>{
-  try {
-    await addVideoProjectBoard(1,20,3,"TESTCLIENT","TESTPROJECT",6083153)
-  } catch (error) {
-    /* console.log(error) */
-  }
+    }
+    try {
+      await postMonday(body,"adding board to Video Project Over")
+    } catch (error) {
+      throw new Error("error when creating board for Video Project overview",clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
+    }  
 
 }
 
+const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId)=>{
+  console.log(clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
 
+  const body = {
+      query: `
+      mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
+        create_item (
+          board_id: $boardId,
+          group_id: $groupId,
+          item_name: $itemName,
+          column_values: $columnValues
+        ) {
+          id
+        }
+      }
+      `,
+      variables: {
+      boardId: PROJECT_OVERVIEW_ID,
+      groupId: P_OVER_INBOX_GROUP_ID,
+      itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
+      columnValues: JSON.stringify( {"person":{"id":pmId}})
+      }
+  
+    }
+    try {
+      await postMonday(body,"adding item to Inboc Project Overview")
+    } catch (error) {
+      throw new Error("error when creating board for Video Project overview",clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
+    }  
 
-
+}
 module.exports.getResult = getResult;
 module.exports.updateForms = updateForms;
 module.exports.getSubmissionData = getSubmissionData;
@@ -532,3 +556,4 @@ module.exports.changeMondayStatus = changeMondayStatus
 module.exports.setMondayClientId = setMondayClientId
 module.exports.getBoardByClientId = getBoardByClientId
 module.exports.addVideoProjectBoard = addVideoProjectBoard
+module.exports.addProjectOverview = addProjectOverview
