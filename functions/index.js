@@ -4,6 +4,7 @@ TODO:
       - send invite to client for slack, pendind admin status on slack
       - get the year from created at of project
       - format date correctly and send to project overview
+      - ensure correct id number when creating projects for existing clients ? database?
 */
 const functions = require('firebase-functions');
 const createFolder = require("./google");
