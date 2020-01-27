@@ -8,6 +8,7 @@ TODO: - delete forms that are not on TypeForm anymore when update
 */
 /* const { GraphQLClient } = require('graphql-request'); */
 require('dotenv').config();
+const moment = require("moment")
 const axios = require('axios')
 
 // const data from MONDAY
@@ -26,7 +27,8 @@ const STATUS_ID_SALES_PIPELINE = "status"
 // moneyTree accounts
 const MONEY_TREE_ACCOUNTS_BOARD_ID = 416324914
 const MONEY_TREE_ACCOUNTS_GROUP_ID = "duplicate_of_043___bruno_s_bes10603"
-
+//client dabtase
+const CLIENT_DATABASE_BOARD_ID = 275842142
 const postMonday = (body,action) => {
  
   return axios.post(`https://api.monday.com/v2`, body, {
@@ -405,18 +407,23 @@ const getSubmissionData=async(boardId,itemId)=>{
       email:"",  
       slack:false,
       phone:"",
-      clientId:0
+      clientId:0,
+      name:""
     }
 
     try {
       const response  = await postMonday(body,"getSubmissionData");
       const values = await response.data.boards[0].items[0].column_values;
-
+      console.log(values)
       const emailObj = values.find(item => item.id === "email");
       submissionObj.email = JSON.parse(emailObj.value).email;
 
+      const contactNameObj = values.find(item => item.id === "text4");
+      submissionObj.name = JSON.parse(contactNameObj.value);
+
 
       const birthdayObj = values.find(item => item.id === "date4");
+      console.log(birthdayObj, typeof birthdayObj)
       submissionObj.birthday = JSON.parse(birthdayObj.value).date;
 
       const slackObj = values.find(item => item.id === "check");
@@ -439,6 +446,10 @@ const getSubmissionData=async(boardId,itemId)=>{
       console.log("error when creating submission obj",error);
     }
 }
+const test =async ()=>{
+await getSubmissionData(411284598,439576800)
+}
+/* test() */
 const getBoardByClientId = async (clientId) =>{
   console.log(clientId, typeof clientId)
 
@@ -523,7 +534,11 @@ const addVideoProjectBoard = async (clientNumber,year,clientProjectNumber,client
 }
 
 const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId,createdAt)=>{
-  console.log(clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
+ /*  console.log(clientNumber,year,clientProjectNumber,clientName,projectName,pmId,createdAt) */
+
+ let dateTime = moment(createdAt).format("YYYY-MM-DD");
+
+ console.log(typeof dateTime)
  //"date": "2019-06-03"  format to insert date
   const body = {
       query: `
@@ -542,12 +557,12 @@ const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientNa
       boardId: PROJECT_OVERVIEW_ID,
       groupId: P_OVER_INBOX_GROUP_ID,
       itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
-      columnValues: JSON.stringify( {"person":{"id":pmId}})
+      columnValues: JSON.stringify( {"person":{"id":pmId},"geschenksdatum":{"date":dateTime}})
       }
   
     }
     try {
-      await postMonday(body,"adding item to Inboc Project Overview")
+       await postMonday(body,"adding item to Inbox Project Overview") 
     } catch (error) {
       throw new Error("error when creating board for Video Project overview",error)
     }  
@@ -556,7 +571,7 @@ const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientNa
 
 const addMoneyTreeAccount = async (clientNumber,year,clientProjectNumber,clientName,projectName,pmId)=>{
   console.log(clientNumber,year,clientProjectNumber,clientName,projectName,pmId)
- //"date": "2019-06-03"  format to insert date
+
   const body = {
       query: `
       mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
@@ -585,6 +600,60 @@ const addMoneyTreeAccount = async (clientNumber,year,clientProjectNumber,clientN
     }  
 
 }
+
+const saveClientToMondayDatabase = async (clientFirebase) =>{
+
+
+console.log(clientFirebase)
+//create group and get back id
+const body = {
+  query: `
+    mutation ($boardId: Int!, $groupName: String!){
+      create_group (board_id: $boardId, group_name: $groupName ) {
+        id
+      }
+    }
+    `,
+  variables: {
+  boardId: CLIENT_DATABASE_BOARD_ID,  
+  groupName: `TEST${clientFirebase.idNumber} | ${clientFirebase.name}`,
+  }
+}
+
+
+  try {
+     const obj = await postMonday(body,"saving client to mondaydatabase") 
+     const newGroupIdid = obj.data.create_group.id 
+
+    //query to populate the board
+    // id "phone" = {clientFirebase.phone} id: "email" = {clientFirebase.email} id:"due_date" = {birthday}
+    const body1 = {
+      query: `
+      mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
+        create_item (
+          board_id: $boardId,
+          group_id: $groupId,
+          item_name: $itemName,
+          column_values: $columnValues
+        ) {
+          id
+        }
+      }
+      `,
+      variables: {
+        boardId: CLIENT_DATABASE_BOARD_ID,
+        groupId: newGroupIdid,
+        itemName: `${clientFirebase.contactName}`,  
+        columnValues: JSON.stringify( { "phone" :{"phone":clientFirebase.phone}, "email":{"email":clientFirebase.email,"text":clientFirebase.contactName},"due_date":{"date":clientFirebase.birthday}})
+      }
+    }
+    await postMonday(body1,"populating board monday database") 
+  } catch (error) {
+    throw new Error("error when saving client to mondaydatabase",error)
+  }  
+
+}
+
 module.exports.getResult = getResult;
 module.exports.updateForms = updateForms;
 module.exports.getSubmissionData = getSubmissionData;
@@ -594,3 +663,4 @@ module.exports.getBoardByClientId = getBoardByClientId
 module.exports.addVideoProjectBoard = addVideoProjectBoard
 module.exports.addProjectOverview = addProjectOverview
 module.exports.addMoneyTreeAccount = addMoneyTreeAccount
+module.exports.saveClientToMondayDatabase = saveClientToMondayDatabase

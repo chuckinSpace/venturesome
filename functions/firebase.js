@@ -150,21 +150,24 @@ const deleteStagedClient = async(clientId) =>{
 
 //saves the submission obj adding it to the corresponding client, stored as clientId inside the coming obj on firebase
 const saveSubmissionObj = async (submissionObj)=>{
-    let clientFirebase = ""
+   
     try {
         const getClientSnap =  db.collection('clients').where('idNumber','==',submissionObj.clientId);
         const clientObj =await getClientSnap.get()
         clientObj.forEach((doc)=>{
-            clientFirebase = doc.data()
+           
             doc.ref.update({
                   birthday:submissionObj.birthday,
                   contactEmail:submissionObj.email,
                   onboardingCompletedOn:new Date(),
                   slack:submissionObj.slack,
-                  contactPhone:submissionObj.phone
+                  contactPhone:submissionObj.phone,
+                  contactName:submissionObj.name
                 })
+                .then(()=>console.log("after sending submission"))
+                .catch(err=> console.log("error when sving submission obj",err))
             });
-            return clientFirebase
+           
     } catch (error) {
         console.log(error);
     }
@@ -256,6 +259,21 @@ const getProjectObjByClientId = async (clientId) =>{
         console.log(error);
     }
 }
+const getClient = async (clientId) =>{
+    console.log("getClient starting with internal project Id", clientId)
+    let clientObj = ""
+    try {
+        const getClientSnap =  db.collection('clients').where('idNumber','==',clientId);
+        const clientSnap = await getClientSnap.get()
+        clientSnap.forEach((doc)=>{
+            clientObj = doc.data()
+            });
+           return clientObj
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 //exports
 module.exports.getClientId = getClientId
 module.exports.getInternalProjectId = getInternalProjectId
@@ -272,7 +290,7 @@ module.exports.getSlackOption= getSlackOption
 module.exports.getProjectObjByInternal= getProjectObjByInternal
 module.exports.getProjectObjByClientId= getProjectObjByClientId
 module.exports.updateFirebase = updateFirebase
-
+module.exports.getClient = getClient
 
 //firebase extension to send emails to use generic emails for testing
 
