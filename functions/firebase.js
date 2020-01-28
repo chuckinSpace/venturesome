@@ -262,7 +262,7 @@ const getProjectObjByClientId = async (clientId) =>{
     }
 }
 const getClient = async (clientId) =>{
-    console.log("getClient starting with internal project Id", clientId)
+    console.log("getClient starting with client Id", clientId)
     let clientObj = ""
     try {
         const getClientSnap =  db.collection('clients').where('idNumber','==',clientId);

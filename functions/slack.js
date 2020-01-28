@@ -38,24 +38,32 @@ const getSlackIds = async (slackObj) =>{
     console.log("success getting ids for users from slack",data)
     return data
   })
-  .catch(err=>console.log("error getting ids for users from slack",err)) 
+  .catch(err=>{
+    throw new Error("error getting ids for users from slack",err)
+  })
 
 }
 
  
 
 const sendWelcomeMessage =async (channelId,team,clientName) =>{
-  let message = "Welcome"
-  if(team === "client"){
-    message= `Hey there ${clientName} Welcome! please let us know if you need anything! we are happy to help!`
-  }else if(team === "internal"){
-    message = `New client awesome work!!, this is an internal channel for the client ${clientName}`
-  }else if(team === "internal-only")
-    message = `New client awesome work!!, client ${clientName} selected not to participate on slack`
-  await web.chat.postMessage({
-    channel: channelId,
-    text: message,
-  }); 
+  console.log("sending messages",channelId,team,clientName)
+  try {
+    let message = "Welcome"
+    if(team === "client"){
+      message= `Hey there ${clientName} Welcome! please let us know if you need anything! we are happy to help!`
+    }else if(team === "internal"){
+      message = `New client awesome work!!, this is an internal channel for the client ${clientName}`
+    }else if(team === "internal-only")
+      message = `New client awesome work!!, client ${clientName} selected not to participate on slack`
+    await web.chat.postMessage({
+      channel: channelId,
+      text: message,
+    }); 
+  } catch (error) {
+    throw new Error("error sending messages to slack",error,channelId,team,clientName)
+  }
+ 
 }
 
 
@@ -69,9 +77,8 @@ const slackCreationWorkflow = async (clientFirebase)=>{
     
       //if the mondayObj.slack is true (meaning that the client prefers to use slack) we will create 2 private channels
       //both channels will have all the users selected in the monday board, but we will add the client (by sending and invite from slack) to one of the channels
-      
-
-      // first we retrieve list of users and slack option form clientComing from firestore (emails)
+      try {
+        // first we retrieve list of users and slack option form clientComing from firestore (emails)
       let slackUsers = clientFirebase.slackUsers
       let slackOption = clientFirebase.slack
       //then we send the emails to our slack function to get back the ids from slack for those users, to later create the channels
@@ -94,6 +101,11 @@ const slackCreationWorkflow = async (clientFirebase)=>{
           await sendWelcomeMessage(companyChannelId,"internal-only",clientFirebase.name)
           console.log(companyChannelId,"companyChannelId")
         }  
+      } catch (error) {
+        throw new Error("error when crating slack channels",error,clientFirebase)
+      }
+
+      
 }
 
 

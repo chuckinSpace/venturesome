@@ -8,7 +8,7 @@ TODO:
       - GOOGLE DRIVE
 */
 const functions = require('firebase-functions');
-const createFolder = require("./google");
+const googleDrive = require("./google");
 const slack = require("./slack");
 const monday = require("./monday");
 const typeForm = require("./typeForm")
@@ -99,7 +99,7 @@ const createProjectObj = async (clientId,mondayObj,clientProjectNumber)=>{
   
   const internalProjectId = await firebase.getInternalProjectId()
   
-  const projectObj = {
+  let projectObj = {
 
     clientId : clientId,
     clientEmail:mondayObj.email,
@@ -119,7 +119,6 @@ const createProjectObj = async (clientId,mondayObj,clientProjectNumber)=>{
   }
   return projectObj
 }
-
 
 
   //webhook for monday.com triggered on status change to "Signed" on boardId 413267102
@@ -175,7 +174,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
       // create project and client
       const clientObj = createClientObj(clientId,mondayObj,clientProjectNumber)
       const projectObj = await createProjectObj(clientId,mondayObj,clientProjectNumber)
-      
+      const yearCreated = projectObj.createdAt.getFullYear().toString().slice(2,4)
       //if the client is new, we create the client, then the project for that client, we send the onboarding email,we change the status on the board on monday
       // to onboarding sent (on sucesss only), we already handled the error scenario of missing information inside the monday.js file, after we send back the
       // recently generated clientId to the monday Sales board, else (client is not new) we only create the project and change the status of the board to "Project Created"
@@ -188,23 +187,24 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
         await monday.changeMondayStatus(0,boardId,itemId)
         await monday.setMondayClientId(boardId,itemId,clientObj.idNumber)
         // create google drive entire tree
-
+        projectObj.isNewClient = true
+        await googleDrive.createFolderTree(projectObj); //client number, client name, year project, clientprojectnumber, projectname
       if(projectObj.companyAssigned === "Venturesome"){
           
         //add to Video project Overview
-        await monday.addVideoProjectBoard(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
+        await monday.addVideoProjectBoard(clientObj.idNumber,yearCreated,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
         //create frameio client
         //create toggle client
         //create toggle project
         
       }else if(projectObj.companyAssigned === "MoneyTree"){
           
-         await monday.addMoneyTreeAccount(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
+         await monday.addMoneyTreeAccount(clientObj.idNumber,yearCreated,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
         
       } 
   
         // add to Project overview Inbox always
-      await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt,projectObj.smId) 
+      await monday.addProjectOverview(clientObj.idNumber,yearCreated,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt,projectObj.smId) 
       
     }else{
         
@@ -214,19 +214,25 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
     
       if(projectObj.companyAssigned === "Venturesome"){
           
-        await monday.addVideoProjectBoard(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
+        await monday.addVideoProjectBoard(clientObj.idNumber,yearCreated,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
         
         //create toggle project
 
       }else if(projectObj.companyAssigned === "MoneyTree"){
       
-        await monday.addMoneyTreeAccount(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
+        await monday.addMoneyTreeAccount(clientObj.idNumber,yearCreated,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId)
       
       }
         
       // add to Project overview Inbox always
-      
-      await monday.addProjectOverview(clientObj.idNumber,20,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt,projectObj.smId) 
+      const firebaseClient = await firebase.getClient(projectObj.clientId)
+      console.log("object from firebase",firebaseClient)
+      projectObj.clientFolderId = firebaseClient.clientFolderId
+      projectObj.projectsFolderId = firebaseClient.projectsFolderId
+      projectObj.isNewClient = false
+      console.log("projectObj going to google drive in old client", projectObj)
+      await googleDrive.createFolderTree(projectObj)
+      await monday.addProjectOverview(clientObj.idNumber,yearCreated,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt,projectObj.smId) 
       
     }
     res.send({message: "success"}) 
@@ -274,7 +280,7 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
 
    console.log(projectObj);
    // perform desired operations ...
-   createFolder.runFolder(projectObj);
+  
    await slack.createSlackChannel(projectObj.slackUsers,projectObj.clientName);
 
    return null;
