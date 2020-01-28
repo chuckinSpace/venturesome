@@ -84,6 +84,7 @@ const createClient= async (client)=>{
         mondayItemIdDeal:client.mondayItemIdDeal,
         formLink: client.formLink,
         createdAt: client.createdAt,
+        slackUsers: client.slackUsers,
     })
     .then((doc)=> console.log("success creating client on firebase", doc.id))
     .catch(err=>console.log("error creating client on firebase"))
@@ -100,7 +101,6 @@ const createProject=async (project)=>{
         pmEmail: project.pmEmail,
         pmName: project.pmName,
         pmId:project.pmId,
-        slackUsers: project.slackUsers,
         companyAssigned: project.companyAssigned,
         name:project.name,
         clientPhone:project.clientPhone,
@@ -186,11 +186,11 @@ const updateFirebase= async (collection,whereParam,whereIqualTo,objectToStore,co
       }
 }
 
-const getSlackUsersByInternal = async(internalProjectId) =>{
+/* const getSlackUsersByInternal = async(internalProjectId) =>{
     console.log("getSlackUsersByInternal starting", internalProjectId)
     let slackUsers = ""
     try {
-        const getClientSnap =  db.collection('projects').where('internalProjectId','==',internalProjectId);
+        const getClientSnap =  db.collection('clients').where('internalProjectId','==',internalProjectId);
         const clientObj = await getClientSnap.get()
         clientObj.forEach((doc)=>{
               slackUsers = doc.data().slackUsers
@@ -199,9 +199,9 @@ const getSlackUsersByInternal = async(internalProjectId) =>{
     } catch (error) {
         console.log(error);
     }
-}
+} */
 
-const getSlackUsersByClientId = async(clientId) =>{
+/* const getSlackUsersByClientId = async(clientId) =>{
     console.log("getSlackUsersByClientId starting", clientId)
     let slackUsers = ""
     try {
@@ -214,7 +214,7 @@ const getSlackUsersByClientId = async(clientId) =>{
     } catch (error) {
         console.log(error);
     }
-}
+} */
 
 const getSlackOption = async(clientId) =>{
     console.log("getSlackOption starting", clientId)
@@ -286,8 +286,8 @@ module.exports.saveIdstaging = saveIdstaging
 module.exports.getStagedClientId = getStagedClientId
 module.exports.deleteStagedClient = deleteStagedClient
 module.exports.saveSubmissionObj = saveSubmissionObj
-module.exports.getSlackUsersByInternal = getSlackUsersByInternal
-module.exports.getSlackUsersByClientId = getSlackUsersByClientId
+/* module.exports.getSlackUsersByInternal = getSlackUsersByInternal
+module.exports.getSlackUsersByClientId = getSlackUsersByClientId */
 module.exports.getSlackOption= getSlackOption
 module.exports.getProjectObjByInternal= getProjectObjByInternal
 module.exports.getProjectObjByClientId= getProjectObjByClientId
