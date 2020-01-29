@@ -51,18 +51,10 @@ const getInternalProjectId= async () =>{
 
 const getClientProjectNumber= async (clientId) =>{
     try {
-        let clientData = ""     
-        const querySnapshot = db.collection("clients").where('idNumber','==',clientId);
-        const snapObj = await querySnapshot.get()
-        snapObj.forEach((doc) => {
-            if(doc.exists){
-                console.log("client found", doc.data());
-                clientData = doc.data().clientProjectNumber + 1
-            }else{
-                throw new Error(`Error trying to find the Client's project number,Client ${clientId} not found on the database`)
-            }    
-        })
-        return clientData
+        let counter = 0
+        const querySnapshot = await db.collection("projects").where("clientId","==",clientId).get();
+        querySnapshot.forEach((doc) => counter += 1)
+        return counter + 1
     }
     catch (err) {
         return console.log(err);

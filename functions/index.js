@@ -188,7 +188,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
         await monday.setMondayClientId(boardId,itemId,clientObj.idNumber)
         // create google drive entire tree
         projectObj.isNewClient = true
-        await googleDrive.createFolderTree(projectObj); //client number, client name, year project, clientprojectnumber, projectname
+       await googleDrive.createFolderTree(projectObj);
       if(projectObj.companyAssigned === "Venturesome"){
           
         //add to Video project Overview
@@ -231,7 +231,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
       projectObj.projectsFolderId = firebaseClient.projectsFolderId
       projectObj.isNewClient = false
       console.log("projectObj going to google drive in old client", projectObj)
-      await googleDrive.createFolderTree(projectObj)
+      await googleDrive.createFolderTree(projectObj) 
       await monday.addProjectOverview(clientObj.idNumber,yearCreated,projectObj.clientProjectNumber,clientObj.name,projectObj.name,projectObj.pmId,clientObj.createdAt,projectObj.smId) 
       
     }

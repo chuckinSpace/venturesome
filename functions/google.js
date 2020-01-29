@@ -62,7 +62,7 @@ function authorize(credentials, callback) {
       return getAccessToken(oAuth2Client, callback);
     }else{
       oAuth2Client.setCredentials(JSON.parse(token));
-      callback(oAuth2Client).then((data)=>console.log("sucess")).catch(err=>console.log(err));
+      callback(oAuth2Client)
     }
     
   
@@ -108,6 +108,10 @@ function getAccessToken(oAuth2Client, callback) {
  * Lists the names and IDs of up to 10 files.
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
+
+
+
+
 
 
 async function createFolder(auth) {
@@ -156,7 +160,7 @@ try {
     mainFolderId = mainFolderObj.data.id
 
     // /mainfolder     Main Folder Sub folders
-     if(data.isNewClient){ 
+      if(data.isNewClient){  
       console.log("starting google drive creation in new client", data)
       const angebote = fileMetadata( `00 Angebote`,mainFolderId)
       const angeboteId = await generateFolder(angebote) 
@@ -250,11 +254,34 @@ try {
       await generateFolder(logo) 
           
       console.log("sucess creating google drive tree")
-      await firebase.updateFirebase("clients","idNumber",data.clientId,{clientFolderId:mainFolderId,projectsFolderId:xxProjectGewonnenId.data.id},"saving folderId google drive") 
-    }else{
-      console.log("google drive in old client")
+      await firebase.updateFirebase("clients","idNumber",data.clientId,{clientFolderId:mainFolderId,projectsFolderId:projekteGewonnenId.data.id},"saving folderId google drive") 
+     }else{
+      console.log("google drive in old client", data)
+      //mainfolder/Projekte_gewonnen/
+      const xxProjectGewonnen1 = fileMetadata( `${yearCreated}_${data.clientProjectNumber}_${data.name}`,data.projectsFolderId)
+      const xxProjectGewonnenId1 = await generateFolder(xxProjectGewonnen1)
 
-    } 
+
+      const pitch = fileMetadata( `01 Pitch`,xxProjectGewonnenId1.data.id)
+      await generateFolder(pitch) 
+  
+      const contracts = fileMetadata( `02 Contracts`,xxProjectGewonnenId1.data.id)
+      await generateFolder(contracts) 
+  
+      const briefing = fileMetadata( `03 Briefing`,xxProjectGewonnenId1.data.id)
+      await generateFolder(briefing) 
+  
+      const content = fileMetadata( `04 Content`,xxProjectGewonnenId1.data.id)
+      await generateFolder(content) 
+  
+      const preprod = fileMetadata( `05 Preprod`,xxProjectGewonnenId1.data.id)
+      await generateFolder(preprod) 
+  
+      const finalContent = fileMetadata( `06 Final Content`,xxProjectGewonnenId1.data.id)
+      await generateFolder(finalContent) 
+
+      console.log("sucess creating new project on old client") 
+    }  
     
 
 
@@ -264,27 +291,27 @@ try {
 
 }
 
-const test = async () =>{
-     //createdAt,clientProjectNumber,name(project),clientId,clientName
- try {
-  let projectObj = {
-    createdAt: new Date(),
-    clientProjectNumber:1,
-    name:"AwesomeProject",
-    clientId:1,
-    clientName:"Coca Cola"
- }
-  projectObj.isNewClient = false
-  await createFolderTree(projectObj)
- } catch (error) {
-   console.log(error)
- }
-   
-} 
- const getTest= async ()=>{
-  const result = await test()
-  console.log(result)
- }
-getTest()
+
+
+/* function listFiles(auth) {
+  const drive = google.drive({version: 'v3', auth});
+  drive.files.list({
+    pageSize: 10,
+    fields: 'nextPageToken, files(id, name)',
+  }, (err, res) => {
+    if (err) return console.log('The API returned an error: ' + err);
+    const files = res.data.files;
+    if (files.length) {
+      console.log('Files:');
+      files.map((file) => {
+        console.log(`${file.name} (${file.id})`);
+      });
+    } else {
+      console.log('No files found.');
+    }
+  });
+}
+
+createFolderTree() */
 
 module.exports.createFolderTree = createFolderTree
