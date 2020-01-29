@@ -1,11 +1,9 @@
 /*
 TODO: 
-      * check error that keeps a staged client on database
-      - send invite to client for slack, pendind admin status on slack
-      - get the year from created at of project
-      - ensure correct id number when creating projects for existing clients ? database?
-      - how to send onboarding email again in case it got lost
-      - GOOGLE DRIVE
+    
+
+    
+
 */
 const functions = require('firebase-functions');
 const googleDrive = require("./google");
@@ -58,6 +56,7 @@ const FIRST_PROJECT_NUMBER = 1
           
           // save the client to Mondays database
           const clientFirebase =await firebase.getClient(clientId)
+          console.log("about to run save client to database on monday")
           await monday.saveClientToMondayDatabase(clientFirebase)
 
           //after onboarding from the client is complete we create slack channels

@@ -1,8 +1,8 @@
 /*
-TODO: - delete forms that are not on TypeForm anymore when update
+TODO: 
       - check error when client not found
       - change getPmInfo function name
-      - change all column ids to CONST
+
     
  BUG: - error when submitting form check cloud funciotns
 */

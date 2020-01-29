@@ -1,6 +1,6 @@
 /*
-TODO: get cleintProject NUmber from number of projects on database (also clients?)
-      check client by email to reject new client with emaikl already on the database
+TODO: 
+      
 */
 
 //firebase authentication
