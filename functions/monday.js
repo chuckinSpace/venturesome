@@ -546,8 +546,9 @@ const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientNa
    console.log("in adding project overview",clientNumber,year,clientProjectNumber,clientName,projectName,pmId,createdAt,smId) 
 
  let dateTime = moment(createdAt).format("YYYY-MM-DD");
+ let giftDate = moment(createdAt).add(3, 'M').format("YYYY-MM-DD")
 
- console.log(typeof dateTime)
+ console.log(typeof dateTime, giftDate)
  //"date": "2019-06-03"  format to insert date
   const body = {
       query: `
@@ -566,7 +567,7 @@ const addProjectOverview = async (clientNumber,year,clientProjectNumber,clientNa
       boardId: PROJECT_OVERVIEW_ID,
       groupId: P_OVER_INBOX_GROUP_ID,
       itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
-      columnValues: JSON.stringify( {"person":{"id":pmId},"geschenksdatum":{"date":dateTime}, "pm":{"id":smId}})
+      columnValues: JSON.stringify( {"person":{"id":pmId},"geschenksdatum":{"date":dateTime}, "datum":{"date":giftDate},"pm":{"id":smId}})
       }
   
     }
@@ -609,6 +610,9 @@ const addMoneyTreeAccount = async (clientNumber,year,clientProjectNumber,clientN
     }  
 
 }
+
+/* const date = new Date()
+console.log( moment(date).add(1, 'M').toDate()) */
 
 const saveClientToMondayDatabase = async (clientFirebase) =>{
 

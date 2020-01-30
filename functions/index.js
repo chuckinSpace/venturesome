@@ -226,7 +226,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
       // add to Project overview Inbox always
       const firebaseClient = await firebase.getClient(projectObj.clientId)
       console.log("object from firebase",firebaseClient)
-      projectObj.clientFolderId = firebaseClient.clientFolderId
+     
       projectObj.projectsFolderId = firebaseClient.projectsFolderId
       projectObj.isNewClient = false
       console.log("projectObj going to google drive in old client", projectObj)

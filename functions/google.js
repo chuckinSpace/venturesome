@@ -145,36 +145,30 @@ const generateFolder= async (fileMetadata)=>{
   }
 }  
 
-
+const yearCreated = data.createdAt.getFullYear().toString().slice(2,4)
 try {
-
-
-
- 
-    const yearCreated = data.createdAt.getFullYear().toString().slice(2,4)
-    let mainFolderId = ""  
-    //Main folder
-    const createFolderData = fileMetadata( `${data.clientId}_${data.clientName}`,teamDriveId)
-    const mainFolderObj = await generateFolder(createFolderData)
-   
-    mainFolderId = mainFolderObj.data.id
 
     // /mainfolder     Main Folder Sub folders
       if(data.isNewClient){  
       console.log("starting google drive creation in new client", data)
+
+      
+      let mainFolderId = ""  
+      //Main folder
+      const createFolderData = fileMetadata( `${data.clientId}_${data.clientName}`,teamDriveId)
+      const mainFolderObj = await generateFolder(createFolderData)
+      mainFolderId = mainFolderObj.data.id
+      
       const angebote = fileMetadata( `00 Angebote`,mainFolderId)
       const angeboteId = await generateFolder(angebote) 
   
       const projekteGewonnen = fileMetadata( `01 Projekte Gewonnen`,mainFolderId)
       const projekteGewonnenId = await generateFolder(projekteGewonnen) 
   
-      const projekteVerloren = fileMetadata( `02 Projekte Verloren`,mainFolderId)
-      await generateFolder(projekteVerloren) 
-  
-      const corporateDesign = fileMetadata( `03 Corporate Design`,mainFolderId)
+      const corporateDesign = fileMetadata( `02 Corporate Design`,mainFolderId)
       const corporateDesignId = await generateFolder(corporateDesign) 
-  
-      const adminAllgemein = fileMetadata( `04 Admin Allgemein`,mainFolderId)
+
+      const adminAllgemein = fileMetadata( `03 Admin Allgemein`,mainFolderId)
       await generateFolder(adminAllgemein) 
   
       // mainfolder/angebote       Subfolder
@@ -186,64 +180,41 @@ try {
       const meeting = fileMetadata( `00 Meeting Protocols`,xxProjectId.data.id)
       await generateFolder(meeting) 
   
-      const pitch1 = fileMetadata( `01 Pitch`,xxProjectId.data.id)
-      await generateFolder(pitch1) 
-  
-      const contracts1 = fileMetadata( `02 Contracts`,xxProjectId.data.id)
-      await generateFolder(contracts1) 
-  
-      const briefing1 = fileMetadata( `03 Briefing`,xxProjectId.data.id)
-      await generateFolder(briefing1) 
-  
-      const content1 = fileMetadata( `04 Content`,xxProjectId.data.id)
-      await generateFolder(content1) 
-  
-      const preprod1 = fileMetadata( `05 Preprod`,xxProjectId.data.id)
-      const preprodId1 = await generateFolder(preprod1) 
-  
-      const finalContent1 = fileMetadata( `06 Final Content`,xxProjectId.data.id)
-      await generateFolder(finalContent1) 
-      
-      //mainfolder/angenote/xx_xxproject/05_Preprod       subfolders
-      const script = fileMetadata( `01 Script`,preprodId1.data.id)
-      await generateFolder(script) 
-  
-      const storyboard = fileMetadata( `02 Storyboard`,preprodId1.data.id)
-      await generateFolder(storyboard) 
-  
-      const scouting = fileMetadata( `03 Scouting`,preprodId1.data.id)
-      await generateFolder(scouting) 
-  
-      const shotlist = fileMetadata( `04 Shotlist`,preprodId1.data.id)
-      await generateFolder(shotlist) 
-  
-      const callsheet = fileMetadata( `05 Call Sheet`,preprodId1.data.id)
-      await generateFolder(callsheet)
-  
-      //mainfolder/01_Projecte_gewennen
-      const xxProjectGewonnen = fileMetadata( `${yearCreated}_${data.clientProjectNumber}_${data.name}`,projekteGewonnenId.data.id)
-      const xxProjectGewonnenId = await generateFolder(xxProjectGewonnen) 
-  
-  
-  
-      //mainfolder/01_Projecte_gewennen/xx_xxProject/    subfolders
-      const pitch = fileMetadata( `01 Pitch`,xxProjectGewonnenId.data.id)
+      const pitch = fileMetadata( `01 Pitch`,xxProjectId.data.id)
       await generateFolder(pitch) 
   
-      const contracts = fileMetadata( `02 Contracts`,xxProjectGewonnenId.data.id)
+      const contracts = fileMetadata( `02 Contracts`,xxProjectId.data.id)
       await generateFolder(contracts) 
   
-      const briefing = fileMetadata( `03 Briefing`,xxProjectGewonnenId.data.id)
+      const briefing = fileMetadata( `03 Briefing`,xxProjectId.data.id)
       await generateFolder(briefing) 
   
-      const content = fileMetadata( `04 Content`,xxProjectGewonnenId.data.id)
+      const content = fileMetadata( `04 Content`,xxProjectId.data.id)
       await generateFolder(content) 
   
-      const preprod = fileMetadata( `05 Preprod`,xxProjectGewonnenId.data.id)
-      await generateFolder(preprod) 
+      const preprod = fileMetadata( `05 Preprod`,xxProjectId.data.id)
+      const preprodId = await generateFolder(preprod) 
   
-      const finalContent = fileMetadata( `06 Final Content`,xxProjectGewonnenId.data.id)
+      const finalContent = fileMetadata( `06 Final Content`,xxProjectId.data.id)
       await generateFolder(finalContent) 
+      
+      //mainfolder/angenote/xx_xxproject/05_Preprod       subfolders
+      const script = fileMetadata( `01 Script`,preprodId.data.id)
+      await generateFolder(script) 
+  
+      const storyboard = fileMetadata( `02 Storyboard`,preprodId.data.id)
+      await generateFolder(storyboard) 
+  
+      const scouting = fileMetadata( `03 Scouting`,preprodId.data.id)
+      await generateFolder(scouting) 
+  
+      const shotlist = fileMetadata( `04 Shotlist`,preprodId.data.id)
+      await generateFolder(shotlist) 
+  
+      const callsheet = fileMetadata( `05 Call Sheet`,preprodId.data.id)
+      await generateFolder(callsheet)
+  
+     
   
   
       // Corporate Design subfolders
@@ -253,11 +224,12 @@ try {
       const logo = fileMetadata( `Logo`,corporateDesignId.data.id)
       await generateFolder(logo) 
           
-      console.log("sucess creating google drive tree")
-      await firebase.updateFirebase("clients","idNumber",data.clientId,{clientFolderId:mainFolderId,projectsFolderId:projekteGewonnenId.data.id},"saving folderId google drive") 
+      console.log("sucess creating google drive tree, Id from agebote forlder is",xxProjectId.data.id)
+      await firebase.updateFirebase("clients","idNumber",data.clientId,{projectsFolderId:angeboteId.data.id},"saving folderId google drive") 
      }else{
       console.log("google drive in old client", data)
-      //mainfolder/Projekte_gewonnen/
+      //mainfolder/angebote/
+
       const xxProjectGewonnen1 = fileMetadata( `${yearCreated}_${data.clientProjectNumber}_${data.name}`,data.projectsFolderId)
       const xxProjectGewonnenId1 = await generateFolder(xxProjectGewonnen1)
 
@@ -275,10 +247,26 @@ try {
       await generateFolder(content) 
   
       const preprod = fileMetadata( `05 Preprod`,xxProjectGewonnenId1.data.id)
-      await generateFolder(preprod) 
+      const preprodId1 = await generateFolder(preprod) 
   
       const finalContent = fileMetadata( `06 Final Content`,xxProjectGewonnenId1.data.id)
       await generateFolder(finalContent) 
+
+      //mainfolder/angenote/xx_xxproject/05_Preprod  subfolders
+      const script = fileMetadata( `01 Script`,preprodId1.data.id)
+      await generateFolder(script) 
+
+      const storyboard = fileMetadata( `02 Storyboard`,preprodId1.data.id)
+      await generateFolder(storyboard) 
+
+      const scouting = fileMetadata( `03 Scouting`,preprodId1.data.id)
+      await generateFolder(scouting) 
+
+      const shotlist = fileMetadata( `04 Shotlist`,preprodId1.data.id)
+      await generateFolder(shotlist) 
+
+      const callsheet = fileMetadata( `05 Call Sheet`,preprodId1.data.id)
+      await generateFolder(callsheet)
 
       console.log("sucess creating new project on old client") 
     }  
