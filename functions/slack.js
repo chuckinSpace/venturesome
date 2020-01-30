@@ -1,5 +1,5 @@
 require('dotenv').config()
-
+var request = require('request');
 const { WebClient } = require('@slack/web-api');
 const axios = require('axios')
 
@@ -18,6 +18,29 @@ const createSlackChannel = async (users,clientName) => {
      console.log(error)
    }
  };
+
+ const sendClientInvite = async (clientEmail,channelId) =>{
+  try {
+    var options = {
+      'method': 'POST',
+      'url': 'https://slack.com/api/users.admin.invite',
+      'headers': {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer xoxp-684436221811-875091030949-911637715186-cc72849f9de570e7be5126b247a497d1'
+      },
+      formData: {
+        'email': clientEmail,'channels':channelId,'ultra_restricted': "true"
+      }
+    };
+    request(options, function (error, response) { 
+      if (error) throw new Error("error trying to send invite to client",error);
+      console.log(`sucess sending invitation to channel ${channelId} to user for slack`,response.body);
+    });
+  }
+  catch(err){
+    throw new Error("error trying to send invite to client")
+  }
+ }
 
 const getUserbyEmail = async (userEmail)=>{
   try {
@@ -44,7 +67,6 @@ const getSlackIds = async (slackObj) =>{
 
 }
 
- 
 
 const sendWelcomeMessage =async (channelId,team,clientName) =>{
   console.log("sending messages",channelId,team,clientName)
@@ -91,10 +113,11 @@ const slackCreationWorkflow = async (clientFirebase)=>{
           console.log(companyChannelId,"companyChannelId",clientChannelId,"clientChannelId") 
           // invite the client to clientChannel just created via email  
           
-      /*     await slack.sendClientInvite(submissionObj.contactEmail)  */
+         
         
           await sendWelcomeMessage(companyChannelId,"internal",clientFirebase.name)
           await sendWelcomeMessage(clientChannelId,"client",clientFirebase.name)
+          await sendClientInvite(clientFirebase.contactEmail,clientChannelId.toString())
       }else{
           //create one private channel add slackUsers
           const companyChannelId = await createSlackChannel(slackIds,`TEST-intern-${clientFirebase.idNumber}-${clientFirebase.name}`)
@@ -115,10 +138,12 @@ const slackCreationWorkflow = async (clientFirebase)=>{
 
 
 
+
+
 module.exports.createSlackChannel = createSlackChannel
 module.exports.getUserbyEmail = getUserbyEmail
 module.exports.getSlackIds = getSlackIds
-/* module.exports.sendClientInvite = sendClientInvite */
+module.exports.sendClientInvite = sendClientInvite 
 module.exports.sendWelcomeMessage = sendWelcomeMessage
 module.exports.slackCreationWorkflow = slackCreationWorkflow
 

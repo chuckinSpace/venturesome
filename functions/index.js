@@ -1,10 +1,4 @@
-/*
-TODO: 
-    
 
-    
-
-*/
 const functions = require('firebase-functions');
 const googleDrive = require("./google");
 const slack = require("./slack");
@@ -187,7 +181,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
         await monday.setMondayClientId(boardId,itemId,clientObj.idNumber)
         // create google drive entire tree
         projectObj.isNewClient = true
-       await googleDrive.createFolderTree(projectObj);
+        await googleDrive.createFolderTree(projectObj);
       if(projectObj.companyAssigned === "Venturesome"){
           
         //add to Video project Overview
@@ -260,31 +254,7 @@ exports.getClientIdTypeForm = functions.https.onRequest(async(req,res)=>{
    res.send({message: "success"})
 })
 
-/*
-  exports.createDriveFolders = functions.firestore.document("projects/{projectId}")
-   
-  .onCreate(async (snap) => {
 
-   const project = snap.data();
-   const projectObj = {
-       clientEmail: project.clientEmail,
-       clientIdNumber: project.clientIdNumber,
-       clientName: project.clientName,
-       internalProjectNumber: project.idNumber,
-       managerEmail: project.managerEmail,
-       managerName: project.managerName,
-       clientProjectNumber: project.clientProjectNumber,
-       slackUsers: project.slackUsers
-   };
-
-   console.log(projectObj);
-   // perform desired operations ...
-  
-   await slack.createSlackChannel(projectObj.slackUsers,projectObj.clientName);
-
-   return null;
- }); 
- */
 
   /*   
     challenge for monday.com to activate new Wehbhook  
