@@ -5,20 +5,6 @@ require("dotenv").config()
 
 const WID = process.env.TOGGL_WID
 
-const getClients = () => {
-	let options = {
-		url: "https://www.toggl.com/api/v8/workspaces/2355444/clients",
-		auth: {
-			user: process.env.TOGGL_USER,
-			pass: "api_token"
-		}
-	}
-
-	rp(options)
-		.then(response => console.log(JSON.parse(response)))
-		.catch(err => console.log(err))
-}
-
 const createClient = async (clientName, clientNumber) => {
 	console.log("creating toggl", clientName)
 	let options = {
