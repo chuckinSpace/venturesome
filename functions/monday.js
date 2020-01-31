@@ -535,10 +535,17 @@ const addProjectOverview = async (
 	projectName,
 	pmId,
 	createdAt,
-	smId
+	smId,
+	companyAssigned
 ) => {
+	let dateTime = moment(createdAt).format("YYYY-MM-DD")
+	let giftDate = moment(createdAt)
+		.add(3, "M")
+		.format("YYYY-MM-DD")
+
+	let columValues = ""
 	console.log(
-		"in adding project overview",
+		"bedfore creating project overview",
 		clientNumber,
 		year,
 		clientProjectNumber,
@@ -546,16 +553,24 @@ const addProjectOverview = async (
 		projectName,
 		pmId,
 		createdAt,
-		smId
+		smId,
+		companyAssigned
 	)
+	if (companyAssigned === "Venturesome") {
+		columValues = JSON.stringify({
+			person: { id: pmId },
+			datum4: { date: dateTime },
+			datum: { date: giftDate },
+			pm: { id: smId }
+		})
+	} else if (companyAssigned === "MoneyTree") {
+		columValues = JSON.stringify({
+			person: { id: pmId },
+			datum4: { date: dateTime },
+			pm: { id: smId }
+		})
+	}
 
-	let dateTime = moment(createdAt).format("YYYY-MM-DD")
-	let giftDate = moment(createdAt)
-		.add(3, "M")
-		.format("YYYY-MM-DD")
-
-	console.log(typeof dateTime, giftDate)
-	//"date": "2019-06-03"  format to insert date
 	const body = {
 		query: `
       mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
@@ -573,12 +588,7 @@ const addProjectOverview = async (
 			boardId: PROJECT_OVERVIEW_ID,
 			groupId: P_OVER_INBOX_GROUP_ID,
 			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
-			columnValues: JSON.stringify({
-				person: { id: pmId },
-				geschenksdatum: { date: dateTime },
-				datum: { date: giftDate },
-				pm: { id: smId }
-			})
+			columnValues: columValues
 		}
 	}
 	try {

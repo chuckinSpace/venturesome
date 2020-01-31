@@ -237,6 +237,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				}
 
 				// add to Project overview Inbox always
+
 				await monday.addProjectOverview(
 					clientObj.idNumber,
 					yearCreated,
@@ -245,7 +246,8 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					projectObj.name,
 					projectObj.pmId,
 					clientObj.createdAt,
-					projectObj.smId
+					projectObj.smId,
+					projectObj.companyAssigned
 				)
 			} else {
 				await firebase.createProject(projectObj)
@@ -288,10 +290,6 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				const firebaseClient = await firebase.getClient(projectObj.clientId)
 				projectObj.projectsFolderId = firebaseClient.projectsFolderId
 				projectObj.isNewClient = false
-				console.log(
-					"projectObj going to google drive in old client",
-					projectObj
-				)
 				await googleDrive.createFolderTree(projectObj)
 				await monday.addProjectOverview(
 					clientObj.idNumber,
@@ -301,7 +299,8 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					projectObj.name,
 					projectObj.pmId,
 					clientObj.createdAt,
-					projectObj.smId
+					projectObj.smId,
+					projectObj.companyAssigned
 				)
 			}
 			res.send({ message: "success" })
