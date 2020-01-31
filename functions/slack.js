@@ -48,6 +48,10 @@ const sendClientInvite = async (clientEmail, channelId) => {
 	}
 }
 
+const test = async () => {
+	sendClientInvite("carlos@test.com", "GTC9GBVPX")
+}
+test()
 const getUserbyEmail = async userEmail => {
 	try {
 		const response = await web.users.lookupByEmail({ email: userEmail })
