@@ -1,8 +1,3 @@
-/*
-TODO: 
-      
-*/
-
 //firebase authentication
 const admin = require("firebase-admin")
 require("dotenv").config()
@@ -145,31 +140,6 @@ const deleteStagedClient = async clientId => {
 		.catch(err => console.log("error removing staged client", err))
 }
 
-//saves the submission obj adding it to the corresponding client, stored as clientId inside the coming obj on firebase
-const saveSubmissionObj = async submissionObj => {
-	try {
-		const getClientSnap = db
-			.collection("clients")
-			.where("idNumber", "==", submissionObj.clientId)
-		const clientObj = await getClientSnap.get()
-		clientObj.forEach(doc => {
-			doc.ref
-				.update({
-					birthday: submissionObj.birthday,
-					contactEmail: submissionObj.email,
-					onboardingCompletedOn: new Date(),
-					slack: submissionObj.slack,
-					contactPhone: submissionObj.phone,
-					contactName: submissionObj.name
-				})
-				.then(() => console.log("after sending submission"))
-				.catch(err => console.log("error when sving submission obj", err))
-		})
-	} catch (error) {
-		console.log(error)
-	}
-}
-
 const updateFirebase = async (
 	collection,
 	whereParam,
@@ -189,92 +159,6 @@ const updateFirebase = async (
 	}
 }
 
-/* const getSlackUsersByInternal = async(internalProjectId) =>{
-    console.log("getSlackUsersByInternal starting", internalProjectId)
-    let slackUsers = ""
-    try {
-        const getClientSnap =  db.collection('clients').where('internalProjectId','==',internalProjectId);
-        const clientObj = await getClientSnap.get()
-        clientObj.forEach((doc)=>{
-              slackUsers = doc.data().slackUsers
-            });
-           return slackUsers
-    } catch (error) {
-        console.log(error);
-    }
-} */
-
-/* const getSlackUsersByClientId = async(clientId) =>{
-    console.log("getSlackUsersByClientId starting", clientId)
-    let slackUsers = ""
-    try {
-        const getClientSnap =  db.collection('projects').where('clientId','==',clientId);
-        const clientObj = await getClientSnap.get()
-        clientObj.forEach((doc)=>{
-              slackUsers = doc.data().slackUsers
-            });
-           return slackUsers
-    } catch (error) {
-        console.log(error);
-    }
-} */
-
-const getSlackOption = async clientId => {
-	console.log("getSlackOption starting", clientId)
-	let slackOption = ""
-	try {
-		const getClientSnap = db
-			.collection("clients")
-			.where("idNumber", "==", clientId)
-		const clientObj = await getClientSnap.get()
-		clientObj.forEach(doc => {
-			slackOption = doc.data().slack
-		})
-		return slackOption
-	} catch (error) {
-		console.log(error)
-	}
-}
-
-const getProjectObjByInternal = async internalProjectId => {
-	console.log(
-		"getProjectObj starting with internal project Id",
-		internalProjectId
-	)
-	let projectObj = ""
-	try {
-		const getProjectSnap = db
-			.collection("projects")
-			.where("internalProjectId", "==", internalProjectId)
-		const projectSnap = await getProjectSnap.get()
-		projectSnap.forEach(doc => {
-			projectObj = doc.data()
-		})
-		return projectObj
-	} catch (error) {
-		console.log(error)
-	}
-}
-
-const getProjectObjByClientId = async clientId => {
-	console.log(
-		"getProjectObjByClientId starting with internal project Id",
-		clientId
-	)
-	let projectObj = ""
-	try {
-		const getProjectSnap = db
-			.collection("projects")
-			.where("clientId", "==", clientId)
-		const projectSnap = await getProjectSnap.get()
-		projectSnap.forEach(doc => {
-			projectObj = doc.data()
-		})
-		return projectObj
-	} catch (error) {
-		console.log(error)
-	}
-}
 const getClient = async clientId => {
 	console.log("getClient starting with client Id", clientId)
 	let clientObj = ""
@@ -301,26 +185,5 @@ module.exports.createProject = createProject
 module.exports.saveIdstaging = saveIdstaging
 module.exports.getStagedClientId = getStagedClientId
 module.exports.deleteStagedClient = deleteStagedClient
-module.exports.saveSubmissionObj = saveSubmissionObj
-/* module.exports.getSlackUsersByInternal = getSlackUsersByInternal
-module.exports.getSlackUsersByClientId = getSlackUsersByClientId */
-module.exports.getSlackOption = getSlackOption
-module.exports.getProjectObjByInternal = getProjectObjByInternal
-module.exports.getProjectObjByClientId = getProjectObjByClientId
 module.exports.updateFirebase = updateFirebase
 module.exports.getClient = getClient
-
-//firebase extension to send emails to use generic emails for testing
-
-/* db.collection('mail').add({
-    to: clientEmail,
-    message: {
-      subject: `Welcome to ${companyAssigned}`,
-      html: `<code>
-      <h2>Hi ${clientName}</h2>
-      <h3>We thank you for becoming a client with ${companyAssigned}</h3></br>
-      please follow this link to start the onboarding process ${formLink} </code>`,
-    }
-  })
-  .then(() => console.log('Queued email for delivery!'))
-  .catch((err)=>console.log("error when sending onboarding email", err)) */

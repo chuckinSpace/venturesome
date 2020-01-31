@@ -37,8 +37,21 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
           {birthday,contactEmail,onboardingCompletedOn,slack,contactPhone, contactName} to that client on firestore
           */
 				const submissionObj = await monday.getSubmissionData(boardId, itemId)
-				submissionObj.clientId = clientId
-				await firebase.saveSubmissionObj(submissionObj)
+				/* submissionObj.clientId = clientId */
+				await firebase.updateFirebase(
+					"clients",
+					"idNumber",
+					clientId,
+					{
+						birthday: submissionObj.birthday,
+						contactEmail: submissionObj.email,
+						onboardingCompletedOn: new Date(),
+						slack: submissionObj.slack,
+						contactPhone: submissionObj.phone,
+						contactName: submissionObj.name
+					},
+					"storing submission obj"
+				)
 
 				/*we look for the board where the clientId coming is and change status on monday where clientId to Onboarding Complete*/
 				const boardObj = await monday.getBoardByClientId(clientId)
