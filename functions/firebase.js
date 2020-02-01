@@ -75,6 +75,15 @@ const createClient = async client => {
 		.then(doc => console.log("success creating client on firebase", doc.id))
 		.catch(err => console.log("error creating client on firebase"))
 }
+
+//temp func for new client format
+const createNewClient = async client => {
+	db.collection("clients")
+		.add(client)
+		.then(doc => console.log("success creating client on firebase", doc.id))
+		.catch(err => console.log("error creating client on firebase"))
+}
+
 //creates the project on firebase "projects" collection using the project obj
 const createProject = async project => {
 	console.log("project obj going to firebase", project)
@@ -187,3 +196,4 @@ module.exports.getStagedClientId = getStagedClientId
 module.exports.deleteStagedClient = deleteStagedClient
 module.exports.updateFirebase = updateFirebase
 module.exports.getClient = getClient
+module.exports.createNewClient = createNewClient
