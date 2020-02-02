@@ -19,9 +19,9 @@ const getClientId = async () => {
 			.orderBy("idNumber", "desc")
 			.limit(1)
 			.get()
-		querySnapshot.forEach(doc => (lastId = doc.data().idNumber + 1))
+		querySnapshot.forEach(doc => (lastId = parseInt(doc.data().idNumber) + 1))
 
-		return lastId
+		return lastId.toString()
 	} catch (err) {
 		return console.log(err)
 	}

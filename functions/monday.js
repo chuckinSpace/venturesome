@@ -703,145 +703,27 @@ const saveClientToMondayDatabase = async clientFirebase => {
 	}
 }
 
-const databaseMigration = async () => {
+const createTag = async (clientName, clientNumber) => {
+	const tagText = `${clientNumber}${clientName.replace(/\s+/g, "")}`
+	console.log("tag to create", tagText)
 	const body = {
-		query: ` query {
-                  boards(ids: 275842142,limit:10) {
-					items {
-						group{
-						  id
-						  title
-						}
-						id
-						name
-						column_values{
-							id
-							value
-						}
-					  }  
-					}
-				}
-                `
-	}
-
-	try {
-		const clientObj = {
-			idNumber: "",
-			name: "",
-			address: "",
-			tags: "",
-			category: "",
-			contacts: [
-				{
-					name: "",
-					position: "",
-					birthday: "",
-					email: {
-						email: "",
-						text: ""
-					},
-					officePhone: {
-						number: "",
-						countryShortName: ""
-					},
-					mobilePhone: {
-						number: "",
-						countryShortName: ""
-					}
-				}
-			]
+		query: `
+		mutation($tagText:String!) {
+			create_or_get_tag (tag_name: $tagText) {
+				id
+			}
 		}
-
-		const result = await postMonday(body, `querying monday database`)
-		/* const clientBoards = result.data.boards[0].items.filter(
-			item => item.group.id !== "new_group18"
-		) */
-		const clientBoards = result.data.boards[0].items.filter(
-			item => item.group.id === "topics"
-		)
-		const item = clientBoards[0]
-
-		const clientIdObj = clientBoards[0].column_values.find(
-			item => item.id === "client_nr_"
-		)
-		const clientId = clientIdObj.value.replace(/['"]+/g, "")
-		clientObj.idNumber = clientId
-
-		const name = clientBoards[0].group.title.split(" | ")
-		clientObj.name = name[1]
-
-		const contactName = clientBoards[0].name
-		clientObj.contacts[0].name = contactName
-
-		const positionObj = clientBoards[0].column_values.find(
-			item => item.id === "text17"
-		)
-		const position = positionObj.value.replace(/['"]+/g, "")
-		clientObj.contacts[0].position = position
-
-		const officePhoneObj = clientBoards[0].column_values.find(
-			item => item.id === "mobile8"
-		)
-		const officePhone = JSON.parse(officePhoneObj.value).phone
-		clientObj.contacts[0].officePhone.number = officePhone
-
-		const officePhoneFlag = JSON.parse(officePhoneObj.value).countryShortName
-		clientObj.contacts[0].officePhone.countryShortName = officePhoneFlag
-
-		const mobilePhoneObj = clientBoards[0].column_values.find(
-			item => item.id === "phone"
-		)
-		const mobilePhone = JSON.parse(mobilePhoneObj.value).phone
-		clientObj.contacts[0].mobilePhone.number = mobilePhone
-
-		const mobilePhoneFlag = JSON.parse(mobilePhoneObj.value).countryShortName
-		clientObj.contacts[0].mobilePhone.countryShortName = mobilePhoneFlag
-
-		const emailObj = clientBoards[0].column_values.find(
-			item => item.id === "email"
-		)
-		const email = JSON.parse(emailObj.value).email
-		clientObj.contacts[0].email.email = email
-		clientObj.contacts[0].email.text = contactName
-
-		const addressObj = clientBoards[0].column_values.find(
-			item => item.id === "location"
-		)
-		const address = JSON.parse(addressObj.value).address
-		clientObj.address = address
-
-		const birthdayObj = clientBoards[0].column_values.find(
-			item => item.id === "due_date"
-		)
-		const birthday = JSON.parse(birthdayObj.value).date
-		clientObj.contacts[0].birthday = birthday
-
-		const tagsObj = clientBoards[0].column_values.find(
-			item => item.id === "tags7"
-		)
-		const tags = JSON.parse(tagsObj.value).tag_ids
-		clientObj.tags = tags[0]
-
-		const category = clientBoards[0].column_values.find(
-			item => item.id === "text1"
-		)
-		clientObj.category = category.value.replace(/['"]+/g, "")
-
-		return clientObj
-	} catch (error) {
-		console.log(error)
+    `,
+		variables: {
+			tagText: tagText
+		}
 	}
+	const response = await postMonday(body, `creating tag ${tagText}`)
+	const tagId = response.data.create_or_get_tag.id
+	return tagId
 }
-const test = async () => {
-	const result = await databaseMigration()
-	try {
-		await firebase.createNewClient(result)
-		console.log(util.inspect(result, { maxArrayLength: 30 }))
-	} catch (error) {
-		console.log(error)
-	}
-}
-test()
+
+//function to migrate database from monday to firebase
 
 module.exports.getResult = getResult
 module.exports.updateForms = updateForms
@@ -853,3 +735,4 @@ module.exports.addVideoProjectBoard = addVideoProjectBoard
 module.exports.addProjectOverview = addProjectOverview
 module.exports.addMoneyTreeAccount = addMoneyTreeAccount
 module.exports.saveClientToMondayDatabase = saveClientToMondayDatabase
+module.exports.createTag = createTag
