@@ -3,6 +3,7 @@
 		-change message for slack
 		-add error to monday board and email not to me
 		-move with us since and gift to database
+		- update new clients added to monday database
 */
 const functions = require("firebase-functions")
 const googleDrive = require("./google")
@@ -12,6 +13,8 @@ const typeForm = require("./typeForm")
 const firebase = require("./firebase")
 const sendGrid = require("./sendGrid")
 const toggl = require("./toggl")
+const frameio = require("./frameio")
+
 //designated format for first project number
 const FIRST_PROJECT_NUMBER = 1
 
@@ -232,7 +235,11 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						clientObj.tag
 					)
 
-					//create frameio client
+					//create frameio project
+					await frameio.createFrameIoProject(
+						`${clientObj.idNumber}_${yearCreated}_${projectObj.clientProjectNumber} | ${clientObj.name} | ${projectObj.name} `
+					)
+					await monday.changeMondayStatus("status8", "Completed", itemId)
 					//create toggle client
 					const togglClientId = await toggl.createClient(
 						clientObj.name,
