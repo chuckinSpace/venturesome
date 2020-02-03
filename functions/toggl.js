@@ -6,7 +6,7 @@ require("dotenv").config()
 const WID = process.env.TOGGL_WID
 
 const createClient = async (clientName, clientNumber) => {
-	console.log("creating toggl", clientName)
+	console.log("creating toggl client", clientName)
 	let options = {
 		method: "POST",
 		url: "https://www.toggl.com/api/v8/clients",
@@ -40,6 +40,7 @@ const createProject = async (
 	year,
 	clientProjectNumber
 ) => {
+	console.log("creating toggle project", projectName)
 	let options = {
 		method: "POST",
 		url: "https://www.toggl.com/api/v8/projects",

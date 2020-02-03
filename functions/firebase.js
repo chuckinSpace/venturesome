@@ -57,53 +57,18 @@ const getClientProjectNumber = async clientId => {
 
 //creates the client on firebase "clients" collection using the client Obj
 const createClient = async client => {
-	db.collection("clients")
-		.add({
-			idNumber: client.idNumber,
-			name: client.name,
-			email: client.email,
-			phone: client.phone,
-			clientProjectNumber: client.clientProjectNumber,
-			street: client.street,
-			zipCode: client.zipCode,
-			city: client.city,
-			mondayItemIdDeal: client.mondayItemIdDeal,
-			formLink: client.formLink,
-			createdAt: client.createdAt,
-			slackUsers: client.slackUsers
-		})
-		.then(doc => console.log("success creating client on firebase", doc.id))
-		.catch(err => console.log("error creating client on firebase"))
-}
-
-//temp func for new client format
-const createNewClient = async client => {
+	console.log("client goin to firabas", client)
 	db.collection("clients")
 		.add(client)
 		.then(doc => console.log("success creating client on firebase", doc.id))
-		.catch(err => console.log("error creating client on firebase"))
+		.catch(err => console.log("error creating client on firebase", err))
 }
 
 //creates the project on firebase "projects" collection using the project obj
 const createProject = async project => {
 	console.log("project obj going to firebase", project)
 	db.collection("projects")
-		.add({
-			clientId: project.clientId,
-			clientEmail: project.clientEmail,
-			clientName: project.clientName,
-			createdAt: project.createdAt,
-			idNumber: project.idNumber,
-			pmEmail: project.pmEmail,
-			pmName: project.pmName,
-			pmId: project.pmId,
-			companyAssigned: project.companyAssigned,
-			name: project.name,
-			clientPhone: project.clientPhone,
-			clientProjectNumber: project.clientProjectNumber,
-			internalProjectId: project.internalProjectId,
-			smId: project.smId
-		})
+		.add(project)
 		.then(doc => console.log("success creating project on firebase", doc.id))
 		.catch(err => console.log("error creating project on firebase", err))
 }
@@ -168,7 +133,7 @@ const updateFirebase = async (
 	}
 }
 
-const getClient = async clientId => {
+const getClientInfo = async clientId => {
 	console.log("getClient starting with client Id", clientId)
 	let clientObj = ""
 	try {
@@ -184,7 +149,15 @@ const getClient = async clientId => {
 		console.log(error)
 	}
 }
-
+const getAllClients = async () => {
+	let clients = []
+	const getClientsSnap = db.collection("clients").orderBy("idNumber", "asc")
+	const clientSnap = await getClientsSnap.get()
+	clientSnap.forEach(doc => {
+		clients.push(doc.data())
+	})
+	return clients
+}
 //exports
 module.exports.getClientId = getClientId
 module.exports.getInternalProjectId = getInternalProjectId
@@ -195,5 +168,5 @@ module.exports.saveIdstaging = saveIdstaging
 module.exports.getStagedClientId = getStagedClientId
 module.exports.deleteStagedClient = deleteStagedClient
 module.exports.updateFirebase = updateFirebase
-module.exports.getClient = getClient
-module.exports.createNewClient = createNewClient
+module.exports.getClientInfo = getClientInfo
+module.exports.getAllClients = getAllClients

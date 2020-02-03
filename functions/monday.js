@@ -1,7 +1,6 @@
 /*
 TODO: 
-      - check error when client not found
-      - change getPmInfo function name
+     - finished implementation to save data from firbase to monday
 
     
  BUG: - error when submitting form check cloud funciotns
@@ -71,19 +70,8 @@ const setMondayClientId = async (boardId, itemId, clientId) => {
 	await postMonday(body, `returning client Id ${stringId}`)
 }
 
-const changeMondayStatus = async (status, boardId, itemId) => {
-	let statusText = ""
-	if (status === 0) {
-		statusText = "Onboarding Sent!"
-	} else if (status === 1) {
-		statusText = "Missing Info"
-	} else if (status === 2) {
-		statusText = "Project Created"
-	} else if (status === 3) {
-		statusText = "Client Not Found"
-	} else if (status === 4) {
-		statusText = "Onboarding Complete"
-	}
+const changeMondayStatus = async (cellId, label, itemId) => {
+	const onboardingId = 413267102
 
 	const body = {
 		query: `
@@ -95,14 +83,14 @@ const changeMondayStatus = async (status, boardId, itemId) => {
     }
     `,
 		variables: {
-			boardId: boardId,
+			boardId: onboardingId,
 			itemId: itemId,
-			columnValues: JSON.stringify({ label: statusText }),
-			columnId: STATUS_ID_SALES_PIPELINE
+			columnValues: JSON.stringify({ label: label }),
+			columnId: cellId
 		}
 	}
 
-	await postMonday(body, `changing monday status to ${statusText}`)
+	await postMonday(body, `changing monday status to ${label}`)
 }
 
 const getLink = async itemId => {
@@ -482,7 +470,8 @@ const addVideoProjectBoard = async (
 	clientProjectNumber,
 	clientName,
 	projectName,
-	pmId
+	pmId,
+	tag
 ) => {
 	console.log(
 		clientNumber,
@@ -511,8 +500,9 @@ const addVideoProjectBoard = async (
 			groupId: GROUP_ID_P_OVER_CURR_VIDEO_PROJ,
 			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
 			columnValues: JSON.stringify({
-				status: { label: "Done" },
-				person: { personsAndTeams: [{ id: pmId, kind: "person" }] }
+				status: { label: "On it!" },
+				person: { personsAndTeams: [{ id: pmId, kind: "person" }] },
+				tags: { text: "testTag", tag_ids: [tag] }
 			})
 		}
 	}
@@ -535,7 +525,8 @@ const addProjectOverview = async (
 	pmId,
 	createdAt,
 	smId,
-	companyAssigned
+	companyAssigned,
+	tag
 ) => {
 	let dateTime = moment(createdAt).format("YYYY-MM-DD")
 	let giftDate = moment(createdAt)
@@ -559,14 +550,16 @@ const addProjectOverview = async (
 		columValues = JSON.stringify({
 			person: { id: pmId },
 			datum4: { date: dateTime },
-			datum: { date: giftDate },
-			pm: { id: smId }
+			pm: { id: smId },
+			tags: { text: "testTag", tag_ids: [tag] }
 		})
 	} else if (companyAssigned === "MoneyTree") {
 		columValues = JSON.stringify({
 			person: { id: pmId },
 			datum4: { date: dateTime },
-			pm: { id: smId }
+			datum: { date: giftDate },
+			pm: { id: smId },
+			tags: { text: "testTag", tag_ids: [tag] }
 		})
 	}
 
@@ -606,7 +599,8 @@ const addMoneyTreeAccount = async (
 	clientProjectNumber,
 	clientName,
 	projectName,
-	pmId
+	pmId,
+	tag
 ) => {
 	console.log(
 		clientNumber,
@@ -635,8 +629,9 @@ const addMoneyTreeAccount = async (
 			groupId: MONEY_TREE_ACCOUNTS_GROUP_ID,
 			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
 			columnValues: JSON.stringify({
-				strategie_session: { label: "Done" },
-				person: { personsAndTeams: [{ id: pmId, kind: "person" }] }
+				strategie_session: { label: "On it!" },
+				person: { personsAndTeams: [{ id: pmId, kind: "person" }] },
+				tags: { text: "testTag", tag_ids: [tag] }
 			})
 		}
 	}
@@ -693,7 +688,9 @@ const saveClientToMondayDatabase = async clientFirebase => {
 						email: clientFirebase.email,
 						text: clientFirebase.contactName
 					},
-					due_date: { date: clientFirebase.birthday }
+					due_date: { date: clientFirebase.birthday },
+					client_nr_: clientFirebase.idNumber,
+					tags7: { text: "testTag", tag_ids: [clientFirebase.tag] }
 				})
 			}
 		}
@@ -704,7 +701,7 @@ const saveClientToMondayDatabase = async clientFirebase => {
 }
 
 const createTag = async (clientName, clientNumber) => {
-	const tagText = `${clientNumber}${clientName.replace(/\s+/g, "")}`
+	const tagText = `#${clientNumber}${clientName.replace(/\s+/g, "")}`
 	console.log("tag to create", tagText)
 	const body = {
 		query: `
@@ -724,6 +721,299 @@ const createTag = async (clientName, clientNumber) => {
 }
 
 //function to migrate database from monday to firebase
+const databaseMigration = async () => {
+	const body = {
+		query: ` query {
+					boards(ids:446193294) {
+						groups {
+							title
+						items(limit: 120) {
+							name
+								column_values {
+								id
+								title
+								value
+								}
+							}
+						}
+					}
+				} 
+                `
+	}
+
+	try {
+		const clientsArray = []
+		const result = await postMonday(body, `querying monday database`)
+		const clients = result.data.boards[0].groups
+
+		await clients.map(async client => {
+			const clientObj = {
+				idNumber: "",
+				name: "",
+				address: "",
+				category: "",
+				formLink: "",
+				mondayItemIdOnboarding: "",
+				onboardingCompletedOn: "",
+				slack: "",
+				slackUsers: "",
+				togglClientId: "",
+				createdAt: new Date(),
+				tag: "",
+				contacts: []
+			}
+
+			const name = client.title.split(" | ")
+			!!name && (clientObj.name = name[1])
+
+			client.items.map(contact => {
+				const clientIdObj = contact.column_values.find(
+					item => item.id === "client_nr_"
+				)
+				const clientId =
+					!!clientIdObj.value && clientIdObj.value.replace(/['"]+/g, "")
+				!!clientId && (clientObj.idNumber = clientId)
+
+				const category = contact.column_values.find(item => item.id === "text1")
+				!!category.value &&
+					(clientObj.category = category.value.replace(/['"]+/g, ""))
+
+				const oldTag = contact.column_values.find(item => item.id === "tags7")
+				!!JSON.parse(oldTag.value) &&
+					JSON.parse(oldTag.value).tag_ids.length !== 0 &&
+					(clientObj.tag = JSON.parse(oldTag.value).tag_ids[0])
+				// creating
+
+				const contactObj = {
+					name: "",
+					position: "",
+					birthday: "",
+					email: {
+						email: "",
+						text: ""
+					},
+					officePhone: {
+						number: "",
+						countryShortName: ""
+					},
+					mobilePhone: {
+						number: "",
+						countryShortName: ""
+					}
+				}
+
+				const contactName = contact.name
+				!!contactName && (contactObj.name = contactName)
+
+				const positionObj = contact.column_values.find(
+					item => item.id === "text17"
+				)
+				const position =
+					!!positionObj.value && positionObj.value.replace(/['"]+/g, "")
+				!!position && (contactObj.position = position)
+
+				const officePhoneObj = contact.column_values.find(
+					item => item.id === "mobile8"
+				)
+
+				const officePhone =
+					!!JSON.parse(officePhoneObj.value) &&
+					JSON.parse(officePhoneObj.value).phone
+				!!officePhone && (contactObj.officePhone.number = officePhone)
+
+				const officePhoneFlag =
+					!!JSON.parse(officePhoneObj.value) &&
+					JSON.parse(officePhoneObj.value).countryShortName
+				!!officePhoneFlag &&
+					(contactObj.officePhone.countryShortName = officePhoneFlag)
+
+				const mobilePhoneObj = contact.column_values.find(
+					item => item.id === "phone"
+				)
+				const mobilePhone =
+					!!JSON.parse(mobilePhoneObj.value) &&
+					JSON.parse(mobilePhoneObj.value).phone
+				!!mobilePhone && (contactObj.mobilePhone.number = mobilePhone)
+
+				const mobilePhoneFlag =
+					!!JSON.parse(mobilePhoneObj.value) &&
+					JSON.parse(mobilePhoneObj.value).countryShortName
+				!!mobilePhoneFlag &&
+					(contactObj.mobilePhone.countryShortName = mobilePhoneFlag)
+
+				const emailObj = contact.column_values.find(item => item.id === "email")
+				const email =
+					!!JSON.parse(emailObj.value) && JSON.parse(emailObj.value).email
+				!!email && (contactObj.email.email = email)
+				!!email && (contactObj.email.text = contactName)
+
+				const addressObj = contact.column_values.find(
+					item => item.id === "location"
+				)
+				const address =
+					!!JSON.parse(addressObj.value) && JSON.parse(addressObj.value).address
+				!!address && (clientObj.address = address.trim())
+
+				const birthdayObj = contact.column_values.find(
+					item => item.id === "due_date"
+				)
+				const birthday =
+					!!JSON.parse(birthdayObj.value) && JSON.parse(birthdayObj.value).date
+				!!birthday && (contactObj.birthday = birthday)
+
+				clientObj.contacts.push(contactObj)
+				return contactObj
+			})
+			if (clientObj.tag === "") {
+				const tagId = await createTag(clientObj.name, clientObj.idNumber)
+				!!tagId && (clientObj.tag = tagId)
+			}
+
+			await firebase.createClient(clientObj)
+		})
+		return clientsArray
+	} catch (error) {
+		console.log(error)
+	}
+}
+
+const databaseFirebaseToMonday = async () => {
+	// create group
+	try {
+		const databaseId = 446277111
+		const createGroup = async groupTitle => {
+			const createGroupQuery = {
+				query: `
+			mutation($groupTitle:String!) {
+				create_group(board_id: ${databaseId}, group_name: $groupTitle) {
+				id
+				}
+			}
+			
+		`,
+				variables: {
+					groupTitle: groupTitle
+				}
+			}
+			const response = await postMonday(
+				createGroupQuery,
+				`creating group ${groupTitle}`
+			)
+			const groupId = response.data.create_group.id
+			return groupId
+		}
+
+		const createItem = async (firebaseClient, groupId) => {
+			console.log("in create item", firebaseClient, groupId)
+			const { idNumber, category, address, tag } = firebaseClient
+
+			const createItemQuery = {
+				query: `
+		  mutation ($boardId:Int!,$groupId:String!,$itemName:String,$columnValues:JSON!){
+			create_item (
+			  board_id: $boardId,
+			  group_id: $groupId,
+			  item_name: $itemName,
+			  column_values: $columnValues
+			) {
+			  id
+			}
+		  }
+		  `,
+				variables: {
+					boardId: databaseId,
+					groupId: groupId,
+					itemName: "temp",
+					columnValues: JSON.stringify({
+						client_nr_: idNumber,
+						adresse: address,
+						tags7: { text: "testTag", tag_ids: [tag] },
+						text1: category
+					})
+				}
+			}
+
+			const response = await postMonday(createItemQuery, `creating item`)
+			return parseInt(response.data.create_item.id)
+		}
+
+		const createItem2 = async (contact, itemId) => {
+			const {
+				birthday,
+				email,
+				mobilePhone,
+				officePhone,
+				position,
+				name
+			} = contact
+
+			const createItemQuery2 = {
+				query: `
+			mutation ($boardId: Int!, $itemId: Int!, $columnValues: JSON!) {
+				change_multiple_column_values(
+				  board_id: $boardId, 
+				  item_id: $itemId, 
+				  column_values: $columnValues ) {
+				  id
+				}
+			  }
+		  `,
+				variables: {
+					boardId: databaseId,
+					itemId: itemId,
+					columnValues: JSON.stringify({
+						name: name,
+						text17: position,
+						mobile8: {
+							phone: officePhone.number,
+							countryShortName: officePhone.countryShortName
+						},
+						phone: {
+							phone: mobilePhone.number,
+							countryShortName: mobilePhone.countryShortName
+						},
+						email: { email: email.email, text: email.text },
+						due_date: { date: birthday }
+					})
+				}
+			}
+
+			const response = await postMonday(createItemQuery2, `creating item 2`)
+		}
+
+		const createSecondLevel = async (firebaseClient, groupId) => {
+			await firebaseClient.contacts.map(async contact => {
+				const itemId = await createItem(firebaseClient, groupId)
+				await createItem2(contact, itemId)
+			})
+		}
+
+		let firebaseClient = ""
+		//get Client form firebase
+		for (let index = 1; index < 107; index++) {
+			let counter = index.toString().padStart(3, "0")
+			firebaseClient = await firebase.getClientInfo(counter)
+			//create group on monday return group Id
+			const groupId = await createGroup(
+				`${firebaseClient.idNumber} | ${firebaseClient.name}`
+			)
+
+			// create second level insertin contact info on the item created
+			await createSecondLevel(firebaseClient, groupId)
+		}
+	} catch (error) {
+		console.log(error)
+	}
+}
+
+const test = async () => {
+	try {
+		await databaseFirebaseToMonday()
+	} catch (error) {
+		console.log(error)
+	}
+}
+/* test() */
 
 module.exports.getResult = getResult
 module.exports.updateForms = updateForms

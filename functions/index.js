@@ -1,3 +1,9 @@
+/*
+ TODO: -client nr on monday database no working, also missing tag, add category to onboarding and database
+		-change message for slack
+		-add error to monday board and email not to me
+		-move with us since and gift to database
+*/
 const functions = require("firebase-functions")
 const googleDrive = require("./google")
 const slack = require("./slack")
@@ -55,15 +61,16 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 
 				/*we look for the board where the clientId coming is and change status on monday where clientId to Onboarding Complete*/
 				const boardObj = await monday.getBoardByClientId(clientId)
-				await monday.changeMondayStatus(4, boardObj.boardId, boardObj.itemId)
+				await monday.changeMondayStatus("status2", "Completed", boardObj.itemId)
 
 				// save the client to Mondays database
-				const clientFirebase = await firebase.getClient(clientId)
+				const clientFirebase = await firebase.getClientInfo(clientId)
 				console.log("about to run save client to database on monday")
 				await monday.saveClientToMondayDatabase(clientFirebase)
-
+				await monday.changeMondayStatus("status9", "Completed", boardObj.itemId)
 				//after onboarding from the client is complete we create slack channels
 				await slack.slackCreationWorkflow(clientFirebase)
+				await monday.changeMondayStatus("status1", "Completed", boardObj.itemId)
 			} catch (e) {
 				throw new Error("Error the completing onboarding process")
 			}
@@ -74,25 +81,30 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 	}
 })
 
-const createClientObj = (clientId, mondayObj, clientProjectNumber) => {
+const createClientObj = (clientId, mondayObj, clientProjectNumber, tag) => {
 	const clientObj = {
 		idNumber: clientId,
 		name: mondayObj.clientName,
 		email: mondayObj.email,
 		phone: mondayObj.phone,
 		clientProjectNumber: clientProjectNumber,
-		street: "",
-		zipCode: "",
-		city: "",
+		address: "",
 		mondayItemIdDeal: mondayObj.itemId,
 		formLink: mondayObj.formLink,
 		createdAt: new Date(),
-		slackUsers: mondayObj.slackUsers
+		slackUsers: mondayObj.slackUsers,
+		tag: tag
 	}
+
 	return clientObj
 }
 
-const createProjectObj = async (clientId, mondayObj, clientProjectNumber) => {
+const createProjectObj = async (
+	clientId,
+	mondayObj,
+	clientProjectNumber,
+	tag
+) => {
 	const internalProjectId = await firebase.getInternalProjectId()
 
 	let projectObj = {
@@ -109,8 +121,10 @@ const createProjectObj = async (clientId, mondayObj, clientProjectNumber) => {
 		clientPhone: mondayObj.phone,
 		clientProjectNumber: clientProjectNumber,
 		internalProjectId: internalProjectId,
-		smId: parseInt(mondayObj.smId)
+		smId: parseInt(mondayObj.smId),
+		tag: tag
 	}
+
 	return projectObj
 }
 
@@ -145,7 +159,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				)
 
 				if (clientProjectNumber === undefined) {
-					await monday.changeMondayStatus(3, boardId, itemId)
+					await monday.changeMondayStatus("status", "Client Not Found", itemId)
 					throw new Error("client not found")
 				}
 
@@ -161,16 +175,20 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				const urlName = encodeURIComponent(mondayObj.clientName.trim())
 				mondayObj.formLink = `${mondayObj.formLink}?clientid=${firebaseClientId}&clientname=${urlName}`
 			}
+			const tag = await monday.createTag(mondayObj.clientName, clientId)
+			console.log(tag, "tag just created", typeof tag)
 			// create project and client
 			const clientObj = createClientObj(
 				clientId,
 				mondayObj,
-				clientProjectNumber
+				clientProjectNumber,
+				tag
 			)
 			const projectObj = await createProjectObj(
 				clientId,
 				mondayObj,
-				clientProjectNumber
+				clientProjectNumber,
+				tag
 			)
 			const yearCreated = projectObj.createdAt
 				.getFullYear()
@@ -181,19 +199,27 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 			// recently generated clientId to the monday Sales board, else (client is not new) we only create the project and change the status of the board to "Project Created"
 
 			if (mondayObj.isNewClient) {
+				//set status to Waiting for client for those that need to wait for onboarding form
+				await monday.changeMondayStatus("status1", "Waiting For Client", itemId)
+				await monday.changeMondayStatus("status9", "Waiting For Client", itemId)
+
 				await firebase.createClient(clientObj)
 				await firebase.createProject(projectObj)
+
 				await sendGrid.sendOnboardingEmail(
 					clientObj.email,
 					clientObj.name,
 					clientObj.formLink,
 					projectObj.companyAssigned
 				)
-				await monday.changeMondayStatus(0, boardId, itemId)
+
+				await monday.changeMondayStatus("status", "Onboarding Started", itemId)
+				await monday.changeMondayStatus("status2", "Waiting For Client", itemId)
 				await monday.setMondayClientId(boardId, itemId, clientObj.idNumber)
 				// create google drive entire tree
 				projectObj.isNewClient = true
 				await googleDrive.createFolderTree(projectObj)
+				await monday.changeMondayStatus("status7", "Completed", itemId)
 				if (projectObj.companyAssigned === "Venturesome") {
 					//add to Video project Overview
 					await monday.addVideoProjectBoard(
@@ -202,14 +228,17 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.clientProjectNumber,
 						clientObj.name,
 						projectObj.name,
-						projectObj.pmId
+						projectObj.pmId,
+						clientObj.tag
 					)
+
 					//create frameio client
 					//create toggle client
 					const togglClientId = await toggl.createClient(
 						clientObj.name,
 						clientObj.idNumber
 					)
+
 					await firebase.updateFirebase(
 						"clients",
 						"idNumber",
@@ -225,6 +254,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						yearCreated,
 						projectObj.clientProjectNumber
 					)
+					await monday.changeMondayStatus("status42", "Completed", itemId)
 				} else if (projectObj.companyAssigned === "MoneyTree") {
 					await monday.addMoneyTreeAccount(
 						clientObj.idNumber,
@@ -232,8 +262,11 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.clientProjectNumber,
 						clientObj.name,
 						projectObj.name,
-						projectObj.pmId
+						projectObj.pmId,
+						clientObj.tag
 					)
+					console.log("new client money tree before setting tlg to completed")
+					await monday.changeMondayStatus("status42", "Completed", itemId)
 				}
 
 				// add to Project overview Inbox always
@@ -247,11 +280,18 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					projectObj.pmId,
 					clientObj.createdAt,
 					projectObj.smId,
-					projectObj.companyAssigned
+					projectObj.companyAssigned,
+					clientObj.tag
 				)
+				await monday.changeMondayStatus("status4", "Completed", itemId)
 			} else {
+				//set all not needed items to completed first for existing clients
+				await monday.changeMondayStatus("status2", "Completed", itemId)
+				await monday.changeMondayStatus("status1", "Completed", itemId)
+				await monday.changeMondayStatus("status9", "Completed", itemId)
+
 				await firebase.createProject(projectObj)
-				await monday.changeMondayStatus(2, boardId, itemId)
+				await monday.changeMondayStatus("status", "Project Created", itemId)
 				// googe drive create only Prejectke genwonned and subfolders on the client
 
 				if (projectObj.companyAssigned === "Venturesome") {
@@ -261,11 +301,14 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.clientProjectNumber,
 						clientObj.name,
 						projectObj.name,
-						projectObj.pmId
+						projectObj.pmId,
+						clientObj.tag
 					)
 
 					//create toggle project
-					const firebaseClient = await firebase.getClient(clientObj.idNumber)
+					const firebaseClient = await firebase.getClientInfo(
+						clientObj.idNumber
+					)
 					const togglClientId = firebaseClient.togglClientId
 					console.log("object from firebase", firebaseClient, togglClientId)
 					await toggl.createProject(
@@ -275,6 +318,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						yearCreated,
 						projectObj.clientProjectNumber
 					)
+					await monday.changeMondayStatus("status42", "Completed", itemId)
 				} else if (projectObj.companyAssigned === "MoneyTree") {
 					await monday.addMoneyTreeAccount(
 						clientObj.idNumber,
@@ -282,15 +326,17 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.clientProjectNumber,
 						clientObj.name,
 						projectObj.name,
-						projectObj.pmId
+						projectObj.pmId,
+						clientObj.tag
 					)
 				}
 
 				// add to Project overview Inbox always
-				const firebaseClient = await firebase.getClient(projectObj.clientId)
+				const firebaseClient = await firebase.getClientInfo(projectObj.clientId)
 				projectObj.projectsFolderId = firebaseClient.projectsFolderId
 				projectObj.isNewClient = false
 				await googleDrive.createFolderTree(projectObj)
+				await monday.changeMondayStatus("status7", "Completed", itemId)
 				await monday.addProjectOverview(
 					clientObj.idNumber,
 					yearCreated,
@@ -300,8 +346,10 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					projectObj.pmId,
 					clientObj.createdAt,
 					projectObj.smId,
-					projectObj.companyAssigned
+					projectObj.companyAssigned,
+					clientObj.tag
 				)
+				await monday.changeMondayStatus("status4", "Completed", itemId)
 			}
 			res.send({ message: "success" })
 		}
@@ -319,7 +367,7 @@ exports.getClientIdTypeForm = functions.https.onRequest(async (req, res) => {
 	try {
 		const clientId = req.body.form_response.hidden.clientid
 		console.log("client is stored", clientId)
-		await firebase.saveIdstaging(parseInt(clientId))
+		await firebase.saveIdstaging(clientId)
 	} catch (error) {
 		console.log("error staging client id")
 	}
