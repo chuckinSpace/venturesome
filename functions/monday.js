@@ -1042,10 +1042,35 @@ const databaseFirebaseToMonday = async () => {
 		console.log(error)
 	}
 }
+const getClientOnboarding = async itemId => {
+	console.log("item id on function", itemId)
+	const intId = parseInt(itemId)
+	const body = {
+		query: `
+		query { 
+			items (ids: [${intId}]) {
+			name
+			  column_values{
+				id
+				value
+			  }
+			}
+		}
+    `
+	}
+	const response = await postMonday(body, `getting client Id for onboarding`)
+	console.log("repsonse", response.data.items)
+	const idItem = response.data.items[0].column_values.find(
+		item => item.id === "text86"
+	)
+	const id = idItem.value.replace(/['"]+/g, "")
+	console.log("id returning", id)
+	return id
+}
 
 const test = async () => {
 	try {
-		await databaseFirebaseToMonday()
+		console.log(await getClientOnboarding())
 	} catch (error) {
 		console.log(error)
 	}
@@ -1063,3 +1088,4 @@ module.exports.addProjectOverview = addProjectOverview
 module.exports.addMoneyTreeAccount = addMoneyTreeAccount
 module.exports.saveClientToMondayDatabase = saveClientToMondayDatabase
 module.exports.createTag = createTag
+module.exports.getClientOnboarding = getClientOnboarding

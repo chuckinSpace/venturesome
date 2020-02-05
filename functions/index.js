@@ -393,3 +393,24 @@ exports.getClientIdTypeForm = functions.https.onRequest(async (req, res) => {
       console.log(challenge);     
     } 
   */
+exports.resendOnboarding = functions.https.onRequest(async (req, res) => {
+	const itemId = req.body.event.pulseId
+	console.log(itemId, "item id from hook")
+	const clientId = await monday.getClientOnboarding(itemId)
+	console.log(clientId)
+	const firebaseClient = await firebase.getClientInfo(clientId)
+	let companyAssigned = ""
+	if (firebaseClient.isAutomaticGift) {
+		companyAssigned = "MoneyTree"
+	} else {
+		companyAssigned = "Venturesome"
+	}
+	console.log(companyAssigned)
+	await sendGrid.sendOnboardingEmail(
+		firebaseClient.email,
+		firebaseClient.name,
+		firebaseClient.formLink,
+		companyAssigned
+	)
+	res.send({ message: "success" })
+})
