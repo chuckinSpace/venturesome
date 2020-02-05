@@ -77,11 +77,11 @@ const sendWelcomeMessage = async (channelId, team, clientName) => {
 	try {
 		let message = "Welcome"
 		if (team === "client") {
-			message = `Hey there ${clientName} Welcome! please let us know if you need anything! we are happy to help!`
+			message = `Willkommen bei, ${clientName}! Wir freuen uns auf die bevorstehende Zusammenarbeit.:handshake:`
 		} else if (team === "internal") {
-			message = `New client awesome work!!, this is an internal channel for the client ${clientName}`
+			message = `:fire: New client awesome work!!, this is an internal channel for the client ${clientName}:fire:`
 		} else if (team === "internal-only")
-			message = `New client awesome work!!, client ${clientName} selected not to participate on slack`
+			message = `:fire: New client awesome work!!, client ${clientName} selected not to participate on slack :fire:`
 		await web.chat.postMessage({
 			channel: channelId,
 			text: message

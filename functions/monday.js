@@ -1,6 +1,6 @@
 /*
 TODO: 
-     - finished implementation to save data from firbase to monday
+
 
     
  BUG: - error when submitting form check cloud funciotns
@@ -29,7 +29,7 @@ const STATUS_ID_SALES_PIPELINE = "status"
 const MONEY_TREE_ACCOUNTS_BOARD_ID = 416324914
 const MONEY_TREE_ACCOUNTS_GROUP_ID = "duplicate_of_043___bruno_s_bes10603"
 //client dabtase
-const CLIENT_DATABASE_BOARD_ID = 275842142
+const CLIENT_DATABASE_BOARD_ID = 450449636
 const postMonday = (body, action) => {
 	return axios
 		.post(`https://api.monday.com/v2`, body, {
@@ -177,21 +177,34 @@ const getValuesFromMonday = async (boardId, itemId) => {
 	try {
 		const response = await postMonday(body, "getValuesFromMonday")
 		const values = await response.data.boards[0].items[0].column_values
+		const name = response.data.boards[0].items[0].name
 
 		mondayObj.itemId = itemId
 
 		const isNewClientItem = values.find(item => item.id === CLIENT_ID_ID)
 		const isNewClient = !!isNewClientItem.value ? false : true
 		if (!!isNewClientItem.value) {
-			mondayObj.clientId = parseInt(isNewClientItem.value.replace(/['"]+/g, ""))
+			mondayObj.clientId = isNewClientItem.value.replace(/['"]+/g, "")
 		}
 		mondayObj.isNewClient = isNewClient
 
+		if (mondayObj.isNewClient) {
+			console.log("in new client setting mname", name)
+			/* const clientNameObj = values.find(item => item.id === "text") */
+			mondayObj.clientName = name.replace(/['"]+/g, "")
+		} else {
+			console.log(
+				"in old client setting name",
+				mondayObj.clientId,
+				typeof mondayObj.clientId
+			)
+			const firebaseClient = await firebase.getClientInfo(mondayObj.clientId)
+			console.log(firebaseClient, "firebaseClient on old client")
+			mondayObj.clientName = firebaseClient.name
+		}
+
 		const emailObj = values.find(item => item.id === "email")
 		mondayObj.email = JSON.parse(emailObj.value).email
-
-		const clientNameObj = values.find(item => item.id === "text")
-		mondayObj.clientName = clientNameObj.value.replace(/['"]+/g, "")
 
 		const phoneObj = values.find(item => item.id === "phone_number")
 		mondayObj.phone = JSON.parse(phoneObj.value).phone
@@ -645,6 +658,10 @@ const addMoneyTreeAccount = async (
 const saveClientToMondayDatabase = async clientFirebase => {
 	console.log(clientFirebase)
 	//create group and get back id
+	let dateTime = moment(clientFirebase.createdAt).format("YYYY-MM-DD")
+	let giftDate = moment(clientFirebase.createdAt)
+		.add(3, "M")
+		.format("YYYY-MM-DD")
 	const body = {
 		query: `
     mutation ($boardId: Int!, $groupName: String!){
@@ -662,7 +679,35 @@ const saveClientToMondayDatabase = async clientFirebase => {
 	try {
 		const obj = await postMonday(body, "saving client to mondaydatabase")
 		const newGroupIdid = obj.data.create_group.id
-
+		let columnValues = ""
+		if (clientFirebase.isAutomaticGift) {
+			columnValues = JSON.stringify({
+				phone: { phone: clientFirebase.phone },
+				email: {
+					email: clientFirebase.email,
+					text: clientFirebase.contactName
+				},
+				due_date: { date: clientFirebase.birthday },
+				client_nr_: clientFirebase.idNumber,
+				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
+				date: { date: dateTime },
+				geschenksdatum: { date: giftDate },
+				text: clientFirebase.name
+			})
+		} else {
+			columnValues = JSON.stringify({
+				phone: { phone: clientFirebase.phone },
+				email: {
+					email: clientFirebase.email,
+					text: clientFirebase.contactName
+				},
+				due_date: { date: clientFirebase.birthday },
+				client_nr_: clientFirebase.idNumber,
+				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
+				date: { date: dateTime },
+				text: clientFirebase.name
+			})
+		}
 		//query to populate the board
 		// id "phone" = {clientFirebase.phone} id: "email" = {clientFirebase.email} id:"due_date" = {birthday}
 		const body1 = {
@@ -682,16 +727,7 @@ const saveClientToMondayDatabase = async clientFirebase => {
 				boardId: CLIENT_DATABASE_BOARD_ID,
 				groupId: newGroupIdid,
 				itemName: `${clientFirebase.contactName}`,
-				columnValues: JSON.stringify({
-					phone: { phone: clientFirebase.phone },
-					email: {
-						email: clientFirebase.email,
-						text: clientFirebase.contactName
-					},
-					due_date: { date: clientFirebase.birthday },
-					client_nr_: clientFirebase.idNumber,
-					tags7: { text: "testTag", tag_ids: [clientFirebase.tag] }
-				})
+				columnValues: columnValues
 			}
 		}
 		await postMonday(body1, "populating board monday database")
@@ -724,7 +760,7 @@ const createTag = async (clientName, clientNumber) => {
 const databaseMigration = async () => {
 	const body = {
 		query: ` query {
-					boards(ids:446193294) {
+					boards(ids:450419368) {
 						groups {
 							title
 						items(limit: 120) {
@@ -880,7 +916,7 @@ const databaseMigration = async () => {
 const databaseFirebaseToMonday = async () => {
 	// create group
 	try {
-		const databaseId = 446277111
+		const databaseId = CLIENT_DATABASE_BOARD_ID
 		const createGroup = async groupTitle => {
 			const createGroupQuery = {
 				query: `
@@ -937,7 +973,7 @@ const databaseFirebaseToMonday = async () => {
 			return parseInt(response.data.create_item.id)
 		}
 
-		const createItem2 = async (contact, itemId) => {
+		const createItem2 = async (contact, itemId, clientName) => {
 			const {
 				birthday,
 				email,
@@ -973,7 +1009,8 @@ const databaseFirebaseToMonday = async () => {
 							countryShortName: mobilePhone.countryShortName
 						},
 						email: { email: email.email, text: email.text },
-						due_date: { date: birthday }
+						due_date: { date: birthday },
+						text: clientName
 					})
 				}
 			}
@@ -984,13 +1021,13 @@ const databaseFirebaseToMonday = async () => {
 		const createSecondLevel = async (firebaseClient, groupId) => {
 			await firebaseClient.contacts.map(async contact => {
 				const itemId = await createItem(firebaseClient, groupId)
-				await createItem2(contact, itemId)
+				await createItem2(contact, itemId, firebaseClient.name)
 			})
 		}
 
 		let firebaseClient = ""
 		//get Client form firebase
-		for (let index = 1; index < 107; index++) {
+		for (let index = 108; index < 109; index++) {
 			let counter = index.toString().padStart(3, "0")
 			firebaseClient = await firebase.getClientInfo(counter)
 			//create group on monday return group Id
@@ -1013,7 +1050,7 @@ const test = async () => {
 		console.log(error)
 	}
 }
-/* test() */
+test()
 
 module.exports.getResult = getResult
 module.exports.updateForms = updateForms

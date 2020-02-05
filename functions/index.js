@@ -1,9 +1,7 @@
 /*
- TODO: -client nr on monday database no working, also missing tag, add category to onboarding and database
-		-change message for slack
-		-add error to monday board and email not to me
-		-move with us since and gift to database
-		- update new clients added to monday database
+ TODO:   -add category to onboarding and database
+	
+		- add error to monday board and email to me	
 */
 const functions = require("firebase-functions")
 const googleDrive = require("./google")
@@ -96,7 +94,8 @@ const createClientObj = (clientId, mondayObj, clientProjectNumber, tag) => {
 		formLink: mondayObj.formLink,
 		createdAt: new Date(),
 		slackUsers: mondayObj.slackUsers,
-		tag: tag
+		tag: tag,
+		isAutomaticGift: mondayObj.companyAssigned === "MoneyTree"
 	}
 
 	return clientObj
@@ -274,6 +273,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					)
 					console.log("new client money tree before setting tlg to completed")
 					await monday.changeMondayStatus("status42", "Completed", itemId)
+					await monday.changeMondayStatus("status8", "Completed", itemId)
 				}
 
 				// add to Project overview Inbox always
@@ -292,6 +292,8 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				)
 				await monday.changeMondayStatus("status4", "Completed", itemId)
 			} else {
+				//old client
+
 				//set all not needed items to completed first for existing clients
 				await monday.changeMondayStatus("status2", "Completed", itemId)
 				await monday.changeMondayStatus("status1", "Completed", itemId)
@@ -327,6 +329,8 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					)
 					await monday.changeMondayStatus("status42", "Completed", itemId)
 				} else if (projectObj.companyAssigned === "MoneyTree") {
+					await monday.changeMondayStatus("status42", "Completed", itemId)
+					await monday.changeMondayStatus("status8", "Completed", itemId)
 					await monday.addMoneyTreeAccount(
 						clientObj.idNumber,
 						yearCreated,

@@ -134,7 +134,7 @@ const updateFirebase = async (
 }
 
 const getClientInfo = async clientId => {
-	console.log("getClient starting with client Id", clientId)
+	console.log("getClient starting with client Id", clientId, typeof clientId)
 	let clientObj = ""
 	try {
 		const getClientSnap = db
