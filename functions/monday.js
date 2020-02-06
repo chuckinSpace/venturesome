@@ -653,10 +653,12 @@ const addMoneyTreeAccount = async (
 const saveClientToMondayDatabase = async clientFirebase => {
 	console.log(clientFirebase)
 	//create group and get back id
+
 	let dateTime = moment(clientFirebase.createdAt).format("YYYY-MM-DD")
 	let giftDate = moment(clientFirebase.createdAt)
 		.add(3, "M")
 		.format("YYYY-MM-DD")
+
 	const body = {
 		query: `
     mutation ($boardId: Int!, $groupName: String!){
@@ -674,6 +676,7 @@ const saveClientToMondayDatabase = async clientFirebase => {
 	try {
 		const obj = await postMonday(body, "saving client to mondaydatabase")
 		const newGroupIdid = obj.data.create_group.id
+
 		let columnValues = ""
 		if (clientFirebase.isAutomaticGift) {
 			columnValues = JSON.stringify({
@@ -686,7 +689,7 @@ const saveClientToMondayDatabase = async clientFirebase => {
 				client_nr_: clientFirebase.idNumber,
 				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
 				date: { date: dateTime },
-				geschenksdatum: { date: giftDate },
+				date3: { date: giftDate },
 				text: clientFirebase.name
 			})
 		} else {

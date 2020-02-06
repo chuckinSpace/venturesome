@@ -1,11 +1,10 @@
 require("dotenv").config()
 var request = require("request")
-const monday = require("./monday")
-const constants = require("./constants")
+
 const token = process.env.FRAMEIO_TOKEN
 const teamId = process.env.FRAMEIO_TEAM_ID
 
-const createFrameIoProject = async (projectName, itemId) => {
+const createFrameIoProject = async projectName => {
 	try {
 		var options = {
 			method: "POST",
@@ -18,28 +17,13 @@ const createFrameIoProject = async (projectName, itemId) => {
 				name: `${projectName}`
 			}
 		}
-		return request(options, async function(error, response) {
-			if (error) {
-				throw new Error(error)
-			} else {
-				const json = JSON.parse(response.body)
-				if (json.code !== 200) {
-					await monday.changeMondayStatus(
-						constants.FRAMEIO_FORM_STATUS,
-						"Error",
-						itemId
-					)
-					return Error("Error on frameIo process", error)
-				}
-			}
+		request(options, function(error, response) {
+			if (error) throw new Error(error)
+			console.log(response.body)
 		})
 	} catch (error) {
-		console.log("in error final")
+		console.log(error)
 	}
 }
 
 module.exports.createFrameIoProject = createFrameIoProject
-const test = async () => {
-	createFrameIoProject("test", 413267104)
-}
-/* test() */
