@@ -202,29 +202,33 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 
 			if (mondayObj.isNewClient) {
 				//set status to Waiting for client for those that need to wait for onboarding form
-				await monday.changeMondayStatus("status1", "Waiting For Client", itemId)
+
+				/* await monday.changeMondayStatus("status1", "Waiting For Client", itemId)
 				await monday.changeMondayStatus("status9", "Waiting For Client", itemId)
+ */
+				/* 	await firebase.createClient(clientObj)
+				await firebase.createProject(projectObj) */
 
-				await firebase.createClient(clientObj)
-				await firebase.createProject(projectObj)
-
-				await sendGrid.sendOnboardingEmail(
+				/* 	await sendGrid.sendOnboardingEmail(
 					clientObj.email,
 					clientObj.name,
 					clientObj.formLink,
 					projectObj.companyAssigned
-				)
+				) 
 
 				await monday.changeMondayStatus("status", "Onboarding Started", itemId)
 				await monday.changeMondayStatus("status2", "Waiting For Client", itemId)
-				await monday.setMondayClientId(boardId, itemId, clientObj.idNumber)
+				await monday.setMondayClientId(boardId, itemId, clientObj.idNumber)*/
 				// create google drive entire tree
 				projectObj.isNewClient = true
-				await googleDrive.createFolderTree(projectObj)
+
+				/* await googleDrive.createFolderTree(projectObj) */
+
 				await monday.changeMondayStatus("status7", "Completed", itemId)
 				if (projectObj.companyAssigned === "Venturesome") {
 					//add to Video project Overview
-					await monday.addVideoProjectBoard(
+
+					/* 	await monday.addVideoProjectBoard(
 						clientObj.idNumber,
 						yearCreated,
 						projectObj.clientProjectNumber,
@@ -232,35 +236,39 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.name,
 						projectObj.pmId,
 						clientObj.tag
-					)
+					) */
 
 					//create frameio project
 					await frameio.createFrameIoProject(
-						`${clientObj.idNumber}_${yearCreated}_${projectObj.clientProjectNumber} | ${clientObj.name} | ${projectObj.name} `
+						`${clientObj.idNumber}_${yearCreated}_${projectObj.clientProjectNumber} | ${clientObj.name} | ${projectObj.name} `,
+						itemId
 					)
 					await monday.changeMondayStatus("status8", "Completed", itemId)
 					//create toggle client
-					const togglClientId = await toggl.createClient(
+
+					/* const togglClientId = await toggl.createClient(
 						clientObj.name,
 						clientObj.idNumber
-					)
+					) */
 
-					await firebase.updateFirebase(
+					/* await firebase.updateFirebase(
 						"clients",
 						"idNumber",
 						clientObj.idNumber,
 						{ togglClientId: togglClientId },
 						"saving toggl id to firebase client"
-					)
+					) */
+
 					//create toggle project
-					await toggl.createProject(
+
+					/* 	await toggl.createProject(
 						togglClientId,
 						clientObj.idNumber,
 						projectObj.name,
 						yearCreated,
 						projectObj.clientProjectNumber
-					)
-					await monday.changeMondayStatus("status42", "Completed", itemId)
+					) 
+					await monday.changeMondayStatus("status42", "Completed", itemId)*/
 				} else if (projectObj.companyAssigned === "MoneyTree") {
 					await monday.addMoneyTreeAccount(
 						clientObj.idNumber,

@@ -1,15 +1,7 @@
-/*
-TODO: 
-
-
-    
- BUG: - error when submitting form check cloud funciotns
-*/
-/* const { GraphQLClient } = require('graphql-request'); */
 require("dotenv").config()
 const moment = require("moment")
 const axios = require("axios")
-const util = require("util")
+
 const firebase = require("./firebase")
 
 // const data from MONDAY
@@ -21,15 +13,18 @@ const GROUP_ID_P_OVER_CURR_VIDEO_PROJ = "duplicate_of_043___bruno_s_bes10603"
 //Project Overview
 const P_OVER_INBOX_GROUP_ID = "neue_gruppe"
 const PROJECT_OVERVIEW_ID = 162013046
-const WITH_US_SINCE_ID = "geschenksdatum"
+
 // contant id in sales pipeline
 const CLIENT_ID_ID = "text86"
-const STATUS_ID_SALES_PIPELINE = "status"
+
 // moneyTree accounts
 const MONEY_TREE_ACCOUNTS_BOARD_ID = 416324914
 const MONEY_TREE_ACCOUNTS_GROUP_ID = "duplicate_of_043___bruno_s_bes10603"
 //client dabtase
 const CLIENT_DATABASE_BOARD_ID = 450449636
+
+// onboardin status  codes
+
 const postMonday = (body, action) => {
 	return axios
 		.post(`https://api.monday.com/v2`, body, {
@@ -1015,7 +1010,7 @@ const databaseFirebaseToMonday = async () => {
 				}
 			}
 
-			const response = await postMonday(createItemQuery2, `creating item 2`)
+			await postMonday(createItemQuery2, `creating item 2`)
 		}
 
 		const createSecondLevel = async (firebaseClient, groupId) => {
@@ -1075,7 +1070,7 @@ const test = async () => {
 		console.log(error)
 	}
 }
-test()
+/* test() */
 
 module.exports.getResult = getResult
 module.exports.updateForms = updateForms

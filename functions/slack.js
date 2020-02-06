@@ -1,7 +1,6 @@
 require("dotenv").config()
 var request = require("request")
 const { WebClient } = require("@slack/web-api")
-const axios = require("axios")
 
 // Create a new instance of the WebClient class with the token read from your environment variable
 const web = new WebClient(process.env.SLACK_TOKEN)
