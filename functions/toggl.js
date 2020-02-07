@@ -1,9 +1,11 @@
 let rp = require("request-promise")
 require("dotenv").config()
-
 const WID = process.env.TOGGL_WID
+const monday = require("./monday")
+const constants = require("./constants")
+const sendGrid = require("./sendGrid")
 
-const createClient = async (clientName, clientNumber) => {
+const createClient = async (clientName, clientNumber, itemId, action) => {
 	console.log("creating toggl client", clientName)
 	let options = {
 		method: "POST",
@@ -23,20 +25,39 @@ const createClient = async (clientName, clientNumber) => {
 
 	return rp(options)
 		.then(response => {
+			monday.changeMondayStatus(
+				constants.TOGGL_FORM_STATUS,
+				"Completed",
+				itemId
+			)
 			return response.data.id
 		})
-
 		.catch(err => {
-			throw new Error("error when creating client on toggl", err)
+			console.log("error when creating client on toggl", err.message)
+			monday.changeMondayStatus(constants.TOGGL_FORM_STATUS, "Error", itemId)
+			sendGrid.sendErrorEmail(
+				`toggl/createClient client Name: ${clientName} itemId ${itemId}`,
+				action,
+				err.message
+			)
 		})
 }
-
+/* const test = async () => {
+	try {
+		await createClient("testname", "112", 413267104, "creating toggle client")
+	} catch (error) {
+		console.log(error)
+	}
+}
+test() */
 const createProject = async (
 	togglClientId,
 	clientId,
 	projectName,
 	year,
-	clientProjectNumber
+	clientProjectNumber,
+	itemId,
+	action
 ) => {
 	console.log("creating toggle project", projectName)
 	let options = {
@@ -62,9 +83,22 @@ const createProject = async (
 	}
 
 	rp(options)
-		.then(response => console.log("sucess creating toggl project"))
+		.then(response => {
+			console.log("sucess creating toggl project")
+			monday.changeMondayStatus(
+				constants.TOGGL_FORM_STATUS,
+				"Completed",
+				itemId
+			)
+		})
 		.catch(err => {
-			throw new Error("error when creating toggl project", err)
+			console.log("error when creating toggl project", err.message)
+			monday.changeMondayStatus(constants.TOGGL_FORM_STATUS, "Error", itemId)
+			sendGrid.sendErrorEmail(
+				`toggl/createProject- projectname ${projectName} clientid ${clientId}-itemId${itemId}`,
+				action,
+				err.message
+			)
 		})
 }
 

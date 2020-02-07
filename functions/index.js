@@ -262,12 +262,13 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						"creating frame io project"
 					)
 
-					await monday.changeMondayStatus("status8", "Completed", itemId)
 					//create toggle client
 
-					/* 	const togglClientId = await toggl.createClient(
+					const togglClientId = await toggl.createClient(
 						clientObj.name,
-						clientObj.idNumber
+						clientObj.idNumber,
+						itemId,
+						"creating toggl client"
 					)
 
 					await firebase.updateFirebase(
@@ -285,9 +286,10 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						clientObj.idNumber,
 						projectObj.name,
 						yearCreated,
-						projectObj.clientProjectNumber
-					) */
-					await monday.changeMondayStatus("status42", "Completed", itemId)
+						projectObj.clientProjectNumber,
+						itemId,
+						"creating toggl Project"
+					)
 				} else if (projectObj.companyAssigned === "MoneyTree") {
 					/* await monday.addMoneyTreeAccount(
 						clientObj.idNumber,

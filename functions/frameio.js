@@ -17,15 +17,23 @@ const createFrameIoProject = (projectName, itemId, action) => {
 				Authorization: `Bearer ${token}`
 			}
 		})
-
 		.then(res => {
-			console.log(` 1 sucess ${action}`, res.data)
+			console.log(`sucess ${action}`, res.data)
+			monday.changeMondayStatus(
+				constants.FRAMEIO_FORM_STATUS,
+				"Completed",
+				itemId
+			)
 		})
 		.catch(err => {
-			console.log(` 2 error ${action}`, err.response.data)
+			console.log(`error ${action}`, err.response.data)
 			monday.changeMondayStatus(constants.FRAMEIO_FORM_STATUS, "Error", itemId)
-			sendGrid.sendErrorEmail("createFrameIoProject", action, err.response.data)
+			sendGrid.sendErrorEmail(
+				`/freameIo/createFrameIoProject-${projectName}-itemId${itemId}`,
+				action,
+				err.response.data
+			)
 		})
 }
-createFrameIoProject("test", 413267104, "create frame io")
+
 module.exports.createFrameIoProject = createFrameIoProject
