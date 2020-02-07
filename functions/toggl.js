@@ -1,5 +1,3 @@
-// id  3695043
-// workspace 2355444
 let rp = require("request-promise")
 require("dotenv").config()
 
