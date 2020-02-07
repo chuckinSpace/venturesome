@@ -149,7 +149,12 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		slackUsers: [],
 		isNewClient: true,
 		clientId: "",
-		smId: ""
+		smId: "",
+		contactName: "",
+		streetAddress: "",
+		zipCode: "",
+		city: "",
+		country: { countryCode: "", countryName: "" }
 	}
 
 	//Create query to send to Monday.com's API
@@ -204,7 +209,24 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		const phoneObj = values.find(item => item.id === "phone_number")
 		mondayObj.phone = JSON.parse(phoneObj.value).phone
 
+		const contactNameObj = values.find(item => item.id === "text52")
+		mondayObj.contactName = contactNameObj.value.replace(/['"]+/g, "")
+
 		const companyAssignedObj = values.find(item => item.id === "dropdown1")
+
+		//address
+		const streetAddressObj = values.find(item => item.id === "text4")
+		mondayObj.streetAddress = streetAddressObj.value.replace(/['"]+/g, "")
+
+		const zipCodeObj = values.find(item => item.id === "text42")
+		mondayObj.zipCode = zipCodeObj.value.replace(/['"]+/g, "")
+
+		const cityObj = values.find(item => item.id === "text88")
+		mondayObj.city = cityObj.value.replace(/['"]+/g, "")
+
+		const countryObj = values.find(item => item.id === "country")
+		mondayObj.country.countryCode = JSON.parse(countryObj.value).countryCode
+		mondayObj.country.countryName = JSON.parse(countryObj.value).countryName
 
 		//check company assigned, if empty error
 		const companyAssignedParse = JSON.parse(companyAssignedObj.value)
