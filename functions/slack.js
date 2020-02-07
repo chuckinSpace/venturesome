@@ -1,22 +1,41 @@
+/* TODO: ON ERROR WORKFLOW FIRST FUNCTION FINISHED
+ */
+
 require("dotenv").config()
 var request = require("request")
 const { WebClient } = require("@slack/web-api")
+const monday = require("./monday")
+const constants = require("./constants")
+const sendGrid = require("./sendGrid")
 
 // Create a new instance of the WebClient class with the token read from your environment variable
 const web = new WebClient(process.env.SLACK_TOKEN)
 
-const createSlackChannel = async (users, clientName) => {
+const createSlackChannel = async (users, clientName, itemId, action) => {
 	console.log("in create slack channel, users coming", users, clientName)
 	try {
 		const newChannel = await web.groups.create({ name: clientName })
 		const channelId = await newChannel.group.id
-		console.log(channelId, "channel id", newChannel, "newChannel")
+		console.log(channelId, "channel id", typeof users)
+
 		await users.map(user =>
 			web.groups.invite({ channel: channelId, user: user.id })
 		)
+
+		await monday.changeMondayStatus(
+			constants.SLACK_FORM_STATUS,
+			"Completed",
+			itemId
+		)
 		return channelId
-	} catch (error) {
-		console.log(error)
+	} catch (err) {
+		console.log(err)
+		monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+		sendGrid.sendErrorEmail(
+			`/slack/createSlackChannel - clientName ${clientName}-itemId${itemId}`,
+			action,
+			err.data.error
+		)
 	}
 }
 
@@ -46,6 +65,25 @@ const sendClientInvite = async (clientEmail, channelId) => {
 		throw new Error("error trying to send invite to client")
 	}
 }
+
+/* const test = async () => {
+	try {
+		const response = await web.users.lookupByEmail({
+			email: "carlosmoyanor@gmail.com"
+		})
+		const id = response.user.id
+
+		await createSlackChannel(
+			[{ id: id }],
+			"testuser",
+			413267104,
+			"creating slack channel"
+		)
+	} catch (error) {
+		console.log(error)
+	}
+}
+test() */
 
 const getUserbyEmail = async userEmail => {
 	try {
@@ -98,7 +136,7 @@ const sendWelcomeMessage = async (channelId, team, clientName) => {
 
 /***************** SLACK CHANNELS CREATION WORKFLOW ******************/
 
-const slackCreationWorkflow = async clientFirebase => {
+const slackCreationWorkflow = async (clientFirebase, itemId) => {
 	console.log("in slack creation workflow", clientFirebase)
 
 	//if the mondayObj.slack is true (meaning that the client prefers to use slack) we will create 2 private channels
@@ -114,11 +152,15 @@ const slackCreationWorkflow = async clientFirebase => {
 			//create 2 channel add slackUsers to both and invite client to 1
 			const companyChannelId = await createSlackChannel(
 				slackIds,
-				`TEST-intern-${clientFirebase.idNumber}-${clientFirebase.name}`
+				`TEST-intern-${clientFirebase.idNumber}-${clientFirebase.name}`,
+				itemId,
+				"creating Internal Channel"
 			)
 			const clientChannelId = await createSlackChannel(
 				slackIds,
-				`TEST-${clientFirebase.idNumber}-${clientFirebase.name}`
+				`TEST-${clientFirebase.idNumber}-${clientFirebase.name}`,
+				itemId,
+				"creating Client channel"
 			)
 			console.log(
 				companyChannelId,
@@ -142,7 +184,9 @@ const slackCreationWorkflow = async clientFirebase => {
 			//create one private channel add slackUsers
 			const companyChannelId = await createSlackChannel(
 				slackIds,
-				`TEST-intern-${clientFirebase.idNumber}-${clientFirebase.name}`
+				`TEST-intern-${clientFirebase.idNumber}-${clientFirebase.name}`,
+				itemId,
+				"creating Intern channel"
 			)
 			await sendWelcomeMessage(
 				companyChannelId,

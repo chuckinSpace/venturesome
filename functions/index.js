@@ -71,7 +71,7 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 				await monday.changeMondayStatus("status9", "Completed", boardObj.itemId)
 				//after onboarding from the client is complete we create slack channels
 
-				/* await slack.slackCreationWorkflow(clientFirebase) */
+				/* await slack.slackCreationWorkflow(clientFirebase, boardObj.itemId) 
 
 				await monday.changeMondayStatus("status1", "Completed", boardObj.itemId)
 			} catch (e) {
@@ -256,15 +256,15 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 
 					//create frameio project
 
-					await frameio.createFrameIoProject(
+				/* 	await frameio.createFrameIoProject(
 						`${clientObj.idNumber}_${yearCreated}_${projectObj.clientProjectNumber} | ${clientObj.name} | ${projectObj.name} `,
 						itemId,
 						"creating frame io project"
-					)
+					) */
 
 					//create toggle client
 
-					const togglClientId = await toggl.createClient(
+			/* 		const togglClientId = await toggl.createClient(
 						clientObj.name,
 						clientObj.idNumber,
 						itemId,
@@ -277,11 +277,11 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						clientObj.idNumber,
 						{ togglClientId: togglClientId },
 						"saving toggl id to firebase client"
-					)
+					) */
 
 					//create toggle project
 
-					await toggl.createProject(
+					/* await toggl.createProject(
 						togglClientId,
 						clientObj.idNumber,
 						projectObj.name,
@@ -289,7 +289,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.clientProjectNumber,
 						itemId,
 						"creating toggl Project"
-					)
+					) */
 				} else if (projectObj.companyAssigned === "MoneyTree") {
 					/* await monday.addMoneyTreeAccount(
 						clientObj.idNumber,

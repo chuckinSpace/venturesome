@@ -42,14 +42,7 @@ const createClient = async (clientName, clientNumber, itemId, action) => {
 			)
 		})
 }
-/* const test = async () => {
-	try {
-		await createClient("testname", "112", 413267104, "creating toggle client")
-	} catch (error) {
-		console.log(error)
-	}
-}
-test() */
+
 const createProject = async (
 	togglClientId,
 	clientId,
