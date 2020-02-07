@@ -1,7 +1,7 @@
 require("dotenv").config()
 const moment = require("moment")
 const axios = require("axios")
-
+const constants = require("./constants")
 const firebase = require("./firebase")
 
 // const data from MONDAY
@@ -150,7 +150,8 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		isNewClient: true,
 		clientId: "",
 		smId: "",
-		contactName: "",
+		contactFirstName: "",
+		contactLastName: "",
 		streetAddress: "",
 		zipCode: "",
 		city: "",
@@ -209,8 +210,11 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		const phoneObj = values.find(item => item.id === "phone_number")
 		mondayObj.phone = JSON.parse(phoneObj.value).phone
 
-		const contactNameObj = values.find(item => item.id === "text52")
-		mondayObj.contactName = contactNameObj.value.replace(/['"]+/g, "")
+		const contactFirstNameObj = values.find(item => item.id === "text52")
+		mondayObj.contactFirstName = contactFirstNameObj.value.replace(/['"]+/g, "")
+
+		const contactLastNameObj = values.find(item => item.id === "text524")
+		mondayObj.contactLastName = contactLastNameObj.value.replace(/['"]+/g, "")
 
 		const companyAssignedObj = values.find(item => item.id === "dropdown1")
 
@@ -308,7 +312,7 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		return mondayObj
 	} catch (error) {
 		console.log("Error when reading mondayObj", error)
-		changeMondayStatus(1, boardId, itemId)
+		changeMondayStatus(constants.START_FORM_STATUS, "Missing Info", itemId)
 		return 0
 	}
 }
@@ -1088,6 +1092,32 @@ const getClientOnboarding = async itemId => {
 	return id
 }
 
+const getPmMondayInfo = async pmId => {
+	console.log(pmId, "pmId")
+	const body = {
+		query: `
+			query {
+				users (ids: ${pmId}) {
+					name
+					phone
+					photo_original
+					mobile_phone
+					email
+					 }
+				}`
+	}
+	const response = await postMonday(body, `getting client Id for onboarding`)
+	const pmInfo = response.data.users[0]
+	const pmInfoObj = {
+		name: pmInfo.name,
+		phone: pmInfo.phone,
+		photo: pmInfo.photo_original,
+		mobile: pmInfo.mobile_phone,
+		email: pmInfo.email
+	}
+	return pmInfoObj
+}
+
 const test = async () => {
 	try {
 		console.log(await getClientOnboarding())
@@ -1109,3 +1139,4 @@ module.exports.addMoneyTreeAccount = addMoneyTreeAccount
 module.exports.saveClientToMondayDatabase = saveClientToMondayDatabase
 module.exports.createTag = createTag
 module.exports.getClientOnboarding = getClientOnboarding
+module.exports.getPmMondayInfo = getPmMondayInfo

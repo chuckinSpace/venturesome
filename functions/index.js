@@ -90,7 +90,8 @@ const createClientObj = (clientId, mondayObj, clientProjectNumber, tag) => {
 		name: mondayObj.clientName,
 		email: mondayObj.email,
 		phone: mondayObj.phone,
-		contactName: mondayObj.contactName,
+		contactFirstName: mondayObj.contactFirstName,
+		contactLastName: mondayObj.contactLastName,
 		clientProjectNumber: clientProjectNumber,
 		address: {
 			street: mondayObj.streetAddress,
@@ -106,7 +107,8 @@ const createClientObj = (clientId, mondayObj, clientProjectNumber, tag) => {
 		createdAt: new Date(),
 		slackUsers: mondayObj.slackUsers,
 		tag: tag,
-		isAutomaticGift: mondayObj.companyAssigned === "MoneyTree"
+		isAutomaticGift: mondayObj.companyAssigned === "MoneyTree",
+		smId: parseInt(mondayObj.smId)
 	}
 
 	return clientObj
@@ -134,7 +136,7 @@ const createProjectObj = async (
 		clientPhone: mondayObj.phone,
 		clientProjectNumber: clientProjectNumber,
 		internalProjectId: internalProjectId,
-		smId: parseInt(mondayObj.smId),
+
 		tag: tag
 	}
 
@@ -219,14 +221,17 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 
 				await firebase.createClient(clientObj)
 				await firebase.createProject(projectObj)
-
-				/* 	await sendGrid.sendOnboardingEmail(
+				const pmObj = await monday.getPmMondayInfo(projectObj.pmId)
+				const smObj = await monday.getPmMondayInfo(clientObj.smId)
+				/* await sendGrid.sendOnboardingEmail(
 					clientObj.email,
-					clientObj.contactName,
+					clientObj.contactFirstName,
 					clientObj.formLink,
-					projectObj.companyAssigned
-				)
- */
+					projectObj.companyAssigned,
+					pmObj,
+					smObj
+				) */
+
 				await monday.changeMondayStatus("status", "Onboarding Started", itemId)
 				await monday.changeMondayStatus("status2", "Waiting For Client", itemId)
 				await monday.setMondayClientId(boardId, itemId, clientObj.idNumber)
@@ -251,10 +256,11 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 
 					//create frameio project
 
-					/* 	await frameio.createFrameIoProject(
+					await frameio.createFrameIoProject(
 						`${clientObj.idNumber}_${yearCreated}_${projectObj.clientProjectNumber} | ${clientObj.name} | ${projectObj.name} `,
-						itemId
-					) */
+						itemId,
+						"creating frame io project"
+					)
 
 					await monday.changeMondayStatus("status8", "Completed", itemId)
 					//create toggle client
@@ -387,6 +393,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				) */
 				await monday.changeMondayStatus("status4", "Completed", itemId)
 			}
+			console.log("reached end of script with success")
 			res.send({ message: "success" })
 		}
 	} catch (error) {

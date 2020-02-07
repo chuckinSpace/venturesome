@@ -11,44 +11,55 @@ const MONEYTREE_TEMPLATE_ID = "d-e1874833f3814ed0a1b8b540f18f24ba"
 */
 
 const sendOnboardingEmail = async (
-	clientEmail,
-	contactName,
+	contactEmail,
+	contactFirstName,
 	formLink,
-	companyAssigned
+	companyAssigned,
+	pmObj,
+	smObj
 ) => {
-	console.log(
-		"sending email",
-		clientEmail,
-		contactName,
-		formLink,
-		companyAssigned
-	)
 	let templateId = ""
 	let emailFrom = ""
+	let logo = ""
 	if (companyAssigned === "Venturesome") {
 		templateId = VENTURESOME_TEMPLATE_ID
 		emailFrom = "office@venturesome.ch"
+		logo =
+			"https://firebasestorage.googleapis.com/v0/b/venturesome-f6c40.appspot.com/o/Logos%2FVENTURESOME-Favicon%20(1).png?alt=media&token=9b4517ab-fe2f-40ff-8996-aca06ea63477"
 	} else if (companyAssigned === "MoneyTree") {
 		templateId = MONEYTREE_TEMPLATE_ID
 		emailFrom = "office@moneytree.ch"
+		logo =
+			"https://firebasestorage.googleapis.com/v0/b/venturesome-f6c40.appspot.com/o/Logos%2Fmt-high-color-pos%20(1).png?alt=media&token=e5e3fc2f-f846-4348-94f4-6a378f04be15"
 	}
 
+	const pmFirstName = pmObj.name.split(" ")[0]
 	const msg = {
 		from: emailFrom,
-		templateId: templateId,
+		templateId: "d-2f1aadef566b4c07a4602ed01b136e9b",
 		personalizations: [
 			{
 				to: [
 					{
-						email: clientEmail
+						email: contactEmail
 					}
 				],
 				dynamic_template_data: {
 					companyAssigned: companyAssigned,
-					contactName: contactName,
+					contactFirstName: contactFirstName,
 					formLink: formLink,
-					image:
-						"https://firebasestorage.googleapis.com/v0/b/venturesome-f6c40.appspot.com/o/Nick.png?alt=media&token=3b3e7ec3-3827-4ca2-bfe4-75671d0b04a1"
+					pmName: pmObj.name,
+					pmFirstName: pmFirstName,
+					pmEmail: pmObj.email,
+					pmMobile: pmObj.mobile,
+					pmPhone: pmObj.phone,
+					image: pmObj.photo,
+					logo: logo,
+					smPhoto: smObj.photo,
+					smName: smObj.name,
+					smEmail: smObj.email,
+					smPhone: smObj.phone,
+					smMobile: smObj.mobile
 				}
 			}
 		]
@@ -60,16 +71,10 @@ const sendOnboardingEmail = async (
 	}
 }
 const test = async () => {
-	try {
-		await sendOnboardingEmail(
-			"carlosmoyanor@gmail.com",
-			"test Client",
-			"asd",
-			"Venturesome"
-		)
-	} catch (error) {
-		console.log(error)
-	}
+	const string = "Carlos Moyano"
+	const array = string.split(" ")[0]
+	console.log(array)
 }
 /* test() */
+
 module.exports.sendOnboardingEmail = sendOnboardingEmail
