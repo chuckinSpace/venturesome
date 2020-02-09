@@ -200,8 +200,17 @@ const getValuesFromMonday = async (boardId, itemId) => {
 				typeof mondayObj.clientId
 			)
 			const firebaseClient = await firebase.getClientInfo(mondayObj.clientId)
-			console.log(firebaseClient, "firebaseClient on old client")
-			mondayObj.clientName = firebaseClient.name
+			if (!!firebaseClient) {
+				console.log(firebaseClient, "firebaseClient on old client")
+				mondayObj.clientName = firebaseClient.name
+			} else {
+				changeMondayStatus(
+					constants.START_FORM_STATUS,
+					"Client Not Found",
+					itemId
+				)
+				throw new Error("client not found ending program")
+			}
 		}
 
 		const emailObj = values.find(item => item.id === "email")
@@ -1118,9 +1127,73 @@ const getPmMondayInfo = async pmId => {
 	return pmInfoObj
 }
 
+const sendWelcome = async (clientObj, companyAssigned) => {
+	let name = ""
+
+	if (companyAssigned === "Venturesome") {
+		name = `Send Welcome card to ${clientObj.name}`
+	} else if (companyAssigned === "MoneyTree") {
+		name = `Send Bonsai to ${clientObj.name}`
+	}
+
+	//on project overview
+	const createItemQuery = {
+		query: `
+			mutation ($boardId:Int!,$groupId:String!,$itemName:String,$columnValues:JSON!){
+				create_item (
+				board_id: $boardId,
+				group_id: $groupId,
+				item_name: $itemName,
+				column_values: $columnValues
+				) {
+				id
+				}
+			}
+			`,
+		variables: {
+			boardId: 168787053,
+			groupId: "new_group",
+			itemName: name,
+			columnValues: JSON.stringify({
+				tags: { text: "testTag", tag_ids: [clientObj.tag] }
+			})
+		}
+	}
+
+	const response = await postMonday(createItemQuery, `creating item`)
+	const id = parseInt(response.data.create_item.id)
+	console.log(id, typeof id)
+	const createUpdate = {
+		query: `
+			mutation ($itemId : Int!, $body: String!) {
+				create_update (item_id: $itemId, body:$body ) {
+						id
+					}
+				}`,
+		variables: {
+			itemId: id,
+			body: `${clientObj.name}'s Address : ${clientObj.address.street} ${clientObj.address.zip} ${clientObj.address.city} ${clientObj.address.country.countryName}`
+		}
+	}
+
+	await postMonday(createUpdate, `creating update`)
+}
 const test = async () => {
 	try {
-		console.log(await getClientOnboarding())
+		const clientObj = {
+			tag: 123123,
+			clientName: "test client",
+
+			address: {
+				street: "street1",
+				zip: "a2dd",
+				city: "santaigo",
+				country: {
+					countryName: "Chile"
+				}
+			}
+		}
+		await sendWelcome(clientObj, "Venturesome")
 	} catch (error) {
 		console.log(error)
 	}
@@ -1140,3 +1213,4 @@ module.exports.saveClientToMondayDatabase = saveClientToMondayDatabase
 module.exports.createTag = createTag
 module.exports.getClientOnboarding = getClientOnboarding
 module.exports.getPmMondayInfo = getPmMondayInfo
+module.exports.sendWelcome = sendWelcome

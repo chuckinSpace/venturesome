@@ -149,6 +149,7 @@ const getClientInfo = async clientId => {
 		console.log(error)
 	}
 }
+
 const getAllClients = async () => {
 	let clients = []
 	const getClientsSnap = db.collection("clients").orderBy("idNumber", "asc")

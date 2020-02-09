@@ -39,7 +39,7 @@ const createSlackChannel = async (users, clientName, itemId, action) => {
 	}
 }
 
-const sendClientInvite = async (clientEmail, channelId) => {
+const sendClientInvite = async (clientEmail, channelId, itemId, action) => {
 	try {
 		var options = {
 			method: "POST",
@@ -54,50 +54,65 @@ const sendClientInvite = async (clientEmail, channelId) => {
 				ultra_restricted: "true"
 			}
 		}
-		request(options, function(error, response) {
-			if (error) throw new Error("error trying to send invite to client", error)
-			console.log(
-				`sucess sending invitation to channel ${channelId} to user for slack`,
-				response.body
-			)
+		request(options, async function(err, response) {
+			if (!JSON.parse(response.body).ok) {
+				console.log("error trying to send invite to client", err)
+				monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+				sendGrid.sendErrorEmail(
+					`/slack/sendClientInvite - clientEmail ${clientEmail}-itemId${itemId}`,
+					action,
+					err
+				)
+			} else {
+				console.log(
+					`sucess sending invitation to channel ${channelId} to user for slack`,
+					JSON.parse(response.body)
+				)
+				await monday.changeMondayStatus(
+					constants.SLACK_FORM_STATUS,
+					"Completed",
+					itemId
+				)
+			}
 		})
 	} catch (err) {
-		throw new Error("error trying to send invite to client")
+		console.log("error trying to send invite to client", err)
 	}
 }
 
-/* const test = async () => {
-	try {
-		const response = await web.users.lookupByEmail({
-			email: "carlosmoyanor@gmail.com"
-		})
-		const id = response.user.id
-
-		await createSlackChannel(
-			[{ id: id }],
-			"testuser",
-			413267104,
-			"creating slack channel"
-		)
-	} catch (error) {
-		console.log(error)
-	}
-}
-test() */
-
-const getUserbyEmail = async userEmail => {
+const getUserbyEmail = async (userEmail, itemId, action) => {
 	try {
 		const response = await web.users.lookupByEmail({ email: userEmail })
+		await monday.changeMondayStatus(
+			constants.SLACK_FORM_STATUS,
+			"Completed",
+			itemId
+		)
 		return { id: response.user.id }
-	} catch (error) {
-		console.log("error gettin user by email from slack", error)
+	} catch (err) {
+		console.log("error gettin user by email from slack", err.data.ok)
+		throw err
 	}
 }
 
-const getSlackIds = async slackObj => {
+const getSlackIds = async (slackObj, itemId, action) => {
 	console.log(slackObj, "slackObj")
 	const getUsers = async () => {
-		return Promise.all(slackObj.map(email => getUserbyEmail(email)))
+		try {
+			return Promise.all(
+				slackObj.map(email =>
+					getUserbyEmail(email, itemId, "getting Users by email")
+				)
+			)
+		} catch (err) {
+			console.log(err)
+			monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+			sendGrid.sendErrorEmail(
+				`/slack/sendClientInvite - slackObj ${slackObj}-itemId ${itemId}`,
+				action,
+				err
+			)
+		}
 	}
 	return getUsers()
 		.then(data => {
@@ -105,11 +120,18 @@ const getSlackIds = async slackObj => {
 			return data
 		})
 		.catch(err => {
-			throw new Error("error getting ids for users from slack", err)
+			console.log(err)
+			monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
 		})
 }
 
-const sendWelcomeMessage = async (channelId, team, clientName) => {
+const sendWelcomeMessage = async (
+	channelId,
+	team,
+	clientName,
+	itemId,
+	action
+) => {
 	console.log("sending messages", channelId, team, clientName)
 	try {
 		let message = "Welcome"
@@ -123,13 +145,13 @@ const sendWelcomeMessage = async (channelId, team, clientName) => {
 			channel: channelId,
 			text: message
 		})
-	} catch (error) {
-		throw new Error(
-			"error sending messages to slack",
-			error,
-			channelId,
-			team,
-			clientName
+	} catch (err) {
+		console.log(err)
+		monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+		sendGrid.sendErrorEmail(
+			`/slack/sendClientInvite - clientName ${clientName}-itemId ${itemId}`,
+			action,
+			err
 		)
 	}
 }
@@ -146,7 +168,7 @@ const slackCreationWorkflow = async (clientFirebase, itemId) => {
 		let slackUsers = clientFirebase.slackUsers
 		let slackOption = clientFirebase.slack
 		//then we send the emails to our slack function to get back the ids from slack for those users, to later create the channels
-		let slackIds = await getSlackIds(slackUsers)
+		let slackIds = await getSlackIds(slackUsers, itemId, "get slack Ids")
 
 		if (slackOption) {
 			//create 2 channel add slackUsers to both and invite client to 1
@@ -173,12 +195,16 @@ const slackCreationWorkflow = async (clientFirebase, itemId) => {
 			await sendWelcomeMessage(
 				companyChannelId,
 				"internal",
-				clientFirebase.name
+				clientFirebase.name,
+				itemId,
+				"sending messages slack"
 			)
 			/* await sendWelcomeMessage(clientChannelId, "client", clientFirebase.name) */
 			await sendClientInvite(
 				clientFirebase.contactEmail,
-				clientChannelId.toString()
+				clientChannelId.toString(),
+				itemId,
+				"sending client invite to slack channel"
 			)
 		} else {
 			//create one private channel add slackUsers
@@ -195,8 +221,14 @@ const slackCreationWorkflow = async (clientFirebase, itemId) => {
 			)
 			console.log(companyChannelId, "companyChannelId")
 		}
-	} catch (error) {
-		throw new Error("error when crating slack channels", error, clientFirebase)
+	} catch (err) {
+		console.log(err)
+		monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+		sendGrid.sendErrorEmail(
+			`/slack/sendClientInvite - clientFirebase ${clientFirebase}-itemId ${itemId}`,
+			"creating slack channels",
+			err
+		)
 	}
 }
 
