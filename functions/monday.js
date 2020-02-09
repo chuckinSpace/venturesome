@@ -422,7 +422,7 @@ const getSubmissionData = async (boardId, itemId) => {
 		email: "",
 		slack: false,
 		phone: "",
-		clientId: 0,
+		clientId: "",
 		name: ""
 	}
 
@@ -430,6 +430,10 @@ const getSubmissionData = async (boardId, itemId) => {
 		const response = await postMonday(body, "getSubmissionData")
 		const values = await response.data.boards[0].items[0].column_values
 		console.log(values)
+
+		const clientId = values.find(item => item.id === "text08")
+		submissionObj.clientId = clientId.value.replace(/['"]+/g, "")
+
 		const emailObj = values.find(item => item.id === "email")
 		submissionObj.email = JSON.parse(emailObj.value).email
 
@@ -459,7 +463,11 @@ const getSubmissionData = async (boardId, itemId) => {
 		console.log("error when creating submission obj", error)
 	}
 }
-
+const test = async () => {
+	const data = await getSubmissionData(411284598, 454244837)
+	console.log(data)
+}
+/* test() */
 const getBoardByClientId = async clientId => {
 	console.log(clientId, typeof clientId)
 
@@ -1178,27 +1186,6 @@ const sendWelcome = async (clientObj, companyAssigned) => {
 
 	await postMonday(createUpdate, `creating update`)
 }
-const test = async () => {
-	try {
-		const clientObj = {
-			tag: 123123,
-			clientName: "test client",
-
-			address: {
-				street: "street1",
-				zip: "a2dd",
-				city: "santaigo",
-				country: {
-					countryName: "Chile"
-				}
-			}
-		}
-		await sendWelcome(clientObj, "Venturesome")
-	} catch (error) {
-		console.log(error)
-	}
-}
-/* test() */
 
 module.exports.getResult = getResult
 module.exports.updateForms = updateForms
