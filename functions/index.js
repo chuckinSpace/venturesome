@@ -113,29 +113,6 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 	}
 })
 
-const test = async () => {
-	const submissionObj = await monday.getSubmissionData(411284598, 454344507)
-
-	console.log("submission obj before goin to firebase", submissionObj)
-	const response = await firebase.updateFirebase(
-		"clients",
-		"idNumber",
-		submissionObj.clientId,
-		{
-			birthday: submissionObj.birthday,
-			contactEmail: submissionObj.email,
-			onboardingCompletedOn: new Date(),
-			slack: submissionObj.slack,
-			contactPhone: submissionObj.phone,
-			contactName: submissionObj.name
-		},
-		"storing submission obj"
-	)
-	const clientFirebase = await firebase.getClientInfo(submissionObj.clientId)
-	console.log(clientFirebase)
-}
-/* test() */
-
 const createClientObj = (clientId, mondayObj, clientProjectNumber, tag) => {
 	const clientObj = {
 		idNumber: clientId,
