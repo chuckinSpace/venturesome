@@ -122,12 +122,20 @@ const updateFirebase = async (
 	consoleText
 ) => {
 	console.log(collection, whereParam, whereIqualTo, objectToStore, consoleText)
-	try {
+
+	const task = async () => {
 		const getSnapshot = db
 			.collection(collection)
 			.where(whereParam, "==", whereIqualTo)
 		const snapObj = await getSnapshot.get()
-		snapObj.forEach(doc => doc.ref.update(objectToStore))
+		for (let client of snapObj.docs) {
+			let clients = await client.ref
+				.update(objectToStore)
+				.then(data => console.log("update finished", data))
+		}
+	}
+	try {
+		await task()
 	} catch (error) {
 		throw new Error(`Error when ${consoleText} `, error)
 	}

@@ -1,3 +1,5 @@
+/*TODO: saving monday to database error date is not date not text */
+
 require("dotenv").config()
 const moment = require("moment")
 const axios = require("axios")
@@ -441,8 +443,12 @@ const getSubmissionData = async (boardId, itemId) => {
 		submissionObj.name = JSON.parse(contactNameObj.value)
 
 		const birthdayObj = values.find(item => item.id === "date4")
-		console.log(birthdayObj, typeof birthdayObj)
-		submissionObj.birthday = JSON.parse(birthdayObj.value).date
+		console.log("birthday obj", birthdayObj, typeof birthdayObj)
+		const dateTime = moment(JSON.parse(birthdayObj.value).date).format(
+			"YYYY-MM-DD"
+		)
+		console.log("birthday converted", dateTime)
+		submissionObj.birthday = dateTime
 
 		const slackObj = values.find(item => item.id === "check")
 		if (!!slackObj.value) {
