@@ -739,7 +739,11 @@ const saveClientToMondayDatabase = async clientFirebase => {
 				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
 				date: { date: dateTime },
 				date3: { date: giftDate },
-				text: clientFirebase.name
+				text: clientFirebase.name,
+				people: {
+					personsAndTeams: [{ id: clientFirebase.smId, kind: "person" }]
+				},
+				adresse: `${clientFirebase.address.street} ${clientFirebase.address.zip} ${clientFirebase.address.city} ${clientFirebase.address.country.countryName}`
 			})
 		} else {
 			columnValues = JSON.stringify({
@@ -752,7 +756,10 @@ const saveClientToMondayDatabase = async clientFirebase => {
 				client_nr_: clientFirebase.idNumber,
 				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
 				date: { date: dateTime },
-				text: clientFirebase.name
+				text: clientFirebase.name,
+				people: {
+					personsAndTeams: [{ id: clientFirebase.smId, kind: "person" }]
+				}
 			})
 		}
 		//query to populate the board
@@ -1141,9 +1148,11 @@ const getPmMondayInfo = async pmId => {
 	return pmInfoObj
 }
 
-const sendWelcome = async (clientObj, companyAssigned) => {
+const sendWelcome = async (clientObj, companyAssigned, pmId) => {
 	let name = ""
-
+	let deadline = moment(clientObj.createdAt)
+		.add(1, "d")
+		.format("YYYY-MM-DD")
 	if (companyAssigned === "Venturesome") {
 		name = `Send Welcome card to ${clientObj.name}`
 	} else if (companyAssigned === "MoneyTree") {
@@ -1169,7 +1178,11 @@ const sendWelcome = async (clientObj, companyAssigned) => {
 			groupId: "new_group",
 			itemName: name,
 			columnValues: JSON.stringify({
-				tags: { text: "testTag", tag_ids: [clientObj.tag] }
+				tags: { text: "testTag", tag_ids: [clientObj.tag] },
+				person3: { id: pmId },
+				date: { date: deadline },
+				status1: { label: "Urgent and Important" },
+				priorit_t: { label: "Task" }
 			})
 		}
 	}
@@ -1186,7 +1199,11 @@ const sendWelcome = async (clientObj, companyAssigned) => {
 				}`,
 		variables: {
 			itemId: id,
-			body: `${clientObj.name}'s Address : ${clientObj.address.street} ${clientObj.address.zip} ${clientObj.address.city} ${clientObj.address.country.countryName}`
+			body: `${clientObj.name}'s Address : 
+			${clientObj.name}
+			${clientObj.contactFirstName} ${clientObj.contactLastName}
+			${clientObj.address.street}
+			${clientObj.address.zip} ${clientObj.address.city}`
 		}
 	}
 

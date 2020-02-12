@@ -1,9 +1,20 @@
 const Bexio = require("bexio")
 const express = require("express")
 const createServer = require("http").createServer
-const axios = require("axios")
+const { Issuer } = require("openid-client")
 require("dotenv").config()
 // initialize the object
+
+Issuer.discover("https://accounts.google.com") // => Promise
+	.then(function(googleIssuer) {
+		console.log(
+			"Discovered issuer %s %O",
+			googleIssuer.issuer,
+			googleIssuer.metadata
+		)
+	})
+
+/* 
 const bexioApi = new Bexio.default(
 	process.env.BEXIO_CLIENT_ID,
 	process.env.BEXIO_SECRET,
@@ -17,15 +28,13 @@ const server = createServer(app)
 
 // redirect the user to the Bexio login page
 app.get("/", (req, res) => {
-	axios
-		.get("https://idp.bexio.com/")
-		.then(function(response) {
-			return response.json()
-		})
-		.then(function(myJson) {
-			console.log(myJson)
-		})
-		.catch(err => console.log(err.data))
+	if (!bexioApi.isInitialized()) {
+		console.log("not inititalized ")
+		res.redirect(bexioApi.getAuthUrl())
+	} else {
+		console.log("in contact list")
+		res.redirect("/list_contacts")
+	}
 })
 
 // receive the callback of the bexio login page and get the access token
@@ -57,3 +66,4 @@ app.get("/list_contacts", (req, res) => {
 server.listen(3000, () => {
 	console.log("Listening on port 3000")
 })
+ */
