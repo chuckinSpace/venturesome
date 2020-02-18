@@ -201,7 +201,7 @@ const slackCreationWorkflow = async (clientFirebase, itemId) => {
 			)
 			/* await sendWelcomeMessage(clientChannelId, "client", clientFirebase.name) */
 			await sendClientInvite(
-				clientFirebase.contactEmail,
+				clientFirebase.slackEmail,
 				clientChannelId.toString(),
 				itemId,
 				"sending client invite to slack channel"

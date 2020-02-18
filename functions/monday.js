@@ -23,7 +23,7 @@ const CLIENT_ID_ID = "text86"
 const MONEY_TREE_ACCOUNTS_BOARD_ID = 416324914
 const MONEY_TREE_ACCOUNTS_GROUP_ID = "duplicate_of_043___bruno_s_bes10603"
 //client dabtase
-const CLIENT_DATABASE_BOARD_ID = 450449636
+const CLIENT_DATABASE_BOARD_ID = 463586872
 
 // onboardin status  codes
 
@@ -157,7 +157,8 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		streetAddress: "",
 		zipCode: "",
 		city: "",
-		country: { countryCode: "", countryName: "" }
+		country: { countryCode: "", countryName: "" },
+		contactPosition: ""
 	}
 
 	//Create query to send to Monday.com's API
@@ -248,15 +249,20 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		const companyAssigned = companyAssignedParse.ids[0]
 		console.log(companyAssigned)
 		if (!!companyAssigned && companyAssigned === 1) {
-			mondayObj.companyAssigned = "Venturesome"
+			mondayObj.companyAssigned = "VENTURESOME"
 		} else if (!!companyAssigned && companyAssigned === 2) {
-			mondayObj.companyAssigned = "MoneyTree"
+			mondayObj.companyAssigned = "moneytree"
 		} else {
 			throw new Error("missing company Assigned")
 		}
 
 		const projectNameObj = values.find(item => item.id === "project_name")
-		mondayObj.projectName = projectNameObj.value.replace(/['"]+/g, "")
+		!!projectNameObj.value &&
+			(mondayObj.projectName = projectNameObj.value.replace(/['"]+/g, ""))
+
+		const positionObj = values.find(item => item.id === "text2")
+		!!positionObj.value &&
+			(mondayObj.contactPosition = positionObj.value.replace(/['"]+/g, ""))
 
 		const managerObj = values.find(item => item.id === "person")
 		if (!!JSON.parse(managerObj.value).personsAndTeams[0]) {
@@ -469,11 +475,7 @@ const getSubmissionData = async (boardId, itemId) => {
 		console.log("error when creating submission obj", error)
 	}
 }
-const test = async () => {
-	const data = await getSubmissionData(411284598, 454244837)
-	console.log(data)
-}
-/* test() */
+
 const getBoardByClientId = async clientId => {
 	console.log(clientId, typeof clientId)
 
@@ -603,14 +605,14 @@ const addProjectOverview = async (
 		smId,
 		companyAssigned
 	)
-	if (companyAssigned === "Venturesome") {
+	if (companyAssigned === "VENTURESOME") {
 		columValues = JSON.stringify({
 			person: { id: pmId },
 			datum4: { date: dateTime },
 			pm: { id: smId },
 			tags: { text: "testTag", tag_ids: [tag] }
 		})
-	} else if (companyAssigned === "MoneyTree") {
+	} else if (companyAssigned === "moneytree") {
 		columValues = JSON.stringify({
 			person: { id: pmId },
 			datum4: { date: dateTime },
@@ -699,8 +701,8 @@ const addMoneyTreeAccount = async (
 	}
 }
 
-const saveClientToMondayDatabase = async clientFirebase => {
-	console.log(clientFirebase)
+const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
+	console.log(clientFirebase, contactObj)
 	//create group and get back id
 
 	let dateTime = moment(clientFirebase.createdAt).format("YYYY-MM-DD")
@@ -729,36 +731,57 @@ const saveClientToMondayDatabase = async clientFirebase => {
 		let columnValues = ""
 		if (clientFirebase.isAutomaticGift) {
 			columnValues = JSON.stringify({
-				phone: { phone: clientFirebase.phone },
-				email: {
-					email: clientFirebase.email,
-					text: clientFirebase.contactName
+				phone: {
+					phone: contactObj.mobilePhone.number,
+					countryShortName: contactObj.mobilePhone.countryShortName
 				},
-				due_date: { date: clientFirebase.birthday },
-				client_nr_: clientFirebase.idNumber,
+				email: {
+					email: contactObj.email.email,
+					text: contactObj.email.text
+				},
+				due_date: { date: contactObj.birthday },
+				client_nr_: contactObj.clientId,
 				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
-				date: { date: dateTime },
-				date3: { date: giftDate },
+				date4: { date: dateTime },
+				date: { date: giftDate },
 				text: clientFirebase.name,
 				people: {
 					personsAndTeams: [{ id: clientFirebase.smId, kind: "person" }]
 				},
-				adresse: `${clientFirebase.address.street} ${clientFirebase.address.zip} ${clientFirebase.address.city} ${clientFirebase.address.country.countryName}`
+				adresse: `${clientFirebase.address.street} ${clientFirebase.address.zip} ${clientFirebase.address.city} `,
+				text12: clientFirebase.address.street,
+				text3: clientFirebase.address.zip,
+				text6: clientFirebase.address.city,
+				country: {
+					countryCode: clientFirebase.address.country.countryCode,
+					countryName: clientFirebase.address.country.countryName
+				}
 			})
 		} else {
 			columnValues = JSON.stringify({
-				phone: { phone: clientFirebase.phone },
-				email: {
-					email: clientFirebase.email,
-					text: clientFirebase.contactName
+				phone: {
+					phone: contactObj.mobilePhone.number,
+					countryShortName: contactObj.mobilePhone.countryShortName
 				},
-				due_date: { date: clientFirebase.birthday },
-				client_nr_: clientFirebase.idNumber,
+				email: {
+					email: contactObj.email.email,
+					text: contactObj.email.text
+				},
+				due_date: { date: contactObj.birthday },
+				client_nr_: contactObj.clientId,
 				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
-				date: { date: dateTime },
+				date4: { date: dateTime },
 				text: clientFirebase.name,
 				people: {
 					personsAndTeams: [{ id: clientFirebase.smId, kind: "person" }]
+				},
+				adresse: `${clientFirebase.address.street} ${clientFirebase.address.zip} ${clientFirebase.address.city}`,
+				text12: clientFirebase.address.street,
+				text3: clientFirebase.address.zip,
+				text6: clientFirebase.address.city,
+				country: {
+					countryCode: clientFirebase.address.country.countryCode,
+					countryName: clientFirebase.address.country.countryName
 				}
 			})
 		}
@@ -780,7 +803,7 @@ const saveClientToMondayDatabase = async clientFirebase => {
 			variables: {
 				boardId: CLIENT_DATABASE_BOARD_ID,
 				groupId: newGroupIdid,
-				itemName: `${clientFirebase.contactName}`,
+				itemName: `${contactObj.firstName} ${contactObj.lastName}`,
 				columnValues: columnValues
 			}
 		}
@@ -789,6 +812,18 @@ const saveClientToMondayDatabase = async clientFirebase => {
 		throw new Error("error when saving client to mondaydatabase", error)
 	}
 }
+
+const test = async () => {
+	try {
+		const clientFirebase = await firebase.getClientInfo("112")
+		const contactObj = await firebase.getContactInfo("112")
+		console.log(clientFirebase, contactObj)
+		await saveClientToMondayDatabase(clientFirebase, contactObj)
+	} catch (error) {
+		console.error(error)
+	}
+}
+/* test() */
 
 const createTag = async (clientName, clientNumber) => {
 	const tagText = `#${clientNumber}${clientName.replace(/\s+/g, "")}`
@@ -814,7 +849,7 @@ const createTag = async (clientName, clientNumber) => {
 const databaseMigration = async () => {
 	const body = {
 		query: ` query {
-					boards(ids:450419368) {
+					boards(ids:463586872) {
 						groups {
 							title
 						items(limit: 120) {
@@ -840,7 +875,15 @@ const databaseMigration = async () => {
 			const clientObj = {
 				idNumber: "",
 				name: "",
-				address: "",
+				address: {
+					street: "",
+					zip: "",
+					city: "",
+					country: {
+						countryCode: "",
+						countryName: ""
+					}
+				},
 				category: "",
 				formLink: "",
 				mondayItemIdOnboarding: "",
@@ -937,11 +980,39 @@ const databaseMigration = async () => {
 				!!email && (contactObj.email.email = email)
 				!!email && (contactObj.email.text = contactName)
 
-				const addressObj = contact.column_values.find(
-					item => item.id === "location"
+				//separated address obj
+				const streetObj = contact.column_values.find(
+					item => item.id === "text12"
+				)
+				!!streetObj.value &&
+					(clientObj.address.street = streetObj.value.replace(/['"]+/g, ""))
+
+				const ZIPobj = contact.column_values.find(item => item.id === "text3")
+				!!ZIPobj.value &&
+					(clientObj.address.zip = ZIPobj.value.replace(/['"]+/g, ""))
+
+				const cityObj = contact.column_values.find(item => item.id === "text6")
+				!!cityObj.value &&
+					(clientObj.address.city = cityObj.value.replace(/['"]+/g, ""))
+
+				const countryObj = contact.column_values.find(
+					item => item.id === "country"
+				)
+				!!JSON.parse(countryObj.value) &&
+					(clientObj.address.country.countryCode = JSON.parse(
+						countryObj.value
+					).countryCode)
+				!!JSON.parse(countryObj.value) &&
+					(clientObj.address.country.countryName = JSON.parse(
+						countryObj.value
+					).countryName)
+
+				//full adress from old db
+				const addressOb = contact.column_values.find(
+					item => item.id === "adresse"
 				)
 				const address =
-					!!JSON.parse(addressObj.value) && JSON.parse(addressObj.value).address
+					!!JSON.parse(addressOb.value) && JSON.parse(addressOb.value).address
 				!!address && (clientObj.address = address.trim())
 
 				const birthdayObj = contact.column_values.find(
@@ -958,8 +1029,8 @@ const databaseMigration = async () => {
 				const tagId = await createTag(clientObj.name, clientObj.idNumber)
 				!!tagId && (clientObj.tag = tagId)
 			}
-
-			await firebase.createClient(clientObj)
+			/* 	console.log(clientObj) */
+			await firebase.createDocument("clients", clientObj, "create client")
 		})
 		return clientsArray
 	} catch (error) {
@@ -979,7 +1050,6 @@ const databaseFirebaseToMonday = async () => {
 				id
 				}
 			}
-			
 		`,
 				variables: {
 					groupTitle: groupTitle
@@ -1016,9 +1086,19 @@ const databaseFirebaseToMonday = async () => {
 					itemName: "temp",
 					columnValues: JSON.stringify({
 						client_nr_: idNumber,
-						adresse: address,
+						adresse: `${address.street} ${address.zip} ${address.city}`,
+						text12: address.street,
+						text3: address.zip,
+						text6: address.city,
+						country: {
+							countryCode: address.country.countryCode,
+							countryName: address.country.countryName
+						},
 						tags7: { text: "testTag", tag_ids: [tag] },
-						text1: category
+						text1: category,
+						people: {
+							personsAndTeams: [{ id: 8109061, kind: "person" }]
+						}
 					})
 				}
 			}
@@ -1081,7 +1161,7 @@ const databaseFirebaseToMonday = async () => {
 
 		let firebaseClient = ""
 		//get Client form firebase
-		for (let index = 108; index < 109; index++) {
+		for (let index = 2; index <= 111; index++) {
 			let counter = index.toString().padStart(3, "0")
 			firebaseClient = await firebase.getClientInfo(counter)
 			//create group on monday return group Id
@@ -1096,6 +1176,7 @@ const databaseFirebaseToMonday = async () => {
 		console.log(error)
 	}
 }
+
 const getClientOnboarding = async itemId => {
 	console.log("item id on function", itemId)
 	const intId = parseInt(itemId)
@@ -1133,29 +1214,33 @@ const getPmMondayInfo = async pmId => {
 					photo_original
 					mobile_phone
 					email
+				title
 					 }
 				}`
 	}
 	const response = await postMonday(body, `getting client Id for onboarding`)
 	const pmInfo = response.data.users[0]
+	console.log(pmInfo)
 	const pmInfoObj = {
 		name: pmInfo.name,
+		//phone contains the gender String
 		phone: pmInfo.phone,
 		photo: pmInfo.photo_original,
 		mobile: pmInfo.mobile_phone,
-		email: pmInfo.email
+		email: pmInfo.email,
+		title: pmInfo.title
 	}
 	return pmInfoObj
 }
 
-const sendWelcome = async (clientObj, companyAssigned, pmId) => {
+const sendWelcome = async (clientObj, companyAssigned, pmId, contactObj) => {
 	let name = ""
 	let deadline = moment(clientObj.createdAt)
 		.add(1, "d")
 		.format("YYYY-MM-DD")
-	if (companyAssigned === "Venturesome") {
+	if (companyAssigned === "VENTURESOME") {
 		name = `Send Welcome card to ${clientObj.name}`
-	} else if (companyAssigned === "MoneyTree") {
+	} else if (companyAssigned === "moneytree") {
 		name = `Send Bonsai to ${clientObj.name}`
 	}
 
@@ -1201,7 +1286,7 @@ const sendWelcome = async (clientObj, companyAssigned, pmId) => {
 			itemId: id,
 			body: `${clientObj.name}'s Address : 
 			${clientObj.name}
-			${clientObj.contactFirstName} ${clientObj.contactLastName}
+			${contactObj.firstName} ${contactObj.lastName}
 			${clientObj.address.street}
 			${clientObj.address.zip} ${clientObj.address.city}`
 		}

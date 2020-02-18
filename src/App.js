@@ -1,28 +1,28 @@
-import React from 'react';
-import './App.css';
+import React from "react"
+import "./App.css"
 
-import Grid from '@material-ui/core/Grid';
+import Grid from "@material-ui/core/Grid"
 import SignUp from "./Auth/SignUp"
-import Home from './components/Home';
+import Home from "./components/Home"
 import Login from "./Auth/Login"
-import {Route,Switch} from "react-router-dom"
-import NavBar from './components/NavBar';
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom"
+import NavBar from "./components/NavBar"
 
 function App() {
-  return (
-    <Grid container justify="center" >
-       <Grid item xs={12}>
-          <NavBar/>
-          <Switch>
-            <Route exact path="/createUser" component={SignUp}/>
-            <Route exact path="/" component={Login}/>
-            <Route exact path="/home" component={Home}/>
-          </Switch>
-         
-          
-       </Grid>
-    </Grid>
-  );
+	return (
+		<Router>
+			<Grid container justify="center">
+				<Grid item xs={12}>
+					<NavBar />
+					<Switch>
+						<Route exact path="/createUser" component={SignUp} />
+						<Route exact path="/" component={Login} />
+						<Route exact path="/home" component={Home} />
+					</Switch>
+				</Grid>
+			</Grid>
+		</Router>
+	)
 }
 
-export default App;
+export default App

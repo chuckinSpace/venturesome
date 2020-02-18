@@ -56,25 +56,65 @@ const getClientProjectNumber = async clientId => {
 }
 
 //creates the client on firebase "clients" collection using the client Obj
-const createClient = async client => {
-	console.log("client goin to firabas", client)
-	db.collection("clients")
-		.add(client)
-		.then(doc => console.log("success creating client on firebase", doc.id))
-		.catch(err => console.log("error creating client on firebase", err))
+const createDocument = async (collection, object, action) => {
+	console.log("client going to firabase", collection, object, action)
+
+	try {
+		db.collection(collection)
+			.add(object)
+			.then(doc => console.log(`success ${action} on firebase`, doc.id))
+			.catch(err => console.log(`error ${action}on firebase`, err))
+	} catch (error) {
+		console.error(
+			"error creating document in firebase",
+			error,
+			object,
+			collection
+		)
+	}
 }
 
+const getPrimaryContactId = async clientId => {
+	console.log("getPrimaryContact")
+
+	try {
+		let contact = ""
+		const contactSnap = await db
+			.collection("contacts")
+			.where("clientId", "==", clientId)
+			.where("isPrimary", "==", true)
+			.get()
+		contactSnap.forEach(doc => (contact = doc.id))
+
+		return contact
+	} catch (error) {
+		console.error("error creating document in firebase", error, clientId)
+	}
+}
+const updateContact = async (itemId, objectToStore, action) => {
+	try {
+		const contact = db.collection("contacts").doc(itemId)
+		await contact.update(objectToStore)
+	} catch (error) {
+		console.error(error, action)
+	}
+}
+const test = async () => {
+	console.log(await getPrimaryContactId("112"))
+}
+/* test() */
+
 //creates the project on firebase "projects" collection using the project obj
-const createProject = async project => {
+/* const createProject = async project => {
 	console.log("project obj going to firebase", project)
 	db.collection("projects")
 		.add(project)
 		.then(doc => console.log("success creating project on firebase", doc.id))
 		.catch(err => console.log("error creating project on firebase", err))
-}
+} */
 
 //saves the client id on "staging" collection on firebase
-const saveIdstaging = async clientId => {
+/* const saveIdstaging = async clientId => {
 	console.log("stagin client id in firebase", clientId)
 	try {
 		const doc = await db.collection("staging").add({
@@ -86,10 +126,10 @@ const saveIdstaging = async clientId => {
 	} catch (error) {
 		console.log("Error when stagind client id ", error)
 	}
-}
+} */
 
 // retrieves the client id from "staging"
-const getStagedClientId = async () => {
+/* const getStagedClientId = async () => {
 	let clientId = ""
 	const querySnapshot = await db
 		.collection("staging")
@@ -99,9 +139,9 @@ const getStagedClientId = async () => {
 	querySnapshot.forEach(doc => (clientId = doc.data().clientId))
 	// delete staged client
 	return clientId
-}
+} */
 // deletes the client id from staging
-const deleteStagedClient = async clientId => {
+/* const deleteStagedClient = async clientId => {
 	let stagedClient = db.collection("staging").where("clientId", "==", clientId)
 	stagedClient
 		.get()
@@ -112,7 +152,7 @@ const deleteStagedClient = async clientId => {
 		})
 		.then(() => console.log("item succesfully removed"))
 		.catch(err => console.log("error removing staged client", err))
-}
+} */
 
 const updateFirebase = async (
 	collection,
@@ -167,15 +207,32 @@ const getAllClients = async () => {
 	})
 	return clients
 }
+const getContactInfo = async clientId => {
+	let contactInfo = ""
+	const contactSnap = await db
+		.collection("contacts")
+		.where("clientId", "==", clientId)
+		.get()
+	contactSnap.forEach(contact => (contactInfo = contact.data()))
+	return contactInfo
+}
+/* const test = async () => {
+	console.log(await getContactInfo("112"))
+}
+test() */
+
 //exports
 module.exports.getClientId = getClientId
 module.exports.getInternalProjectId = getInternalProjectId
 module.exports.getClientProjectNumber = getClientProjectNumber
-module.exports.createClient = createClient
-module.exports.createProject = createProject
+module.exports.createDocument = createDocument
+/* module.exports.createProject = createProject
 module.exports.saveIdstaging = saveIdstaging
 module.exports.getStagedClientId = getStagedClientId
-module.exports.deleteStagedClient = deleteStagedClient
+module.exports.deleteStagedClient = deleteStagedClient */
 module.exports.updateFirebase = updateFirebase
 module.exports.getClientInfo = getClientInfo
 module.exports.getAllClients = getAllClients
+module.exports.getContactInfo = getContactInfo
+module.exports.getPrimaryContactId = getPrimaryContactId
+module.exports.updateContact = updateContact

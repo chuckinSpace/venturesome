@@ -2,6 +2,7 @@ const fs = require("fs")
 const readline = require("readline")
 const { google } = require("googleapis")
 require("dotenv").config()
+/* const request = require("request") */
 const firebase = require("./firebase")
 
 // If modifying these scopes, delete token.json.
@@ -285,24 +286,29 @@ async function createFolder(auth) {
 }
 
 /* function listFiles(auth) {
-  const drive = google.drive({version: 'v3', auth});
-  drive.files.list({
-    pageSize: 10,
-    fields: 'nextPageToken, files(id, name)',
-  }, (err, res) => {
-    if (err) return console.log('The API returned an error: ' + err);
-    const files = res.data.files;
-    if (files.length) {
-      console.log('Files:');
-      files.map((file) => {
-        console.log(`${file.name} (${file.id})`);
-      });
-    } else {
-      console.log('No files found.');
-    }
-  });
-}
+	const teamDriveId = process.env.TEAM_DRIVE_ID
+	const key = auth.credentials.access_token
 
-createFolderTree() */
+	var headers = {
+		Authorization: `Bearer ${key}`,
+		Accept: "application/json"
+	}
+
+	var options = {
+		url: `https://www.googleapis.com/drive/v2/files/0AGMJwxMDT3DFUk9PVA/children?maxResults=100&key=AIzaSyCk6ISCQmGU7swxw9W-1nRlBBy7X_0Yl6s`,
+		headers: headers
+	}
+
+	function callback(error, response, body) {
+		console.log("here", body, response)
+		if (error) console.log("error", error)
+		if (!error && response.statusCode == 200) {
+			console.log("no error", body)
+		}
+	}
+
+	request(options, callback)
+}
+ */
 
 module.exports.createFolderTree = createFolderTree
