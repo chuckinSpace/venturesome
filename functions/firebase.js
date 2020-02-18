@@ -60,9 +60,13 @@ const createDocument = async (collection, object, action) => {
 	console.log("client going to firabase", collection, object, action)
 
 	try {
-		db.collection(collection)
+		return db
+			.collection(collection)
 			.add(object)
-			.then(doc => console.log(`success ${action} on firebase`, doc.id))
+			.then(doc => {
+				console.log(`success ${action} on firebase`, doc.id)
+				return doc.id
+			})
 			.catch(err => console.log(`error ${action}on firebase`, err))
 	} catch (error) {
 		console.error(
@@ -73,7 +77,13 @@ const createDocument = async (collection, object, action) => {
 		)
 	}
 }
-
+const test = async () => {
+	console.log(
+		await createDocument("contacts", { clientId: 1 }, "creating contact")
+	)
+}
+/* test()
+ */
 const getPrimaryContactId = async clientId => {
 	console.log("getPrimaryContact")
 
@@ -99,10 +109,6 @@ const updateContact = async (itemId, objectToStore, action) => {
 		console.error(error, action)
 	}
 }
-const test = async () => {
-	console.log(await getPrimaryContactId("112"))
-}
-/* test() */
 
 //creates the project on firebase "projects" collection using the project obj
 /* const createProject = async project => {

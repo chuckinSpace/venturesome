@@ -150,7 +150,7 @@ const createClientObj = async (
 
 	return clientObj
 }
-const createContactObj = async (mondayObj, clientId) => {
+const createContactObj = async (mondayObj, clientId, itemId) => {
 	const contactObj = {
 		clientId: clientId,
 		firstName: mondayObj.contactFirstName,
@@ -168,7 +168,8 @@ const createContactObj = async (mondayObj, clientId) => {
 			countryShortName: "",
 			number: ""
 		},
-		isPrimary: true
+		isPrimary: true,
+		itemId: itemId
 	}
 	return contactObj
 }
@@ -269,7 +270,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				.toString()
 				.slice(2, 4)
 
-			const contactObj = await createContactObj(mondayObj, clientId)
+			const contactObj = await createContactObj(mondayObj, clientId, itemId)
 			//if the client is new, we create the client, then the project for that client, we send the onboarding email,we change the status on the board on monday
 			// to onboarding sent (on sucesss only), we already handled the error scenario of missing information inside the monday.js file, after we send back the
 			// recently generated clientId to the monday Sales board, else (client is not new) we only create the project and change the status of the board to "Project Created"
@@ -606,5 +607,42 @@ exports.resendOnboarding = functions.https.onRequest(async (req, res) => {
 		pmObj,
 		smObj
 	)
+	res.send({ message: "success" })
+})
+
+//triggered when a new item is created on the monday DB = addingnew contact to firestore
+exports.newMondayContactDb = functions.https.onRequest(async (req, res) => {
+	console.log("new item added = new contact")
+	const itemId = req.body.event.pulseId
+	const boardId = req.body.event.boardId
+	const groupId = req.body.event.groupId
+	console.log(itemId, boardId)
+	console.log(req.body.event)
+
+	//get first item of that group to retrieve client info
+	const firstItemId = await monday.getGroupFirstItem(boardId, groupId)
+	// copy all client info to new item clientName,clientNr,address,ZIP,City,Country, startdatum, SM,Kundennummer
+	const clientInfo = await monday.getNewContactInfo(firstItemId)
+	console.log("clientInfo", clientInfo)
+	// create new contactObj with client id on firestore
+	await firebase.createDocument(
+		"contacts",
+		{ clientId: clientInfo.clientId, itemId: itemId },
+		"creating new contact from monday"
+	)
+	// copy client info to new item on monday
+	await monday.copyClientInfo(clientInfo, boardId, itemId)
+
+	res.send({ message: "success" })
+})
+
+//triggered when a column is changed in monday db = update the contact info on firestore
+exports.updateContactDb = functions.https.onRequest(async (req, res) => {
+	console.log("column updated = new contact info")
+	const itemId = req.body.event.pulseId
+	const boardId = req.body.event.boardId
+	console.log(itemId, boardId)
+	console.log(req.body.event)
+
 	res.send({ message: "success" })
 })

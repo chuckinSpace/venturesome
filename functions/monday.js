@@ -813,18 +813,6 @@ const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
 	}
 }
 
-const test = async () => {
-	try {
-		const clientFirebase = await firebase.getClientInfo("112")
-		const contactObj = await firebase.getContactInfo("112")
-		console.log(clientFirebase, contactObj)
-		await saveClientToMondayDatabase(clientFirebase, contactObj)
-	} catch (error) {
-		console.error(error)
-	}
-}
-/* test() */
-
 const createTag = async (clientName, clientNumber) => {
 	const tagText = `#${clientNumber}${clientName.replace(/\s+/g, "")}`
 	console.log("tag to create", tagText)
@@ -854,6 +842,7 @@ const databaseMigration = async () => {
 							title
 						items(limit: 120) {
 							name
+							id
 								column_values {
 								id
 								title
@@ -870,11 +859,13 @@ const databaseMigration = async () => {
 		const clientsArray = []
 		const result = await postMonday(body, `querying monday database`)
 		const clients = result.data.boards[0].groups
-
+		let globalItemId = ""
 		await clients.map(async client => {
 			const clientObj = {
 				idNumber: "",
-				name: "",
+				firstName: "",
+				lastName: "",
+				isPrimary: false,
 				address: {
 					street: "",
 					zip: "",
@@ -892,17 +883,20 @@ const databaseMigration = async () => {
 				slackUsers: "",
 				togglClientId: "",
 				createdAt: new Date(),
-				tag: "",
-				contacts: []
+				tag: ""
 			}
 
 			const name = client.title.split(" | ")
 			!!name && (clientObj.name = name[1])
 
-			client.items.map(contact => {
+			client.items.map(async contact => {
 				const clientIdObj = contact.column_values.find(
 					item => item.id === "client_nr_"
 				)
+				console.log(client.items)
+				const id = contact.id
+				!!id && (globalItemId = parseInt(id))
+
 				const clientId =
 					!!clientIdObj.value && clientIdObj.value.replace(/['"]+/g, "")
 				!!clientId && (clientObj.idNumber = clientId)
@@ -918,6 +912,7 @@ const databaseMigration = async () => {
 				// creating
 
 				const contactObj = {
+					clientId: clientId,
 					name: "",
 					position: "",
 					birthday: "",
@@ -932,11 +927,16 @@ const databaseMigration = async () => {
 					mobilePhone: {
 						number: "",
 						countryShortName: ""
-					}
+					},
+					itemId: globalItemId
 				}
 
 				const contactName = contact.name
-				!!contactName && (contactObj.name = contactName)
+				const array = contactName.split(" ", [2])
+				const first = array[0]
+				const last = array[1]
+				!!contactName && (contactObj.firstName = first)
+				!!contactName && (contactObj.lastName = last)
 
 				const positionObj = contact.column_values.find(
 					item => item.id === "text17"
@@ -1022,14 +1022,21 @@ const databaseMigration = async () => {
 					!!JSON.parse(birthdayObj.value) && JSON.parse(birthdayObj.value).date
 				!!birthday && (contactObj.birthday = birthday)
 
-				clientObj.contacts.push(contactObj)
+				await firebase.createDocument(
+					"contacts",
+					contactObj,
+					"creating contact firebase"
+				)
+				/* console.log(contactId) */
+				/* clientObj.contacts.push(contactId)
+				console.log("clientObj after push", clientObj.contacts) */
 				return contactObj
 			})
 			if (clientObj.tag === "") {
 				const tagId = await createTag(clientObj.name, clientObj.idNumber)
 				!!tagId && (clientObj.tag = tagId)
 			}
-			/* 	console.log(clientObj) */
+
 			await firebase.createDocument("clients", clientObj, "create client")
 		})
 		return clientsArray
@@ -1037,7 +1044,14 @@ const databaseMigration = async () => {
 		console.log(error)
 	}
 }
-
+const test = async () => {
+	try {
+		await databaseMigration()
+	} catch (error) {
+		console.error(error)
+	}
+}
+test()
 const databaseFirebaseToMonday = async () => {
 	// create group
 	try {
@@ -1295,6 +1309,186 @@ const sendWelcome = async (clientObj, companyAssigned, pmId, contactObj) => {
 	await postMonday(createUpdate, `creating update`)
 }
 
+const getNewContactInfo = async itemId => {
+	const getInfo = {
+		query: `
+		{
+			items(ids: ${itemId}) {
+			  column_values {
+				id
+				title
+				value
+			  }
+			}
+		  }`
+	}
+
+	const response = await postMonday(getInfo, `retrieving client Info to copy`)
+	const clientInfo = response.data.items[0]
+	/* 	console.log(clientInfo) */
+	//clientName,clientNr,address,ZIP,City,Country, startdatum, SM,Kundennummer
+	const clientObj = {
+		name: "",
+		clientId: "",
+		address: "",
+		street: "",
+		zip: "",
+		city: "",
+		country: {
+			countryCode: "",
+			countryName: ""
+		},
+		startDate: "",
+		smId: "",
+		tag: ""
+	}
+	//clientName
+	const clientNameObj = clientInfo.column_values.find(
+		item => item.id === "text"
+	)
+	const clientName =
+		!!clientNameObj.value && clientNameObj.value.replace(/['"]+/g, "")
+	!!clientName && (clientObj.name = clientName)
+	//clientNr
+	const clientNumberObj = clientInfo.column_values.find(
+		item => item.id === "client_nr_"
+	)
+	const clientNumber =
+		!!clientNumberObj.value && clientNumberObj.value.replace(/['"]+/g, "")
+	!!clientNumber && (clientObj.clientId = clientNumber)
+	//address
+	const addressObj = clientInfo.column_values.find(
+		item => item.id === "adresse"
+	)
+	const address = !!addressObj.value && addressObj.value.replace(/['"]+/g, "")
+	!!address && (clientObj.address = address)
+	//street
+	const streetObj = clientInfo.column_values.find(item => item.id === "text12")
+	const street = !!streetObj.value && streetObj.value.replace(/['"]+/g, "")
+	!!street && (clientObj.street = street)
+	//ZIP
+	const zipObj = clientInfo.column_values.find(item => item.id === "text3")
+	const zip = !!zipObj.value && zipObj.value.replace(/['"]+/g, "")
+	!!zip && (clientObj.zip = zip)
+	//City
+	const cityObj = clientInfo.column_values.find(item => item.id === "text6")
+	const city = !!cityObj.value && cityObj.value.replace(/['"]+/g, "")
+	!!city && (clientObj.city = city)
+	//Country
+	const countryObj = clientInfo.column_values.find(
+		item => item.id === "country"
+	)
+	const country = !!JSON.parse(countryObj.value) && JSON.parse(countryObj.value)
+	!!country && (clientObj.country.countryName = country.countryName)
+	!!country && (clientObj.country.countryCode = country.countryCode)
+	//startDate
+	const startDateObj = clientInfo.column_values.find(
+		item => item.id === "date4"
+	)
+	const date =
+		!!JSON.parse(startDateObj.value) && JSON.parse(startDateObj.value).date
+	!!date && (clientObj.startDate = date)
+	//SM
+	const smObj = clientInfo.column_values.find(item => item.id === "people")
+	const smIdObj = !!JSON.parse(smObj.value) && JSON.parse(smObj.value)
+	const smId = smIdObj.personsAndTeams[0].id
+	!!smId && (clientObj.smId = smId)
+	//Tag
+	const tagObj = clientInfo.column_values.find(item => item.id === "tags7")
+	const tagIdObj = !!JSON.parse(tagObj.value) && JSON.parse(tagObj.value)
+	const tag = tagIdObj.tag_ids[0]
+	!!tag && (clientObj.tag = tag)
+
+	return clientObj
+}
+
+const getGroupFirstItem = async (boardId, groupId) => {
+	console.log(boardId, groupId)
+	const getInfo = {
+		query: `
+		query ($boardId:Int!,$groupId:String!){
+			boards (ids: [$boardId]) {
+			groups (ids: [$groupId]) {
+				title
+				items {
+			 		 name
+			 		 id
+			 	column_values {
+			   		id
+				 } 
+				}
+		
+			}
+		}
+	}`,
+		variables: {
+			boardId: boardId,
+			groupId: groupId
+		}
+	}
+
+	const response = await postMonday(
+		getInfo,
+		`retrieving first itemId form group`
+	)
+	/* 	console.log(response.data) */
+	const itemId = parseInt(response.data.boards[0].groups[0].items[0].id)
+	return itemId
+}
+
+const copyClientInfo = async (clientInfo, boardId, itemId) => {
+	//clientName,clientNr,address,ZIP,City,Country, startdatum, SM,Kundennummer
+
+	const {
+		name,
+		clientId,
+		address,
+		zip,
+		city,
+		country: { countryCode, countryName },
+		startDate,
+		smId,
+		tag,
+		street
+	} = clientInfo
+
+	const createItemQuery2 = {
+		query: `
+	mutation ($boardId: Int!, $itemId: Int!, $columnValues: JSON!) {
+		change_multiple_column_values(
+		  board_id: $boardId, 
+		  item_id: $itemId, 
+		  column_values: $columnValues ) {
+		  id
+		}
+	  }
+  `,
+		variables: {
+			boardId: boardId,
+			itemId: itemId,
+			columnValues: JSON.stringify({
+				client_nr_: clientId,
+				tags7: { text: "testTag", tag_ids: [tag] },
+				date4: { date: startDate },
+				people: {
+					personsAndTeams: [{ id: smId, kind: "person" }]
+				},
+				text: name,
+				adresse: address,
+				text12: street,
+				text3: zip,
+				text6: city,
+				country: {
+					countryCode: countryCode,
+					countryName: countryName
+				}
+			})
+		}
+	}
+
+	await postMonday(createItemQuery2, `creating item 2`)
+}
+
 module.exports.getResult = getResult
 module.exports.updateForms = updateForms
 module.exports.getSubmissionData = getSubmissionData
@@ -1309,3 +1503,6 @@ module.exports.createTag = createTag
 module.exports.getClientOnboarding = getClientOnboarding
 module.exports.getPmMondayInfo = getPmMondayInfo
 module.exports.sendWelcome = sendWelcome
+module.exports.getNewContactInfo = getNewContactInfo
+module.exports.getGroupFirstItem = getGroupFirstItem
+module.exports.copyClientInfo = copyClientInfo
