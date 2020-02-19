@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { useFirestoreConnect, isLoaded, isEmpty } from "react-redux-firebase"
 import { Link } from "react-router-dom"
+import Button from "@material-ui/core/Button"
+import Typography from "@material-ui/core/Typography"
 import axios from "axios"
 const Onboarding = () => {
 	// Get todos from redux state
@@ -20,7 +22,7 @@ const Onboarding = () => {
 		await axios
 			.post("http://localhost:9000/", {
 				clientName: "testClient",
-				clientNumber: "002"
+				clientNumber: "003"
 			})
 			.then(res => console.log(res))
 			.catch(err => console.error(err))
@@ -28,9 +30,15 @@ const Onboarding = () => {
 
 	return (
 		<div>
-			<div>Server Connection : {server}</div>
-			<h1>Onboarding</h1>
-			<button onClick={() => handleToggl()}>Create Toggl</button>
+			<Typography variant="h6">Server Connection : {server}</Typography>
+			<Typography variant="h1">Onboarding</Typography>
+			<Button
+				color="secondary"
+				variant="outlined"
+				onClick={() => handleToggl()}
+			>
+				Create Toggl
+			</Button>
 		</div>
 	)
 }

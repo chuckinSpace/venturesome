@@ -1492,6 +1492,7 @@ const copyClientInfo = async (clientInfo, boardId, itemId) => {
 	await postMonday(createItemQuery2, `creating item 2`)
 }
 const parseObjForFirebase = async (columnId, value) => {
+	console.log("value to parse", value)
 	const POSITION = "text17"
 	const OFFICE_PHONE = "mobile8"
 	const MOBILE_PHONE = "phone"
@@ -1515,8 +1516,8 @@ const parseObjForFirebase = async (columnId, value) => {
 	} else if (columnId === EMAIL) {
 		return {
 			email: {
-				email: !!value ? value.email : "",
-				text: !!value ? value.text : ""
+				email: !!value.email ? value.email : "",
+				text: !!value.text ? value.text : ""
 			}
 		}
 	} else if (columnId === BIRTHDATE) {

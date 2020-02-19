@@ -3,6 +3,8 @@ import axios from "axios"
 import { useSelector } from "react-redux"
 import { useFirestoreConnect, isLoaded, isEmpty } from "react-redux-firebase"
 import { Link } from "react-router-dom"
+import Card from "@material-ui/core/Card"
+import Typography from "@material-ui/core/Typography"
 const Client = ({ match }) => {
 	const clientId = match.params.id
 	useFirestoreConnect([
@@ -31,39 +33,58 @@ const Client = ({ match }) => {
 				.then(res => console.log(res.data))
 				.catch(err => console.error(err))
 		}
-		callServer()
-	}, [])
+
+		if (isLoaded(clientQuery)) {
+			if (clientQuery[0].idNumber === "112") {
+				console.log("in call server", clientQuery[0].idNumber)
+				callServer()
+			}
+		}
+	}, [clientQuery])
 
 	if (!isLoaded(clientQuery) || !isLoaded(contacts)) {
 		return <div>Loading...</div>
 	} else {
-		console.log(clientQuery[0])
 		const client = clientQuery[0]
 		return (
-			<div>
-				<h1>Client View</h1>
-				<div>Number: {client.idNumber}</div>
-				<div>Client Name : {client.name}</div>
-				<div>
-					<h3>Contacts: </h3>
-					{contacts.map(contact => {
-						return (
-							<h5 key={contact.id}>
-								<div>
-									Name:{" "}
-									{!!contact.firstName &&
-										`${contact.firstName} ${contact.lastName}`}{" "}
-								</div>
-								<div>Position: {!!contact.position && contact.position} </div>
-								<div>
-									Primary Email: {!!contact.email && contact.email.email}
-								</div>
-								<div>Birthday: {!!contact.birthday && contact.birthday}</div>
-							</h5>
-						)
-					})}
-				</div>
-			</div>
+			<Card
+				style={{
+					width: "30%",
+					margin: "auto",
+					marginTop: "10%"
+				}}
+			>
+				<Typography variant="h5">Client View</Typography>
+				<Typography>Number: {client.idNumber}</Typography>
+				<Typography>Client Name : {client.name}</Typography>
+
+				<Typography variant="h5">Contacts: </Typography>
+
+				{contacts.map(contact => {
+					return (
+						<h5 key={contact.id}>
+							<Typography>
+								Name:
+								{!!contact.firstName &&
+									`${contact.firstName} ${contact.lastName}`}{" "}
+							</Typography>
+							<Typography>
+								Position: {!!contact.position && contact.position}{" "}
+							</Typography>
+							<Typography>
+								Primary Email: {!!contact.email && contact.email.email}
+							</Typography>
+							<Typography>
+								Birthday: {!!contact.birthday && contact.birthday}
+							</Typography>
+							<Typography>
+								Mobile:
+								{!!contact.mobilePhone && contact.mobilePhone.number}
+							</Typography>
+						</h5>
+					)
+				})}
+			</Card>
 		)
 	}
 }

@@ -4,7 +4,7 @@
 		- position from onboardgin not copying to monday DB
 		- start date and gift on second projects? from what date
 		- add error to monday board and email to me	
-		project creation on for venturesome on old moneytree client toggle shoul create is not changing to completed
+
 */
 const functions = require("firebase-functions")
 const googleDrive = require("./google")
@@ -293,7 +293,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 			if (mondayObj.isNewClient) {
 				//set status to Waiting for client for those that need to wait for onboarding form
 
-				await monday.changeMondayStatus(
+				/* 	await monday.changeMondayStatus(
 					constants.SLACK_FORM_STATUS,
 					"Waiting For Client",
 					itemId
@@ -303,7 +303,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					"Waiting For Client",
 					itemId
 				)
-
+ */
 				await firebase.createDocument("clients", clientObj, "creating client")
 				await firebase.createDocument(
 					"contacts",
@@ -327,7 +327,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					smObj
 				)
 
-				await monday.changeMondayStatus(
+				/* await monday.changeMondayStatus(
 					constants.START_FORM_STATUS,
 					"Onboarding Started",
 					itemId
@@ -336,19 +336,19 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					constants.ONBOARDING_FORM_STATUS,
 					"Waiting For Client",
 					itemId
-				)
+				) */
 
 				await monday.setMondayClientId(boardId, itemId, clientObj.idNumber)
 				// create google drive entire tree
 				projectObj.isNewClient = true
 
-				/* 	await googleDrive.createFolderTree(projectObj)
-				 */
+				/* await googleDrive.createFolderTree(projectObj) */
+				/* 
 				await monday.changeMondayStatus(
 					constants.GOOGLE_DRIVE_FORM_STATUS,
 					"Completed",
 					itemId
-				)
+				) */
 
 				if (projectObj.companyAssigned === "VENTURESOME") {
 					//add task "send welcome card" with address on up{date}
@@ -470,11 +470,11 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				) */
 
 				await firebase.createDocument("projects", projectObj, "create project")
-				await monday.changeMondayStatus(
+				/* await monday.changeMondayStatus(
 					constants.START_FORM_STATUS,
 					"Project Created",
 					itemId
-				)
+				) */
 				// googe drive create only Prejectke genwonned and subfolders on the client
 
 				if (projectObj.companyAssigned === "VENTURESOME") {
@@ -486,13 +486,13 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.name,
 						projectObj.pmId,
 						clientObj.tag
-					) */
+					)
 
 					//create toggle project
 					const firebaseClient = await firebase.getClientInfo(
 						clientObj.idNumber
 					)
-					/* 	const togglClientId = firebaseClient.togglClientId
+					const togglClientId = firebaseClient.togglClientId
 					console.log("object from firebase", firebaseClient, togglClientId)
 					await toggl.createProject(
 						togglClientId,

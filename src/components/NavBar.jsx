@@ -3,20 +3,37 @@ import { useSelector } from "react-redux"
 import { useFirebase, isLoaded, isEmpty } from "react-redux-firebase"
 import { Redirect } from "react-router"
 import { withRouter } from "react-router-dom"
+import Button from "@material-ui/core/Button"
 const NavBar = ({ history }) => {
 	const firebase = useFirebase()
 	const auth = useSelector(state => state.firebase.auth)
-
-	const handleHome = () => {}
 
 	if (isLoaded(auth) && isEmpty(auth)) {
 		return <Redirect to="/" />
 	} else {
 		return (
 			<div>
-				<button onClick={() => history.push("/home")}>Home</button>
-				<button onClick={() => history.push("/onboarding")}>Onboarding</button>
-				<button onClick={() => firebase.logout()}>Logout</button>
+				<Button
+					color="primary"
+					variant="contained"
+					onClick={() => history.push("/home")}
+				>
+					Home
+				</Button>
+				<Button
+					color="primary"
+					variant="contained"
+					onClick={() => history.push("/onboarding")}
+				>
+					Onboarding
+				</Button>
+				<Button
+					color="primary"
+					variant="contained"
+					onClick={() => firebase.logout()}
+				>
+					Logout
+				</Button>
 			</div>
 		)
 	}

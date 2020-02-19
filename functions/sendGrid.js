@@ -13,13 +13,17 @@ const sendOnboardingEmail = async (
 	smObj
 ) => {
 	let emailFrom = ""
-
+	let projectOrAccount = ""
 	let noun = ""
-
+	let lineColor = ""
 	if (companyAssigned === "VENTURESOME") {
 		emailFrom = "office@venturesome.ch"
+		projectOrAccount = "Projektmanager"
+		lineColor = "#2CB4FF"
 	} else if (companyAssigned === "moneytree") {
 		emailFrom = "office@moneytree.ch"
+		projectOrAccount = "Account Manager"
+		lineColor = "#36CE78"
 	}
 	if (!!pmObj.phone && pmObj.phone.toLowerCase() === "female") {
 		noun = "Sie"
@@ -52,7 +56,9 @@ const sendOnboardingEmail = async (
 					smName: smObj.name,
 					smEmail: smObj.email,
 					smMobile: smObj.mobile,
-					erSie: noun
+					erSie: noun,
+					projectOrAccount: projectOrAccount,
+					lineColor: lineColor
 				}
 			}
 		]
