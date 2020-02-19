@@ -163,7 +163,9 @@ async function createFolder(auth) {
 			// mainfolder/Projekte_Gewonnen/       Subfolder
 
 			const xxProject = fileMetadata(
-				`${yearCreated}_${data.clientProjectNumber}_${data.name}`,
+				`${yearCreated}_${data.clientProjectNumber
+					.toString()
+					.padStart(2, "0")}_${data.name}`,
 				projekteGewonnenId.data.id
 			)
 			const xxProjectId = await generateFolder(xxProject)
@@ -229,7 +231,9 @@ async function createFolder(auth) {
 			//mainfolder/Projekte_Gewonnen/
 
 			const xxProjectGewonnen1 = fileMetadata(
-				`${yearCreated}_${data.clientProjectNumber}_${data.name}`,
+				`${yearCreated}_${data.clientProjectNumber
+					.toString()
+					.padStart(2, "0")}_${data.name}`,
 				data.projectsFolderId
 			)
 			const xxProjectGewonnenId1 = await generateFolder(xxProjectGewonnen1)

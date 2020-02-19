@@ -557,7 +557,9 @@ const addVideoProjectBoard = async (
 		variables: {
 			boardId: VIDEO_PROJECTS_OVERVIEW_BOARD_ID,
 			groupId: GROUP_ID_P_OVER_CURR_VIDEO_PROJ,
-			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
+			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber
+				.toString()
+				.padStart(2, "0")} | ${clientName} | ${projectName}`,
 			columnValues: JSON.stringify({
 				status: { label: "On it!" },
 				person: { personsAndTeams: [{ id: pmId, kind: "person" }] },
@@ -638,7 +640,9 @@ const addProjectOverview = async (
 		variables: {
 			boardId: PROJECT_OVERVIEW_ID,
 			groupId: P_OVER_INBOX_GROUP_ID,
-			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
+			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber
+				.toString()
+				.padStart(2, "0")} | ${clientName} | ${projectName}`,
 			columnValues: columValues
 		}
 	}
@@ -686,7 +690,9 @@ const addMoneyTreeAccount = async (
 		variables: {
 			boardId: MONEY_TREE_ACCOUNTS_BOARD_ID,
 			groupId: MONEY_TREE_ACCOUNTS_GROUP_ID,
-			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber} | ${clientName} | ${projectName}`,
+			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber
+				.toString()
+				.padStart(2, "0")} | ${clientName} | ${projectName}`,
 			columnValues: JSON.stringify({
 				strategie_session: { label: "On it!" },
 				person: { personsAndTeams: [{ id: pmId, kind: "person" }] },
