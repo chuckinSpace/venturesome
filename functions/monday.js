@@ -807,7 +807,10 @@ const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
 				columnValues: columnValues
 			}
 		}
-		await postMonday(body1, "populating board monday database")
+		const response = await postMonday(body1, "populating board monday database")
+
+		const itemId = parseInt(response.data.create_item.id)
+		return itemId
 	} catch (error) {
 		throw new Error("error when saving client to mondaydatabase", error)
 	}
@@ -845,7 +848,7 @@ const databaseMigration = async () => {
 							id
 								column_values {
 								id
-								title
+							
 								value
 								}
 							}
@@ -1051,7 +1054,7 @@ const test = async () => {
 		console.error(error)
 	}
 }
-test()
+/* test() */
 const databaseFirebaseToMonday = async () => {
 	// create group
 	try {
@@ -1488,7 +1491,40 @@ const copyClientInfo = async (clientInfo, boardId, itemId) => {
 
 	await postMonday(createItemQuery2, `creating item 2`)
 }
+const parseObjForFirebase = async (columnId, value) => {
+	const POSITION = "text17"
+	const OFFICE_PHONE = "mobile8"
+	const MOBILE_PHONE = "phone"
+	const EMAIL = "email"
+	const BIRTHDATE = "due_date"
 
+	if (columnId === POSITION) {
+		return { position: !!value ? value.value : "" }
+	} else if (columnId === OFFICE_PHONE) {
+		return {
+			mobilePhone: {
+				number: !!value ? value.phone : ""
+			}
+		}
+	} else if (columnId === MOBILE_PHONE) {
+		return {
+			officePhone: {
+				number: !!value ? value.phone : ""
+			}
+		}
+	} else if (columnId === EMAIL) {
+		return {
+			email: {
+				email: !!value ? value.email : "",
+				text: !!value ? value.text : ""
+			}
+		}
+	} else if (columnId === BIRTHDATE) {
+		return {
+			birthday: !!value ? value.date : ""
+		}
+	}
+}
 module.exports.getResult = getResult
 module.exports.updateForms = updateForms
 module.exports.getSubmissionData = getSubmissionData
@@ -1506,3 +1542,4 @@ module.exports.sendWelcome = sendWelcome
 module.exports.getNewContactInfo = getNewContactInfo
 module.exports.getGroupFirstItem = getGroupFirstItem
 module.exports.copyClientInfo = copyClientInfo
+module.exports.parseObjForFirebase = parseObjForFirebase

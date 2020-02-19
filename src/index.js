@@ -9,14 +9,14 @@ import "firebase/performance"
 import "firebase/analytics"
 import "firebase/storage"
 // import 'firebase/functions' // <- needed if using httpsCallable
-import { createStore, combineReducers } from "redux"
+import { createStore, combineReducers, applyMiddleware } from "redux"
 import {
 	ReactReduxFirebaseProvider,
 	firebaseReducer
 } from "react-redux-firebase"
 import { createFirestoreInstance, firestoreReducer } from "redux-firestore"
 import App from "./App"
-
+import logger from "redux-logger"
 const fbConfig = {
 	apiKey: process.env.REACT_APP_DEV_API_KEY,
 	authDomain: process.env.REACT_APP_DEV_AUTH_DOMAIN,
@@ -52,7 +52,7 @@ const rootReducer = combineReducers({
 })
 
 const initialState = {}
-const store = createStore(rootReducer, initialState)
+const store = createStore(rootReducer, initialState, applyMiddleware(logger))
 
 const rrfProps = {
 	firebase,

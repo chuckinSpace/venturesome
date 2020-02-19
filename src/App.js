@@ -7,7 +7,8 @@ import Home from "./components/Home"
 import Login from "./Auth/Login"
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom"
 import NavBar from "./components/NavBar"
-
+import Client from "./components/Client"
+import Onboarding from "./components/Onboarding"
 function App() {
 	return (
 		<Router>
@@ -18,6 +19,8 @@ function App() {
 						<Route exact path="/createUser" component={SignUp} />
 						<Route exact path="/" component={Login} />
 						<Route exact path="/home" component={Home} />
+						<Route exact path="/clients/:id" component={Client} />
+						<Route exact path="/onboarding" component={Onboarding} />
 					</Switch>
 				</Grid>
 			</Grid>

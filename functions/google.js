@@ -142,7 +142,7 @@ async function createFolder(auth) {
 			let mainFolderId = ""
 			//Main folder
 			const createFolderData = fileMetadata(
-				`${data.clientId}_${data.clientName}`,
+				`${data.clientId} ${data.clientName}`,
 				teamDriveId
 			)
 			const mainFolderObj = await generateFolder(createFolderData)

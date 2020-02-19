@@ -35,5 +35,9 @@ const createFrameIoProject = (projectName, itemId, action) => {
 			)
 		})
 }
+const test = async () => {
+	await createFrameIoProject("test", 413267104, "creating frame")
+}
+/* test() */
 
 module.exports.createFrameIoProject = createFrameIoProject

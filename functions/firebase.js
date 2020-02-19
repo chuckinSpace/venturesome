@@ -222,6 +222,20 @@ const getContactInfo = async clientId => {
 	contactSnap.forEach(contact => (contactInfo = contact.data()))
 	return contactInfo
 }
+const getContactId = async itemId => {
+	let contactId = ""
+	console.log("about to get contact id with", itemId)
+	try {
+		const getClientsSnap = await db
+			.collection("contacts")
+			.where("itemId", "==", itemId)
+			.get()
+		getClientsSnap.forEach(data => (contactId = data.id))
+		return contactId
+	} catch (error) {
+		console.error(error)
+	}
+}
 /* const test = async () => {
 	console.log(await getContactInfo("112"))
 }
@@ -232,13 +246,10 @@ module.exports.getClientId = getClientId
 module.exports.getInternalProjectId = getInternalProjectId
 module.exports.getClientProjectNumber = getClientProjectNumber
 module.exports.createDocument = createDocument
-/* module.exports.createProject = createProject
-module.exports.saveIdstaging = saveIdstaging
-module.exports.getStagedClientId = getStagedClientId
-module.exports.deleteStagedClient = deleteStagedClient */
 module.exports.updateFirebase = updateFirebase
 module.exports.getClientInfo = getClientInfo
 module.exports.getAllClients = getAllClients
 module.exports.getContactInfo = getContactInfo
 module.exports.getPrimaryContactId = getPrimaryContactId
 module.exports.updateContact = updateContact
+module.exports.getContactId = getContactId
