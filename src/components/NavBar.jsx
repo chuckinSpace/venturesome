@@ -4,7 +4,7 @@ import { useFirebase, isLoaded, isEmpty } from "react-redux-firebase"
 import { Redirect } from "react-router"
 import { withRouter } from "react-router-dom"
 import Button from "@material-ui/core/Button"
-import { Grid } from "@material-ui/core"
+
 import AppBar from "@material-ui/core/AppBar"
 import Toolbar from "@material-ui/core/Toolbar"
 const NavBar = ({ history }) => {
@@ -19,22 +19,22 @@ const NavBar = ({ history }) => {
 				<AppBar position="static">
 					<Toolbar style={{ flexGrow: 1 }}>
 						<Button
-							color="secundary"
-							variant="contained"
+							color="inherit"
+							variant="outlined"
 							onClick={() => history.push("/home")}
 						>
 							Home
 						</Button>
 						<Button
-							color="secundary"
-							variant="contained"
+							color="inherit"
+							variant="outlined"
 							onClick={() => history.push("/onboarding")}
 						>
 							Onboarding
 						</Button>
 						<Button
-							color="secundary"
-							variant="contained"
+							color="inherit"
+							variant="outlined"
 							onClick={() => firebase.logout()}
 						>
 							Logout

@@ -27,10 +27,6 @@ function Mondayleads({ history, client }) {
 		callMonday()
 	}, [])
 
-	const handleReport = () => {
-		/* console.log(client) */
-		history.push(`/clients/${client.idNumber}/databox`)
-	}
 	const leadmap = leads.map(lead => (
 		<Grid key={lead.id} item xs={3}>
 			<Card>
@@ -45,13 +41,15 @@ function Mondayleads({ history, client }) {
 						Email: example@test.com
 					</Typography>
 				</CardContent>
-				<CardActions style={{ alignItems: "center" }}>
-					<Button variant="outlined" color="primary" size="small">
-						Aquired
-					</Button>
-					<Button variant="outlined" color="secondary" size="small">
-						Lost
-					</Button>
+				<CardActions>
+					<Grid container justify="space-between">
+						<Button variant="outlined" color="primary" size="small">
+							Aquired
+						</Button>
+						<Button variant="outlined" color="secondary" size="small">
+							Lost
+						</Button>
+					</Grid>
 				</CardActions>
 			</Card>
 		</Grid>
@@ -68,10 +66,16 @@ function Mondayleads({ history, client }) {
 					paddingRight: 10
 				}}
 			>
-				<Grid item xs={6}>
-					<Typography variant="h4">Leads</Typography>
+				<Grid container>
+					<Grid item xs={6}>
+						<Typography variant="h4">Leads</Typography>
+					</Grid>
+					<Grid item container justify="flex-end" xs={6}>
+						<Button variant="outlined" color="primary">
+							Leads Archive
+						</Button>
+					</Grid>
 				</Grid>
-
 				<Card>
 					<Grid
 						style={{
