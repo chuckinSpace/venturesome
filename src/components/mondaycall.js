@@ -20,8 +20,6 @@ const postMonday = (body, action) => {
 }
 
 export const mondayCall = async () => {
-	console.log(token)
-
 	const body = {
 		query: ` query {
             boards(ids: 215370890) {
@@ -43,4 +41,32 @@ export const mondayCall = async () => {
 	}
 	const response = await postMonday(body, "getting leads")
 	return response.data.boards[0].groups[0].items
+}
+export const getPmMondayInfo = async pmId => {
+	const body = {
+		query: `
+			query {
+				users (ids: ${pmId}) {
+					name
+					phone
+					photo_original
+					mobile_phone
+					email
+				title
+					 }
+				}`
+	}
+	const response = await postMonday(body, `getting Sm info`)
+	const pmInfo = response.data.users[0]
+
+	const pmInfoObj = {
+		name: pmInfo.name,
+		//phone contains the gender String
+		phone: pmInfo.phone,
+		photo: pmInfo.photo_original,
+		mobile: pmInfo.mobile_phone,
+		email: pmInfo.email,
+		title: pmInfo.title
+	}
+	return pmInfoObj
 }

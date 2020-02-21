@@ -1,48 +1,62 @@
-import React, { useEffect } from "react"
-import axios from "axios"
+import React, { useEffect, useState } from "react"
 
-import { Link } from "react-router-dom"
-import Databox from "./Databox"
 import Card from "@material-ui/core/Card"
 import Typography from "@material-ui/core/Typography"
+import { getPmMondayInfo } from "./mondaycall"
+import Avatar from "@material-ui/core/Avatar"
+import { Grid } from "@material-ui/core"
 
 const Clientcard = ({ client, contacts }) => {
-	// Get todos from redux state
+	const [sm, setSm] = useState("")
+	const [loading, setLoading] = useState(false)
+	useEffect(() => {
+		const getPm = async () => {
+			setLoading(true)
+			const pmInfo = await getPmMondayInfo(client.smId)
+			setSm(pmInfo)
+			setLoading(false)
+		}
 
-	return (
-		<div>
-			<Typography style={{ marginTop: 20 }} variant="h5">
-				Master Company
-			</Typography>
-			<Typography>Client Name : {client.name}</Typography>
-			<Typography variant="h5">Contacts: </Typography>
+		getPm()
+	}, [])
 
-			{contacts.map(contact => {
-				return (
-					<h5 key={contact.id}>
-						<Typography>
-							Name:
-							{!!contact.firstName &&
-								`${contact.firstName} ${contact.lastName}`}{" "}
-						</Typography>
-						<Typography>
-							Position: {!!contact.position && contact.position}{" "}
-						</Typography>
-						<Typography>
-							Primary Email: {!!contact.email && contact.email.email}
-						</Typography>
-						<Typography>
-							Birthday: {!!contact.birthday && contact.birthday}
-						</Typography>
-						<Typography>
-							Mobile:
-							{!!contact.mobilePhone && contact.mobilePhone.number}
-						</Typography>
-					</h5>
-				)
-			})}
-		</div>
-	)
+	if (!loading) {
+		console.log(sm)
+		return (
+			<Card style={{ height: "100%", textAlign: "center" }}>
+				<Typography style={{ marginTop: 20 }} variant="h5">
+					Master Company
+				</Typography>
+				<Typography>Client Name : {client.name}</Typography>
+
+				<Typography variant="subtitle1" style={{ marginTop: 5 }}>
+					Project Manager: {sm.name}
+				</Typography>
+
+				<Grid
+					item
+					container
+					justify="center"
+					alignContent="center"
+					alignItems="center"
+				>
+					<Avatar
+						style={{ width: 200, height: 200, marginTop: 30 }}
+						alt={sm.name}
+						src={sm.photo}
+					/>
+				</Grid>
+				<Typography variant="subtitle1" style={{ marginTop: 5 }}>
+					Phone Number: {sm.mobile}
+				</Typography>
+				<Typography variant="subtitle1" style={{ marginTop: 5 }}>
+					Email: {sm.email}
+				</Typography>
+			</Card>
+		)
+	} else {
+		return <Typography>Loading...</Typography>
+	}
 }
 
 export default Clientcard
