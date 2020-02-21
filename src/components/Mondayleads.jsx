@@ -8,7 +8,7 @@ import Button from "@material-ui/core/Button"
 import { Typography } from "@material-ui/core"
 import { Progress } from "react-sweet-progress"
 import "react-sweet-progress/lib/style.css"
-
+import working from "./working.png"
 function Mondayleads({ history, client }) {
 	const [leads, setLeads] = useState([])
 	const [total, setTotal] = useState(0)
@@ -24,6 +24,7 @@ function Mondayleads({ history, client }) {
 				const response = await mondayCall()
 				console.log(response)
 				setLoading(false)
+
 				setLeads(response)
 				setTotal(response.length)
 			} catch (error) {
@@ -43,43 +44,90 @@ function Mondayleads({ history, client }) {
 
 		setLeads(leads.filter(lead => lead.id !== id))
 	}
-	const leadmap = leads.map(lead => (
-		<Grid key={lead.id} item xs={3}>
-			<Card>
-				<CardContent>
-					<Typography color="textSecondary" gutterBottom>
-						Name: {lead.name}
-					</Typography>
-					<Typography color="textSecondary" gutterBottom>
-						Location:{lead.column_values[0].value}
-					</Typography>
-					<Typography color="textSecondary" gutterBottom>
-						Email: example@test.com
-					</Typography>
-				</CardContent>
-				<CardActions>
-					<Grid container justify="space-between">
-						<Button
-							variant="outlined"
-							color="primary"
-							size="small"
-							onClick={() => handleWin(lead.id)}
-						>
-							Aquired
-						</Button>
-						<Button
-							variant="outlined"
-							color="secondary"
-							size="small"
-							onClick={() => handleLost(lead.id)}
-						>
-							Lost
-						</Button>
+	const leadmap =
+		leads.length === 0 ? (
+			<Grid
+				container
+				alignContent="center"
+				alignItems="center"
+				justify="center"
+			>
+				<Grid container>
+					<Grid
+						item
+						xs={12}
+						container
+						alignContent="center"
+						alignItems="center"
+						justify="center"
+						style={{ marginTop: 40 }}
+					>
+						<Typography variant="h5">
+							Nothing Else to update here, check the Leads Archive for old
+							leads...
+						</Typography>
 					</Grid>
-				</CardActions>
-			</Card>
-		</Grid>
-	))
+				</Grid>
+				<Grid
+					container
+					alignContent="center"
+					alignItems="center"
+					justify="center"
+				>
+					<Grid
+						item
+						xs={12}
+						container
+						alignContent="center"
+						alignItems="center"
+						justify="center"
+					>
+						<img src={working} alt="brain" width="200" height="200" />
+					</Grid>
+					<Typography>
+						Our artificial minions are working hard to get you some more leads..
+					</Typography>
+				</Grid>
+			</Grid>
+		) : (
+			leads.map(lead => (
+				<Grid key={lead.id} item xs={3}>
+					<Card style={{ height: 220 }}>
+						<CardContent>
+							<Typography inline noWrap color="textSecondary" gutterBottom>
+								Name: {lead.name}
+							</Typography>
+							<Typography color="textSecondary" gutterBottom>
+								Location:{lead.column_values[0].value}
+							</Typography>
+							<Typography color="textSecondary" gutterBottom>
+								Email: example@test.com
+							</Typography>
+						</CardContent>
+						<CardActions>
+							<Grid container justify="space-between">
+								<Button
+									variant="outlined"
+									color="primary"
+									size="small"
+									onClick={() => handleWin(lead.id)}
+								>
+									Aquired
+								</Button>
+								<Button
+									variant="outlined"
+									color="secondary"
+									size="small"
+									onClick={() => handleLost(lead.id)}
+								>
+									Lost
+								</Button>
+							</Grid>
+						</CardActions>
+					</Card>
+				</Grid>
+			))
+		)
 
 	if (loading) {
 		return <h1>Loading...</h1>
@@ -127,7 +175,7 @@ function Mondayleads({ history, client }) {
 							<Typography>Total Leads: {total} </Typography>
 						</Grid>
 						<Grid item xs={3}>
-							<Typography>Left To Update Leads: {leads.length} </Typography>
+							<Typography>Left To Update : {leads.length} </Typography>
 						</Grid>
 						<Grid item xs={2}>
 							<Typography>Won: {win} </Typography>

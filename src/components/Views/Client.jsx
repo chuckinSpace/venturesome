@@ -49,7 +49,6 @@ function Client({ match, history }) {
 	if (!isLoaded(clientQuery) || !isLoaded(contacts)) {
 		return <div>Loading...</div>
 	} else {
-		console.log(clientQuery[0])
 		return (
 			<Grid container spacing={3}>
 				<Grid container>
