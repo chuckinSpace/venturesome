@@ -11,7 +11,12 @@ import "react-sweet-progress/lib/style.css"
 
 function Mondayleads({ history, client }) {
 	const [leads, setLeads] = useState([])
+	const [total, setTotal] = useState(0)
 	const [loading, setLoading] = useState(false)
+	const [win, setWin] = useState(0)
+	const [lost, setLost] = useState(0)
+	const [progress, setProgress] = useState(0)
+	const [guarantee, setGuarantee] = useState(30)
 	useEffect(() => {
 		const callMonday = async () => {
 			setLoading(true)
@@ -20,6 +25,7 @@ function Mondayleads({ history, client }) {
 				console.log(response)
 				setLoading(false)
 				setLeads(response)
+				setTotal(response.length)
 			} catch (error) {
 				console.log(error)
 			}
@@ -27,6 +33,16 @@ function Mondayleads({ history, client }) {
 		callMonday()
 	}, [])
 
+	const handleWin = id => {
+		setWin(prevState => prevState + 1)
+		setProgress(parseInt((win / guarantee) * 100))
+		setLeads(leads.filter(lead => lead.id !== id))
+	}
+	const handleLost = id => {
+		setLost(prevState => prevState + 1)
+
+		setLeads(leads.filter(lead => lead.id !== id))
+	}
 	const leadmap = leads.map(lead => (
 		<Grid key={lead.id} item xs={3}>
 			<Card>
@@ -43,10 +59,20 @@ function Mondayleads({ history, client }) {
 				</CardContent>
 				<CardActions>
 					<Grid container justify="space-between">
-						<Button variant="outlined" color="primary" size="small">
+						<Button
+							variant="outlined"
+							color="primary"
+							size="small"
+							onClick={() => handleWin(lead.id)}
+						>
 							Aquired
 						</Button>
-						<Button variant="outlined" color="secondary" size="small">
+						<Button
+							variant="outlined"
+							color="secondary"
+							size="small"
+							onClick={() => handleLost(lead.id)}
+						>
 							Lost
 						</Button>
 					</Grid>
@@ -76,7 +102,7 @@ function Mondayleads({ history, client }) {
 						</Button>
 					</Grid>
 				</Grid>
-				<Card>
+				<Card style={{ minHeight: 350, maxHeight: 350 }}>
 					<Grid
 						style={{
 							maxHeight: 350,
@@ -88,44 +114,51 @@ function Mondayleads({ history, client }) {
 						{leadmap}
 					</Grid>
 				</Card>
-				<Grid
-					container
-					justify="center"
-					alignItems="center"
-					alignContent="center"
-					spacing={1}
-					style={{ marginLeft: 0.5, marginRight: 0.5, marginTop: 10 }}
-				>
-					<Grid item xs={3}>
-						<Typography>Amount of Leads: {leadmap.length} </Typography>
-					</Grid>
-					<Grid item xs={2}>
-						<Typography>Won: 20 </Typography>
-					</Grid>
-					<Grid item xs={1}>
-						<Typography>Lost: 5 </Typography>
-					</Grid>
+				<CardActions>
 					<Grid
-						item
-						xs={4}
-						container
-						justify="flex-end"
-						alignItems="flex-end"
-						alignContent="flex-end"
-					>
-						<Typography>Your Guarantee amount of Leads!</Typography>
-					</Grid>
-					<Grid
-						item
-						xs={2}
 						container
 						justify="center"
 						alignItems="center"
 						alignContent="center"
+						spacing={1}
+						style={{ marginLeft: 0.5, marginRight: 0.5, marginTop: 10 }}
 					>
-						<Progress type="circle" width={80} percent={70} />
+						<Grid item xs={3}>
+							<Typography>Total Leads: {total} </Typography>
+						</Grid>
+						<Grid item xs={3}>
+							<Typography>Left To Update Leads: {leads.length} </Typography>
+						</Grid>
+						<Grid item xs={2}>
+							<Typography>Won: {win} </Typography>
+						</Grid>
+						<Grid item xs={1}>
+							<Typography>Lost: {lost} </Typography>
+						</Grid>
+						<Grid
+							item
+							xs={4}
+							container
+							justify="flex-end"
+							alignItems="flex-end"
+							alignContent="flex-end"
+						>
+							<Typography>
+								Your Guarantee amount of Leads is {guarantee}!
+							</Typography>
+						</Grid>
+						<Grid
+							item
+							xs={2}
+							container
+							justify="center"
+							alignItems="center"
+							alignContent="center"
+						>
+							<Progress type="circle" width={80} percent={progress} />
+						</Grid>
 					</Grid>
-				</Grid>
+				</CardActions>
 			</Card>
 		)
 	}

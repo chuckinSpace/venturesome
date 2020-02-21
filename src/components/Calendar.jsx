@@ -14,7 +14,7 @@ import { Typography } from "@material-ui/core"
 function Calendar() {
 	return (
 		<Paper>
-			<Typography variant="h4" style={{ marginLeft: 10 }}>
+			<Typography variant="h5" style={{ marginLeft: 10 }}>
 				Next meeting with us
 			</Typography>
 			<Scheduler

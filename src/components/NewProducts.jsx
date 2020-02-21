@@ -5,7 +5,7 @@ import box from "./box.png"
 import Rating from "react-rating"
 function NewProducts() {
 	return (
-		<Grid container>
+		<Grid container style={{ marginLeft: 10 }}>
 			<Grid container alignItems="center">
 				<Grid item xs={2}>
 					<img src={box} alt="box" width="60" height="60" />

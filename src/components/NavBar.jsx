@@ -7,6 +7,7 @@ import Button from "@material-ui/core/Button"
 
 import AppBar from "@material-ui/core/AppBar"
 import Toolbar from "@material-ui/core/Toolbar"
+import { Grid } from "@material-ui/core"
 const NavBar = ({ history }) => {
 	const firebase = useFirebase()
 	const auth = useSelector(state => state.firebase.auth)
@@ -18,27 +19,22 @@ const NavBar = ({ history }) => {
 			<div style={{ flexGrow: 1, marginBottom: 20 }}>
 				<AppBar position="static">
 					<Toolbar style={{ flexGrow: 1 }}>
-						<Button
-							color="inherit"
-							variant="outlined"
-							onClick={() => history.push("/home")}
-						>
-							Home
-						</Button>
-						<Button
-							color="inherit"
-							variant="outlined"
-							onClick={() => history.push("/onboarding")}
-						>
-							Onboarding
-						</Button>
-						<Button
-							color="inherit"
-							variant="outlined"
-							onClick={() => firebase.logout()}
-						>
-							Logout
-						</Button>
+						<Grid container justify="space-between">
+							<Button
+								color="inherit"
+								variant="outlined"
+								onClick={() => history.push("/home")}
+							>
+								Home
+							</Button>
+							<Button
+								color="inherit"
+								variant="outlined"
+								onClick={() => firebase.logout()}
+							>
+								Logout
+							</Button>
+						</Grid>
 					</Toolbar>
 				</AppBar>
 			</div>

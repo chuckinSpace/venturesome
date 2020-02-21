@@ -2,7 +2,12 @@ import React from "react"
 import { render } from "react-dom"
 import { Provider } from "react-redux"
 import firebase from "firebase/app"
-
+import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles"
+import purple from "@material-ui/core/colors/purple"
+import blue from "@material-ui/core/colors/blue"
+import green from "@material-ui/core/colors/green"
+import teal from "@material-ui/core/colors/teal"
+import red from "@material-ui/core/colors/red"
 import "firebase/auth"
 import "firebase/firestore"
 import "firebase/performance"
@@ -61,10 +66,22 @@ const rrfProps = {
 	createFirestoreInstance // <- needed if using firestore
 }
 
+const theme = createMuiTheme({
+	palette: {
+		primary: teal,
+		secondary: red
+	},
+	status: {
+		danger: "orange"
+	}
+})
+
 render(
 	<Provider store={store}>
 		<ReactReduxFirebaseProvider {...rrfProps}>
-			<App />
+			<ThemeProvider theme={theme}>
+				<App />
+			</ThemeProvider>
 		</ReactReduxFirebaseProvider>
 	</Provider>,
 	document.getElementById("root")
