@@ -47,7 +47,16 @@ function Client({ match, history }) {
 	}, [clientQuery])
 
 	if (!isLoaded(clientQuery) || !isLoaded(contacts)) {
-		return <div>Loading...</div>
+		return (
+			<Grid
+				container
+				justify="center"
+				alignItems="center"
+				alignContent="center"
+			>
+				<Typography>Loading...</Typography>
+			</Grid>
+		)
 	} else {
 		return (
 			<Grid container spacing={3}>
@@ -56,7 +65,7 @@ function Client({ match, history }) {
 						<Clientcard client={clientQuery[0]} sm={sm} />
 					</Grid>
 					<Grid item xs={6}>
-						<Mondayleads />
+						<Mondayleads history={history} client={clientQuery[0]} />
 					</Grid>
 					<Grid item xs={3}>
 						<Grid container>

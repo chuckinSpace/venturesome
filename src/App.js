@@ -9,6 +9,7 @@ import NavBar from "./components/NavBar"
 import Client from "./components/Views/Client"
 import Onboarding from "./components/Onboarding"
 import Databox from "./components/Views/Databox"
+import Archives from "./components/Archives"
 require("dotenv").config()
 function App() {
 	return (
@@ -21,6 +22,7 @@ function App() {
 					<Route exact path="/home" component={Home} />
 					<Route exact path="/clients/:id" component={Client} />
 					<Route exact path="/onboarding" component={Onboarding} />
+					<Route exact path="/clients/:id/archives" component={Archives} />
 					<Route exact path="/clients/:id/databox" component={Databox} />
 				</Switch>
 			</Grid>

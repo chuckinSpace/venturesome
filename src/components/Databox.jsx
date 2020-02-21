@@ -9,9 +9,9 @@ const Databox = ({ history, client }) => {
 	return (
 		<Grid container style={{ marginLeft: 20 }}>
 			<Grid item xs={8}>
-				<Typography variant="h4">Ads Report</Typography>
+				<Typography variant="h4">ADS REPORT</Typography>
 			</Grid>
-			<Grid item xs={4} container justify="center">
+			<Grid item xs={4} container justify="center" style={{ marginBottom: 10 }}>
 				<Button
 					variant="outlined"
 					color="primary"

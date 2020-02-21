@@ -17,6 +17,7 @@ function Mondayleads({ history, client }) {
 	const [lost, setLost] = useState(0)
 	const [progress, setProgress] = useState(0)
 	const [guarantee, setGuarantee] = useState(30)
+
 	useEffect(() => {
 		const callMonday = async () => {
 			setLoading(true)
@@ -94,7 +95,7 @@ function Mondayleads({ history, client }) {
 				<Grid key={lead.id} item xs={3}>
 					<Card style={{ height: 220 }}>
 						<CardContent>
-							<Typography inline noWrap color="textSecondary" gutterBottom>
+							<Typography noWrap color="textSecondary" gutterBottom>
 								Name: {lead.name}
 							</Typography>
 							<Typography color="textSecondary" gutterBottom>
@@ -130,7 +131,7 @@ function Mondayleads({ history, client }) {
 		)
 
 	if (loading) {
-		return <h1>Loading...</h1>
+		return <Typography>Loading...</Typography>
 	} else {
 		return (
 			<Card
@@ -142,10 +143,22 @@ function Mondayleads({ history, client }) {
 			>
 				<Grid container>
 					<Grid item xs={6}>
-						<Typography variant="h4">Leads</Typography>
+						<Typography variant="h4">LEADS</Typography>
 					</Grid>
-					<Grid item container justify="flex-end" xs={6}>
-						<Button variant="outlined" color="primary">
+					<Grid
+						item
+						container
+						justify="flex-end"
+						xs={6}
+						style={{ marginBottom: 10 }}
+					>
+						<Button
+							variant="outlined"
+							color="primary"
+							onClick={() =>
+								history.push(`/clients/${client.idNumber}/archives`)
+							}
+						>
 							Leads Archive
 						</Button>
 					</Grid>
