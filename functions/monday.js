@@ -431,7 +431,11 @@ const getSubmissionData = async (boardId, itemId) => {
 		slack: false,
 		phone: "",
 		clientId: "",
-		name: ""
+		name: "",
+		aditional: "",
+		questions: "",
+		iban: "",
+		backstage: ""
 	}
 
 	try {
@@ -465,6 +469,21 @@ const getSubmissionData = async (boardId, itemId) => {
 		} else {
 			submissionObj.slack = false
 		}
+		const additionalObj = values.find(item => item.id === "text40")
+		!!additionalObj.value &&
+			(submissionObj.aditional = additionalObj.value.replace(/['"]+/g, ""))
+
+		const importantObj = values.find(item => item.id === "text3")
+		!!importantObj.value &&
+			(submissionObj.important = importantObj.value.replace(/['"]+/g, ""))
+
+		const ibanObj = values.find(item => item.id === "text5")
+		!!ibanObj.value &&
+			(submissionObj.iban = ibanObj.value.replace(/['"]+/g, ""))
+
+		const backstageObj = values.find(item => item.id === "text00")
+		!!backstageObj.value &&
+			(submissionObj.backstage = backstageObj.value.replace(/['"]+/g, ""))
 
 		const phoneObj = values.find(item => item.id === "phone1")
 		submissionObj.phone = phoneObj.value.replace(/['"]+/g, "")
@@ -475,7 +494,14 @@ const getSubmissionData = async (boardId, itemId) => {
 		console.log("error when creating submission obj", error)
 	}
 }
-
+const test = async () => {
+	try {
+		await getSubmissionData(411284598, 466835969)
+	} catch (error) {
+		console.error(error)
+	}
+}
+/* test() */
 const getBoardByClientId = async clientId => {
 	console.log(clientId, typeof clientId)
 
@@ -647,7 +673,12 @@ const addProjectOverview = async (
 		}
 	}
 	try {
-		await postMonday(body, "adding item to Inbox Project Overview")
+		const response = await postMonday(
+			body,
+			"adding item to Inbox Project Overview"
+		)
+		const overviewId = response.data.create_item.id
+		return parseInt(overviewId)
 	} catch (error) {
 		throw new Error(
 			"error when creating board for Video Project overview",
@@ -708,7 +739,7 @@ const addMoneyTreeAccount = async (
 }
 
 const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
-	console.log(clientFirebase, contactObj)
+	console.log("data going to monday DB", clientFirebase, contactObj)
 	//create group and get back id
 
 	let dateTime = moment(clientFirebase.createdAt).format("YYYY-MM-DD")
@@ -761,7 +792,8 @@ const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
 				country: {
 					countryCode: clientFirebase.address.country.countryCode,
 					countryName: clientFirebase.address.country.countryName
-				}
+				},
+				text17: contactObj.position
 			})
 		} else {
 			columnValues = JSON.stringify({
@@ -788,7 +820,8 @@ const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
 				country: {
 					countryCode: clientFirebase.address.country.countryCode,
 					countryName: clientFirebase.address.country.countryName
-				}
+				},
+				text17: contactObj.position
 			})
 		}
 		//query to populate the board
@@ -1053,14 +1086,7 @@ const databaseMigration = async () => {
 		console.log(error)
 	}
 }
-const test = async () => {
-	try {
-		await databaseMigration()
-	} catch (error) {
-		console.error(error)
-	}
-}
-/* test() */
+
 const databaseFirebaseToMonday = async () => {
 	// create group
 	try {

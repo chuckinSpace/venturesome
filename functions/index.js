@@ -114,7 +114,7 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 			}
 
 			//after onboarding from the client is complete we create slack channels
-
+			/* 
 			await slack.slackCreationWorkflow(
 				clientFirebase,
 				clientFirebase.mondayItemIdDeal
@@ -124,7 +124,7 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 				constants.SLACK_FORM_STATUS,
 				"Completed",
 				clientFirebase.mondayItemIdDeal
-			)
+			) */
 		} catch (e) {
 			throw new Error("Error the completing onboarding process")
 		}
@@ -298,7 +298,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 			if (mondayObj.isNewClient) {
 				//set status to Waiting for client for those that need to wait for onboarding form
 
-				await monday.changeMondayStatus(
+				/* await monday.changeMondayStatus(
 					constants.SLACK_FORM_STATUS,
 					"Waiting For Client",
 					itemId
@@ -307,7 +307,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					constants.MONDAY_DB_FORM_STATUS,
 					"Waiting For Client",
 					itemId
-				)
+				) */
 
 				await firebase.createDocument("clients", clientObj, "creating client")
 				await firebase.createDocument(
@@ -331,7 +331,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					pmObj,
 					smObj
 				)
-
+				/*
 				await monday.changeMondayStatus(
 					constants.START_FORM_STATUS,
 					"Onboarding Started",
@@ -341,23 +341,23 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					constants.ONBOARDING_FORM_STATUS,
 					"Waiting For Client",
 					itemId
-				)
+				) */
 
 				await monday.setMondayClientId(boardId, itemId, clientObj.idNumber)
 				// create google drive entire tree
 				projectObj.isNewClient = true
 
-				await googleDrive.createFolderTree(projectObj)
+				/* await googleDrive.createFolderTree(projectObj)
 
 				await monday.changeMondayStatus(
 					constants.GOOGLE_DRIVE_FORM_STATUS,
 					"Completed",
 					itemId
-				)
+				) */
 
 				if (projectObj.companyAssigned === "VENTURESOME") {
 					//add task "send welcome card" with address on up{date}
-					await monday.sendWelcome(
+					/* await monday.sendWelcome(
 						clientObj,
 						"VENTURESOME",
 						projectObj.pmId,
@@ -389,7 +389,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						clientObj.idNumber,
 						itemId,
 						"creating toggl client"
-					)
+					) 
 
 					await firebase.updateFirebase(
 						"clients",
@@ -407,9 +407,9 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.clientProjectNumber,
 						itemId,
 						"creating toggl Project"
-					)
+					)*/
 				} else if (projectObj.companyAssigned === "moneytree") {
-					await monday.sendWelcome(
+					/* await monday.sendWelcome(
 						clientObj,
 						"moneytree",
 						projectObj.pmId,
@@ -435,12 +435,12 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						constants.FRAMEIO_FORM_STATUS,
 						"Not Needed",
 						itemId
-					)
+					) */
 				}
 
 				// add to Project overview Inbox always
 
-				await monday.addProjectOverview(
+				const overviewId = await monday.addProjectOverview(
 					clientObj.idNumber,
 					yearCreated,
 					projectObj.clientProjectNumber,
@@ -452,17 +452,23 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					projectObj.companyAssigned,
 					clientObj.tag
 				)
+				await firebase.updateFirebase(
+					"projects",
+					"internalProjectId",
+					projectObj.internalProjectId,
+					{ overviewId: overviewId }
+				)
 
-				await monday.changeMondayStatus(
+				/* await monday.changeMondayStatus(
 					constants.MONDAY_BOARDS_FORM_STATUS,
 					"Completed",
 					itemId
-				)
+				) */
 			} else {
 				//old client
 
 				//set all not needed items to completed first for existing clients
-				await monday.changeMondayStatus(
+				/* await monday.changeMondayStatus(
 					constants.ONBOARDING_FORM_STATUS,
 					"Not Needed",
 					itemId
@@ -476,7 +482,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					constants.MONDAY_DB_FORM_STATUS,
 					"Not Needed",
 					itemId
-				)
+				) */
 
 				await firebase.createDocument("projects", projectObj, "create project")
 				await monday.changeMondayStatus(
@@ -486,7 +492,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				)
 
 				if (projectObj.companyAssigned === "VENTURESOME") {
-					await monday.addVideoProjectBoard(
+					/* await monday.addVideoProjectBoard(
 						clientObj.idNumber,
 						yearCreated,
 						projectObj.clientProjectNumber,
@@ -527,10 +533,9 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						constants.FRAMEIO_FORM_STATUS,
 						"Completed",
 						itemId
-					)
-
+					) */
 					// slack to not needed, onboarding not needed, monday db
-					await monday.changeMondayStatus(
+					/* await monday.changeMondayStatus(
 						constants.SLACK_FORM_STATUS,
 						"Not Needed",
 						itemId
@@ -544,9 +549,9 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						constants.MONDAY_DB_FORM_STATUS,
 						"Not Needed",
 						itemId
-					)
+					) */
 				} else if (projectObj.companyAssigned === "moneytree") {
-					await monday.changeMondayStatus(
+					/* await monday.changeMondayStatus(
 						constants.TOGGL_FORM_STATUS,
 						"Not Needed",
 						itemId
@@ -580,7 +585,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.name,
 						projectObj.pmId,
 						clientObj.tag
-					)
+					) */
 				}
 
 				// add to Project overview Inbox always
@@ -588,7 +593,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				projectObj.projectsFolderId = firebaseClient.projectsFolderId
 				projectObj.isNewClient = false
 
-				await googleDrive.createFolderTree(projectObj)
+				/* await googleDrive.createFolderTree(projectObj)
 
 				await monday.changeMondayStatus(
 					constants.GOOGLE_DRIVE_FORM_STATUS,
@@ -611,7 +616,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					constants.MONDAY_BOARDS_FORM_STATUS,
 					"Completed",
 					itemId
-				)
+				) */
 			}
 			console.log("reached end of script with success")
 			res.send({ message: "success" })
@@ -885,7 +890,7 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					)
 
 					if (projectObj.companyAssigned === "VENTURESOME") {
-						//add task "send welcome card" with address on up{date}
+						//add task "send welcome card" with address on update
 						await monday.sendWelcome(
 							clientObj,
 							"VENTURESOME",
@@ -904,12 +909,12 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 						)  */
 						//create frameio project
 					} else if (projectObj.companyAssigned === "moneytree") {
-						/* await monday.sendWelcome(
+						await monday.sendWelcome(
 							clientObj,
 							"moneytree",
 							projectObj.pmId,
 							contactObj
-						) */
+						)
 						await monday.addMoneyTreeAccount(
 							clientObj.idNumber,
 							yearCreated,
@@ -1025,9 +1030,9 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					)
 				}
 				console.log("reached end of script with success")
-				res.send({ message: "success" })
 			}
 		}
+		res.send({ message: "success" })
 	} catch (error) {
 		console.error(error)
 	}
