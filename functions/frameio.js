@@ -8,6 +8,7 @@ const token = process.env.FRAMEIO_TOKEN
 const teamId = process.env.FRAMEIO_TEAM_ID
 
 const createFrameIoProject = (projectName, itemId, action) => {
+	console.log("in create Frame io workflow")
 	const body = {
 		name: projectName
 	}
@@ -18,16 +19,22 @@ const createFrameIoProject = (projectName, itemId, action) => {
 			}
 		})
 		.then(res => {
-			console.log(`sucess ${action}`, res.data)
 			monday.changeMondayStatus(
 				constants.FRAMEIO_FORM_STATUS,
 				"Completed",
-				itemId
+				itemId,
+				"frameIo"
 			)
+			console.log(`sucess ${action}`, res.data)
 		})
 		.catch(err => {
 			console.log(`error ${action}`, err.response.data)
-			monday.changeMondayStatus(constants.FRAMEIO_FORM_STATUS, "Error", itemId)
+			monday.changeMondayStatus(
+				constants.FRAMEIO_FORM_STATUS,
+				"Error",
+				itemId,
+				"frameIo"
+			)
 			sendGrid.sendErrorEmail(
 				`/freameIo/createFrameIoProject-${projectName}-itemId${itemId}`,
 				action,

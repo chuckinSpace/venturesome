@@ -78,7 +78,8 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 			await monday.changeMondayStatus(
 				constants.ONBOARDING_FORM_STATUS,
 				"Completed",
-				clientFirebase.mondayItemIdDeal
+				clientFirebase.mondayItemIdDeal,
+				"onboarding form"
 			)
 			if (!!clientFirebase) {
 				console.log("about to run save client to database on monday")
@@ -102,7 +103,8 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 				await monday.changeMondayStatus(
 					constants.MONDAY_DB_FORM_STATUS,
 					"Completed",
-					clientFirebase.mondayItemIdDeal
+					clientFirebase.mondayItemIdDeal,
+					"mondayDb"
 				)
 			} else {
 				console.log("client not found on firebase ", submissionObj.clientId)
@@ -114,7 +116,7 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 			}
 
 			//after onboarding from the client is complete we create slack channels
-			/* 
+
 			await slack.slackCreationWorkflow(
 				clientFirebase,
 				clientFirebase.mondayItemIdDeal
@@ -123,8 +125,9 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 			await monday.changeMondayStatus(
 				constants.SLACK_FORM_STATUS,
 				"Completed",
-				clientFirebase.mondayItemIdDeal
-			) */
+				clientFirebase.mondayItemIdDeal,
+				"slack"
+			)
 		} catch (e) {
 			throw new Error("Error the completing onboarding process")
 		}
@@ -232,11 +235,16 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 
 		// 1st step get the data from the board using getResults from monday file, store it into mondayObj,
 		//if there is any error retrieving these field form the board the program will throw an error to be handled
-		const mondayObj = await monday.getResult(boardId, itemId)
+		const mondayObj = await monday.getValuesFromMonday(
+			boardId,
+			itemId,
+			false,
+			false
+		)
 		console.log("Monday Obj", mondayObj)
 
 		if (mondayObj === 0) {
-			throw new Error("error with mondayObj ending program")
+			/* throw new Error("error with mondayObj ending program") */
 		} else {
 			// if client is old, client Id woulb be taken from mondayObj, else, client Id will be from firebase
 
@@ -251,7 +259,8 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.START_FORM_STATUS,
 						"Client Not Found",
-						itemId
+						itemId,
+						"client Not found"
 					)
 					throw new Error("client not found")
 				}
@@ -296,16 +305,18 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 			if (mondayObj.isNewClient) {
 				//set status to Waiting for client for those that need to wait for onboarding form
 
-				/* await monday.changeMondayStatus(
+				await monday.changeMondayStatus(
 					constants.SLACK_FORM_STATUS,
 					"Waiting For Client",
-					itemId
+					itemId,
+					"slack"
 				)
 				await monday.changeMondayStatus(
 					constants.MONDAY_DB_FORM_STATUS,
 					"Waiting For Client",
-					itemId
-				) */
+					itemId,
+					"mondayDb"
+				)
 
 				await firebase.createDocument("clients", clientObj, "creating client")
 				await firebase.createDocument(
@@ -329,33 +340,36 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					pmObj,
 					smObj
 				)
-				/*
+
 				await monday.changeMondayStatus(
 					constants.START_FORM_STATUS,
 					"Onboarding Started",
-					itemId
+					itemId,
+					"onboarding started"
 				)
 				await monday.changeMondayStatus(
 					constants.ONBOARDING_FORM_STATUS,
 					"Waiting For Client",
-					itemId
-				) */
+					itemId,
+					"onboarding form"
+				)
 
 				await monday.setMondayClientId(boardId, itemId, clientObj.idNumber)
 				// create google drive entire tree
 				projectObj.isNewClient = true
 
-				/* await googleDrive.createFolderTree(projectObj)
+				await googleDrive.createFolderTree(projectObj)
 
 				await monday.changeMondayStatus(
 					constants.GOOGLE_DRIVE_FORM_STATUS,
 					"Completed",
-					itemId
-				) */
+					itemId,
+					"google drive"
+				)
 
 				if (projectObj.companyAssigned === "VENTURESOME") {
 					//add task "send welcome card" with address on up{date}
-					/* await monday.sendWelcome(
+					await monday.sendWelcome(
 						clientObj,
 						"VENTURESOME",
 						projectObj.pmId,
@@ -381,13 +395,19 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						itemId,
 						"creating frame io project"
 					)
+					await monday.changeMondayStatus(
+						constants.FRAMEIO_FORM_STATUS,
+						"Completed",
+						itemId,
+						"frameIo"
+					)
 					//create toggle client
 					const togglClientId = await toggl.createClient(
 						clientObj.name,
 						clientObj.idNumber,
 						itemId,
 						"creating toggl client"
-					) 
+					)
 
 					await firebase.updateFirebase(
 						"clients",
@@ -405,9 +425,9 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.clientProjectNumber,
 						itemId,
 						"creating toggl Project"
-					)*/
+					)
 				} else if (projectObj.companyAssigned === "moneytree") {
-					/* await monday.sendWelcome(
+					await monday.sendWelcome(
 						clientObj,
 						"moneytree",
 						projectObj.pmId,
@@ -427,13 +447,15 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.TOGGL_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"toggl"
 					)
 					await monday.changeMondayStatus(
 						constants.FRAMEIO_FORM_STATUS,
 						"Not Needed",
-						itemId
-					) */
+						itemId,
+						"frameIo"
+					)
 				}
 
 				// add to Project overview Inbox always
@@ -457,40 +479,45 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					{ overviewId: overviewId }
 				)
 
-				/* await monday.changeMondayStatus(
+				await monday.changeMondayStatus(
 					constants.MONDAY_BOARDS_FORM_STATUS,
 					"Completed",
-					itemId
-				) */
+					itemId,
+					"monday boards"
+				)
 			} else {
 				//old client
 
 				//set all not needed items to completed first for existing clients
-				/* await monday.changeMondayStatus(
+				await monday.changeMondayStatus(
 					constants.ONBOARDING_FORM_STATUS,
 					"Not Needed",
-					itemId
+					itemId,
+					"onboarding form"
 				)
 				await monday.changeMondayStatus(
 					constants.SLACK_FORM_STATUS,
 					"Not Needed",
-					itemId
+					itemId,
+					"slack"
 				)
 				await monday.changeMondayStatus(
 					constants.MONDAY_DB_FORM_STATUS,
 					"Not Needed",
-					itemId
-				) */
+					itemId,
+					"mondayDb"
+				)
 
 				await firebase.createDocument("projects", projectObj, "create project")
 				await monday.changeMondayStatus(
 					constants.START_FORM_STATUS,
 					"Project Created",
-					itemId
+					itemId,
+					"project Created"
 				)
 
 				if (projectObj.companyAssigned === "VENTURESOME") {
-					/* await monday.addVideoProjectBoard(
+					await monday.addVideoProjectBoard(
 						clientObj.idNumber,
 						yearCreated,
 						projectObj.clientProjectNumber,
@@ -504,7 +531,24 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					const firebaseClient = await firebase.getClientInfo(
 						clientObj.idNumber
 					)
+
 					const togglClientId = firebaseClient.togglClientId
+					if (!!togglClientId) {
+						const togglClientId = await toggl.createClient(
+							clientObj.name,
+							clientObj.idNumber,
+							itemId,
+							"creating toggl client"
+						)
+
+						await firebase.updateFirebase(
+							"clients",
+							"idNumber",
+							clientObj.idNumber,
+							{ togglClientId: togglClientId },
+							"saving toggl id to firebase client"
+						)
+					}
 					console.log("object from firebase", firebaseClient, togglClientId)
 					await toggl.createProject(
 						togglClientId,
@@ -516,7 +560,8 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.TOGGL_FORM_STATUS,
 						"Completed",
-						itemId
+						itemId,
+						"toggl"
 					)
 					await frameio.createFrameIoProject(
 						`${
@@ -530,49 +575,58 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.FRAMEIO_FORM_STATUS,
 						"Completed",
-						itemId
-					) */
+						itemId,
+						"frameIo"
+					)
 					// slack to not needed, onboarding not needed, monday db
-					/* await monday.changeMondayStatus(
+					await monday.changeMondayStatus(
 						constants.SLACK_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"slack"
 					)
 					await monday.changeMondayStatus(
 						constants.ONBOARDING_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"onboarding form"
 					)
 					await monday.changeMondayStatus(
 						constants.MONDAY_DB_FORM_STATUS,
 						"Not Needed",
-						itemId
-					) */
+						itemId,
+						"mondayDb"
+					)
 				} else if (projectObj.companyAssigned === "moneytree") {
-					/* await monday.changeMondayStatus(
+					await monday.changeMondayStatus(
 						constants.TOGGL_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"toggl"
 					)
 					await monday.changeMondayStatus(
 						constants.FRAMEIO_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"frameIo"
 					)
 					await monday.changeMondayStatus(
 						constants.SLACK_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"slack"
 					)
 					await monday.changeMondayStatus(
 						constants.ONBOARDING_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"onboarding form"
 					)
 					await monday.changeMondayStatus(
 						constants.MONDAY_DB_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"monday Db"
 					)
 
 					await monday.addMoneyTreeAccount(
@@ -583,7 +637,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 						projectObj.name,
 						projectObj.pmId,
 						clientObj.tag
-					) */
+					)
 				}
 
 				// add to Project overview Inbox always
@@ -591,12 +645,13 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				projectObj.projectsFolderId = firebaseClient.projectsFolderId
 				projectObj.isNewClient = false
 
-				/* await googleDrive.createFolderTree(projectObj)
+				await googleDrive.createFolderTree(projectObj)
 
 				await monday.changeMondayStatus(
 					constants.GOOGLE_DRIVE_FORM_STATUS,
 					"Completed",
-					itemId
+					itemId,
+					"google drive"
 				)
 				await monday.addProjectOverview(
 					clientObj.idNumber,
@@ -613,19 +668,21 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 				await monday.changeMondayStatus(
 					constants.MONDAY_BOARDS_FORM_STATUS,
 					"Completed",
-					itemId
-				) */
+					itemId,
+					"monday db"
+				)
 			}
 			console.log("reached end of script with success")
 			res.send({ message: "success" })
 		}
 	} catch (error) {
 		console.log("Error in main script", error)
-		await monday.changeMondayStatus(
+		/* 	await monday.changeMondayStatus(
 			constants.START_FORM_STATUS,
 			"Error",
-			itemId
-		)
+			itemId,
+			"error in main script"
+		) */
 		res.send({ message: "error" })
 	}
 })
@@ -656,7 +713,12 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 exports.resendOnboarding = functions.https.onRequest(async (req, res) => {
 	const itemId = req.body.event.pulseId
 	const boardId = req.body.event.boardId
-	const mondayObj = await monday.getResult(boardId, itemId)
+	const mondayObj = await monday.getValuesFromMonday(
+		boardId,
+		itemId,
+		false,
+		false
+	)
 
 	console.log(itemId, "item id from hook")
 	const clientId = await monday.getClientOnboarding(itemId)
@@ -794,7 +856,7 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 	try {
 		let clientProjectNumber = ""
 		let clientId = ""
-		const mondayObj = await monday.getResult(boardId, itemId)
+		const mondayObj = await monday.getValuesFromMonday(boardId, itemId, true)
 		console.log(mondayObj)
 		if (mondayObj === 0) {
 			throw new Error("error with mondayObj ending program")
@@ -808,7 +870,8 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.START_FORM_STATUS,
 						"Client Not Found",
-						itemId
+						itemId,
+						"client Not found"
 					)
 					throw new Error("client not found")
 				}
@@ -847,22 +910,26 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.SLACK_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"slack"
 					)
 					await monday.changeMondayStatus(
 						constants.ONBOARDING_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"onboarding form"
 					)
 					await monday.changeMondayStatus(
 						constants.TOGGL_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"toggl"
 					)
 					await monday.changeMondayStatus(
 						constants.FRAMEIO_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"frameIo"
 					)
 
 					await firebase.createDocument("clients", clientObj, "creating client")
@@ -887,7 +954,8 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.MONDAY_DB_FORM_STATUS,
 						"Completed",
-						itemId
+						itemId,
+						"mondayDb"
 					)
 					console.log("primary contact id", primaryContactId)
 					await firebase.updateContact(
@@ -904,7 +972,8 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.GOOGLE_DRIVE_FORM_STATUS,
 						"Completed",
-						itemId
+						itemId,
+						"google drive"
 					)
 
 					// add to Project overview Inbox always
@@ -925,7 +994,8 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.MONDAY_BOARDS_FORM_STATUS,
 						"Completed",
-						itemId
+						itemId,
+						"monday boards"
 					)
 				} else {
 					//old client
@@ -934,27 +1004,32 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.ONBOARDING_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"onboarding form"
 					)
 					await monday.changeMondayStatus(
 						constants.SLACK_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"slack"
 					)
 					await monday.changeMondayStatus(
 						constants.MONDAY_DB_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"monday db"
 					)
 					await monday.changeMondayStatus(
 						constants.FRAMEIO_FORM_STATUS,
 						"Completed",
-						itemId
+						itemId,
+						"frameIo"
 					)
 					await monday.changeMondayStatus(
 						constants.TOGGL_FORM_STATUS,
 						"Not Needed",
-						itemId
+						itemId,
+						"toggl"
 					)
 
 					await firebase.createDocument(
@@ -975,7 +1050,8 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.GOOGLE_DRIVE_FORM_STATUS,
 						"Completed",
-						itemId
+						itemId,
+						"google drive"
 					)
 					await monday.addProjectOverview(
 						clientObj.idNumber,
@@ -992,7 +1068,8 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					await monday.changeMondayStatus(
 						constants.MONDAY_BOARDS_FORM_STATUS,
 						"Completed",
-						itemId
+						itemId,
+						"monday boards"
 					)
 				}
 				console.log("reached end of script with success")

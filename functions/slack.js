@@ -25,12 +25,18 @@ const createSlackChannel = async (users, clientName, itemId, action) => {
 		await monday.changeMondayStatus(
 			constants.SLACK_FORM_STATUS,
 			"Completed",
-			itemId
+			itemId,
+			"slack"
 		)
 		return channelId
 	} catch (err) {
 		console.log(err)
-		monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+		monday.changeMondayStatus(
+			constants.SLACK_FORM_STATUS,
+			"Error",
+			itemId,
+			"error in slack"
+		)
 		sendGrid.sendErrorEmail(
 			`/slack/createSlackChannel - clientName ${clientName}-itemId${itemId}`,
 			action,
@@ -57,7 +63,12 @@ const sendClientInvite = async (clientEmail, channelId, itemId, action) => {
 		request(options, async function(err, response) {
 			if (!JSON.parse(response.body).ok) {
 				console.log("error trying to send invite to client", err)
-				monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+				monday.changeMondayStatus(
+					constants.SLACK_FORM_STATUS,
+					"Error",
+					itemId,
+					"eror in slack"
+				)
 				sendGrid.sendErrorEmail(
 					`/slack/sendClientInvite - clientEmail ${clientEmail}-itemId${itemId}`,
 					action,
@@ -71,7 +82,8 @@ const sendClientInvite = async (clientEmail, channelId, itemId, action) => {
 				await monday.changeMondayStatus(
 					constants.SLACK_FORM_STATUS,
 					"Completed",
-					itemId
+					itemId,
+					"slack"
 				)
 			}
 		})
@@ -86,7 +98,8 @@ const getUserbyEmail = async (userEmail, itemId, action) => {
 		await monday.changeMondayStatus(
 			constants.SLACK_FORM_STATUS,
 			"Completed",
-			itemId
+			itemId,
+			"slack"
 		)
 		return { id: response.user.id }
 	} catch (err) {
@@ -106,7 +119,12 @@ const getSlackIds = async (slackObj, itemId, action) => {
 			)
 		} catch (err) {
 			console.log(err)
-			monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+			monday.changeMondayStatus(
+				constants.SLACK_FORM_STATUS,
+				"Error",
+				itemId,
+				"error in slack"
+			)
 			sendGrid.sendErrorEmail(
 				`/slack/sendClientInvite - slackObj ${slackObj}-itemId ${itemId}`,
 				action,
@@ -121,7 +139,12 @@ const getSlackIds = async (slackObj, itemId, action) => {
 		})
 		.catch(err => {
 			console.log(err)
-			monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+			monday.changeMondayStatus(
+				constants.SLACK_FORM_STATUS,
+				"Error",
+				itemId,
+				"error in slack"
+			)
 		})
 }
 
@@ -147,7 +170,12 @@ const sendWelcomeMessage = async (
 		})
 	} catch (err) {
 		console.log(err)
-		monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+		monday.changeMondayStatus(
+			constants.SLACK_FORM_STATUS,
+			"Error",
+			itemId,
+			"error in slack"
+		)
 		sendGrid.sendErrorEmail(
 			`/slack/sendClientInvite - clientName ${clientName}-itemId ${itemId}`,
 			action,
@@ -223,7 +251,12 @@ const slackCreationWorkflow = async (clientFirebase, itemId) => {
 		}
 	} catch (err) {
 		console.log(err)
-		monday.changeMondayStatus(constants.SLACK_FORM_STATUS, "Error", itemId)
+		monday.changeMondayStatus(
+			constants.SLACK_FORM_STATUS,
+			"Error",
+			itemId,
+			"error in slack"
+		)
 		sendGrid.sendErrorEmail(
 			`/slack/sendClientInvite - clientFirebase ${clientFirebase}-itemId ${itemId}`,
 			"creating slack channels",

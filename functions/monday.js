@@ -65,7 +65,7 @@ const setMondayClientId = async (boardId, itemId, clientId) => {
 	await postMonday(body, `returning client Id ${stringId}`)
 }
 
-const changeMondayStatus = async (cellId, label, itemId) => {
+const changeMondayStatus = async (cellId, label, itemId, action) => {
 	const onboardingId = 413267102
 
 	const body = {
@@ -85,7 +85,7 @@ const changeMondayStatus = async (cellId, label, itemId) => {
 		}
 	}
 
-	await postMonday(body, `changing monday status to ${label}`)
+	await postMonday(body, `changing monday status to ${label} ${action} `)
 }
 
 const getLink = async itemId => {
@@ -134,7 +134,7 @@ const getPmInfo = async pmId => {
 	}
 }
 
-const getValuesFromMonday = async (boardId, itemId) => {
+const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 	let mondayObj = {
 		email: "",
 		clientName: "",
@@ -180,7 +180,7 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		const response = await postMonday(body, "getValuesFromMonday")
 		const values = await response.data.boards[0].items[0].column_values
 		const name = response.data.boards[0].items[0].name
-
+		let onlyProject = false
 		mondayObj.itemId = itemId
 
 		const isNewClientItem = values.find(item => item.id === CLIENT_ID_ID)
@@ -189,17 +189,13 @@ const getValuesFromMonday = async (boardId, itemId) => {
 			mondayObj.clientId = isNewClientItem.value.replace(/['"]+/g, "")
 		}
 		mondayObj.isNewClient = isNewClient
-
+		if (!mondayObj.isNewClient) onlyProject = true
 		if (mondayObj.isNewClient) {
 			console.log("in new client setting mname", name)
 			/* const clientNameObj = values.find(item => item.id === "text") */
 			mondayObj.clientName = name.replace(/['"]+/g, "")
 		} else {
-			console.log(
-				"in old client setting name",
-				mondayObj.clientId,
-				typeof mondayObj.clientId
-			)
+			console.log("in old client setting name", mondayObj.clientId)
 			const firebaseClient = await firebase.getClientInfo(mondayObj.clientId)
 			if (!!firebaseClient) {
 				console.log(firebaseClient, "firebaseClient on old client")
@@ -208,59 +204,100 @@ const getValuesFromMonday = async (boardId, itemId) => {
 				changeMondayStatus(
 					constants.START_FORM_STATUS,
 					"Client Not Found",
-					itemId
+					itemId,
+					"client not found"
 				)
 				throw new Error("client not found ending program")
 			}
 		}
 
 		const emailObj = values.find(item => item.id === "email")
-		mondayObj.email = JSON.parse(emailObj.value).email
-
-		const phoneObj = values.find(item => item.id === "phone_number")
-		mondayObj.phone = JSON.parse(phoneObj.value).phone
-
-		const contactFirstNameObj = values.find(item => item.id === "text52")
-		mondayObj.contactFirstName = contactFirstNameObj.value.replace(/['"]+/g, "")
-
-		const contactLastNameObj = values.find(item => item.id === "text524")
-		mondayObj.contactLastName = contactLastNameObj.value.replace(/['"]+/g, "")
-
-		const companyAssignedObj = values.find(item => item.id === "dropdown1")
-
-		//address
-		const streetAddressObj = values.find(item => item.id === "text4")
-		mondayObj.streetAddress = streetAddressObj.value.replace(/['"]+/g, "")
-
-		const zipCodeObj = values.find(item => item.id === "text42")
-		mondayObj.zipCode = zipCodeObj.value.replace(/['"]+/g, "")
-
-		const cityObj = values.find(item => item.id === "text88")
-		mondayObj.city = cityObj.value.replace(/['"]+/g, "")
-
-		const countryObj = values.find(item => item.id === "country")
-		mondayObj.country.countryCode = JSON.parse(countryObj.value).countryCode
-		mondayObj.country.countryName = JSON.parse(countryObj.value).countryName
-
-		//check company assigned, if empty error
-		const companyAssignedParse = JSON.parse(companyAssignedObj.value)
-		const companyAssigned = companyAssignedParse.ids[0]
-		console.log(companyAssigned)
-		if (!!companyAssigned && companyAssigned === 1) {
-			mondayObj.companyAssigned = "VENTURESOME"
-		} else if (!!companyAssigned && companyAssigned === 2) {
-			mondayObj.companyAssigned = "moneytree"
+		if (!!emailObj.value) {
+			mondayObj.email = JSON.parse(emailObj.value).email
 		} else {
-			throw new Error("missing company Assigned")
+			if (mondayObj.isNewClient) throw new Error("missing email")
 		}
 
+		const phoneObj = values.find(item => item.id === "phone_number")
+		console.log("phone obj", phoneObj)
+		if (!!JSON.parse(phoneObj.value)) {
+			mondayObj.phone = JSON.parse(phoneObj.value).phone
+		} else {
+			if (mondayObj.isNewClient) throw new Error("missing phone number")
+		}
+
+		const contactFirstNameObj = values.find(item => item.id === "text52")
+		if (!!contactFirstNameObj.value) {
+			mondayObj.contactFirstName = contactFirstNameObj.value.replace(
+				/['"]+/g,
+				""
+			)
+		} else {
+			if (mondayObj.isNewClient) throw new Error("missing contact Name ")
+		}
+
+		const contactLastNameObj = values.find(item => item.id === "text524")
+		if (!!contactLastNameObj.value) {
+			mondayObj.contactLastName = contactLastNameObj.value.replace(/['"]+/g, "")
+		} else {
+			if (mondayObj.isNewClient) throw new Error("missing contact Last Name ")
+		}
+
+		const streetAddressObj = values.find(item => item.id === "text4")
+		if (!!streetAddressObj.value) {
+			mondayObj.streetAddress = streetAddressObj.value.replace(/['"]+/g, "")
+		} else {
+			if (mondayObj.isNewClient) throw new Error("missing street")
+		}
+
+		const zipCodeObj = values.find(item => item.id === "text42")
+		if (!!zipCodeObj.value) {
+			mondayObj.zipCode = zipCodeObj.value.replace(/['"]+/g, "")
+		} else {
+			if (mondayObj.isNewClient) throw new Error("missing zip code")
+		}
+
+		const cityObj = values.find(item => item.id === "text88")
+		if (!!cityObj.value) {
+			mondayObj.city = cityObj.value.replace(/['"]+/g, "")
+		} else {
+			if (mondayObj.isNewClient) throw new Error("missing city")
+		}
+
+		const countryObj = values.find(item => item.id === "country")
+		if (!!JSON.parse(countryObj.value)) {
+			mondayObj.country.countryCode = JSON.parse(countryObj.value).countryCode
+			mondayObj.country.countryName = JSON.parse(countryObj.value).countryName
+		} else {
+			if (mondayObj.isNewClient) throw new Error("missing country")
+		}
+
+		const companyAssignedObj = values.find(item => item.id === "dropdown1")
+		if (!!JSON.parse(companyAssignedObj.value)) {
+			const companyAssignedParse = JSON.parse(companyAssignedObj.value)
+			const companyAssigned = companyAssignedParse.ids[0]
+
+			if (!!companyAssigned && companyAssigned === 1) {
+				mondayObj.companyAssigned = "VENTURESOME"
+			} else if (!!companyAssigned && companyAssigned === 2) {
+				mondayObj.companyAssigned = "moneytree"
+			} else {
+				if (!consulting) throw new Error("missing company Assigned")
+			}
+		}
 		const projectNameObj = values.find(item => item.id === "project_name")
-		!!projectNameObj.value &&
-			(mondayObj.projectName = projectNameObj.value.replace(/['"]+/g, ""))
+		if (!!projectNameObj.value) {
+			mondayObj.projectName = projectNameObj.value.replace(/['"]+/g, "")
+		} else {
+			throw new Error("missing project name")
+		}
 
 		const positionObj = values.find(item => item.id === "text2")
-		!!positionObj.value &&
-			(mondayObj.contactPosition = positionObj.value.replace(/['"]+/g, ""))
+		if (!!positionObj.value) {
+			mondayObj.contactPosition = positionObj.value.replace(/['"]+/g, "")
+		} else {
+			if (mondayObj.isNewClient) throw new Error("missing position")
+		}
 
 		const managerObj = values.find(item => item.id === "person")
 		if (!!JSON.parse(managerObj.value).personsAndTeams[0]) {
@@ -280,30 +317,35 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		} else {
 			throw new Error("missing sm info")
 		}
+
 		//get slackUsers emails array
 		const slackItem = values.find(item => item.id === "people")
-		const slackObj = JSON.parse(slackItem.value)
-		const slackUsers = slackObj.personsAndTeams
-		const slackIds = slackUsers.map(user => user.id)
-		console.log(slackIds)
-		if (slackIds.length === 0) {
-			throw new Error("missing Slack Users")
-		} else {
-			const getUsers = async () => {
-				return Promise.all(slackIds.map(id => getPmInfo(id)))
+		if (!!JSON.parse(slackItem.value)) {
+			const slackObj = JSON.parse(slackItem.value)
+			const slackUsers = slackObj.personsAndTeams
+			const slackIds = slackUsers.map(user => user.id)
+			if (slackIds.length === 0) {
+				if (!consulting && !onlyProject) throw new Error("missing Slack Users")
+				/* if (mondayObj.isNewClient) throw new Error("missing Form Info") */
+			} else {
+				const getUsers = async () => {
+					return Promise.all(slackIds.map(id => getPmInfo(id)))
+				}
+
+				let slackEmails = []
+
+				getUsers()
+					.then(
+						data =>
+							(slackEmails = data.map(email => {
+								return email.email
+							}))
+					)
+					.then(() => (mondayObj.slackUsers = slackEmails))
+					.catch(err => console.log(err))
 			}
-
-			let slackEmails = []
-
-			getUsers()
-				.then(
-					data =>
-						(slackEmails = data.map(email => {
-							return email.email
-						}))
-				)
-				.then(() => (mondayObj.slackUsers = slackEmails))
-				.catch(err => console.log(err))
+		} else {
+			throw new Error("missing slack users")
 		}
 
 		//getting itemIdfor the correct Form
@@ -312,7 +354,8 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		console.log(linkObj)
 		if (mondayObj.isNewClient) {
 			if (!linkObj.linkedPulseIds) {
-				throw new Error("missing Form Info")
+				if (!consulting) throw new Error("missing Form Info")
+				if (mondayObj.isNewClient) throw new Error("missing Form Info")
 			} else {
 				const formItemId = linkObj.linkedPulseIds[0].linkedPulseId
 				mondayObj.formLink = await getLink(formItemId)
@@ -327,19 +370,27 @@ const getValuesFromMonday = async (boardId, itemId) => {
 		return mondayObj
 	} catch (error) {
 		console.log("Error when reading mondayObj", error)
-		changeMondayStatus(constants.START_FORM_STATUS, "Missing Info", itemId)
+		changeMondayStatus(
+			constants.START_FORM_STATUS,
+			"Missing Info",
+			itemId,
+			"missing info"
+		)
 		return 0
 	}
 }
-
-const getResult = async (boardId, itemId) => {
+const test = async () => {
+	await getValuesFromMonday(413267102, 442535972, true)
+}
+test()
+/* const getResult = async (boardId, itemId, consulting) => {
 	try {
 		console.log("get result ", boardId, itemId)
-		return await getValuesFromMonday(boardId, itemId)
+		return await getValuesFromMonday(boardId, itemId, consulting)
 	} catch (error) {
 		console.log(error)
 	}
-}
+} */
 
 //Update forms from type form functions
 
@@ -1158,13 +1209,13 @@ const databaseMigration = async () => {
 		console.log(error)
 	}
 }
-const test = async () => {
+/* const test = async () => {
 	try {
 		await databaseMigration()
 	} catch (error) {
 		console.error(error)
 	}
-}
+} */
 /* test() */
 const databaseFirebaseToMonday = async () => {
 	// create group
@@ -1669,7 +1720,7 @@ const getClientId = async itemId => {
 	return clientId
 }
 
-module.exports.getResult = getResult
+module.exports.getValuesFromMonday = getValuesFromMonday
 module.exports.updateForms = updateForms
 module.exports.getSubmissionData = getSubmissionData
 module.exports.changeMondayStatus = changeMondayStatus

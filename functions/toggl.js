@@ -28,13 +28,19 @@ const createClient = async (clientName, clientNumber, itemId, action) => {
 			monday.changeMondayStatus(
 				constants.TOGGL_FORM_STATUS,
 				"Completed",
-				itemId
+				itemId,
+				"toggl"
 			)
 			return response.data.id
 		})
 		.catch(err => {
 			console.log("error when creating client on toggl", err.message)
-			monday.changeMondayStatus(constants.TOGGL_FORM_STATUS, "Error", itemId)
+			monday.changeMondayStatus(
+				constants.TOGGL_FORM_STATUS,
+				"Error",
+				itemId,
+				"error in toggl"
+			)
 			sendGrid.sendErrorEmail(
 				`toggl/createClient client Name: ${clientName} itemId ${itemId}`,
 				action,
@@ -81,12 +87,18 @@ const createProject = async (
 			monday.changeMondayStatus(
 				constants.TOGGL_FORM_STATUS,
 				"Completed",
-				itemId
+				itemId,
+				"toggl"
 			)
 		})
 		.catch(err => {
 			console.log("error when creating toggl project", err.message)
-			monday.changeMondayStatus(constants.TOGGL_FORM_STATUS, "Error", itemId)
+			monday.changeMondayStatus(
+				constants.TOGGL_FORM_STATUS,
+				"Error",
+				itemId,
+				"error in toggl"
+			)
 			sendGrid.sendErrorEmail(
 				`toggl/createProject- projectname ${projectName} clientid ${clientId}-itemId${itemId}`,
 				action,
