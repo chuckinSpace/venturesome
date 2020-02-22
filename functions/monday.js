@@ -1,5 +1,3 @@
-/*TODO: saving monday to database error date is not date not text */
-
 require("dotenv").config()
 const moment = require("moment")
 const axios = require("axios")
@@ -494,14 +492,7 @@ const getSubmissionData = async (boardId, itemId) => {
 		console.log("error when creating submission obj", error)
 	}
 }
-const test = async () => {
-	try {
-		await getSubmissionData(411284598, 466835969)
-	} catch (error) {
-		console.error(error)
-	}
-}
-/* test() */
+
 const getBoardByClientId = async clientId => {
 	console.log(clientId, typeof clientId)
 
@@ -999,7 +990,8 @@ const databaseMigration = async () => {
 				slackUsers: "",
 				togglClientId: "",
 				createdAt: new Date(),
-				tag: ""
+				tag: "",
+				smId: ""
 			}
 
 			const name = client.title.split(" | ")
@@ -1012,6 +1004,12 @@ const databaseMigration = async () => {
 				console.log(client.items)
 				const id = contact.id
 				!!id && (globalItemId = parseInt(id))
+
+				const smObj = contact.column_values.find(item => item.id === "people")
+				const smId =
+					!!JSON.parse(smObj.value) &&
+					JSON.parse(smObj.value).personsAndTeams[0].id
+				!!smId && (clientObj.smId = smId)
 
 				const clientId =
 					!!clientIdObj.value && clientIdObj.value.replace(/['"]+/g, "")
@@ -1160,7 +1158,14 @@ const databaseMigration = async () => {
 		console.log(error)
 	}
 }
-
+const test = async () => {
+	try {
+		await databaseMigration()
+	} catch (error) {
+		console.error(error)
+	}
+}
+/* test() */
 const databaseFirebaseToMonday = async () => {
 	// create group
 	try {
@@ -1604,6 +1609,7 @@ const parseObjForFirebase = async (columnId, value) => {
 	const MOBILE_PHONE = "phone"
 	const EMAIL = "email"
 	const BIRTHDATE = "due_date"
+	const SM = "people"
 
 	if (columnId === POSITION) {
 		return { position: !!value ? value.value : "" }
@@ -1630,7 +1636,37 @@ const parseObjForFirebase = async (columnId, value) => {
 		return {
 			birthday: !!value ? value.date : ""
 		}
+	} else if (columnId === SM) {
+		return {
+			smId: !!value.personsAndTeams[0] ? value.personsAndTeams[0].id : ""
+		}
 	}
+}
+
+const getClientId = async itemId => {
+	const body = {
+		query: `query {
+		items (ids: ${itemId}) {
+		column_values {
+		  title
+		  id
+		  value
+		}
+		}
+		}`
+	}
+	const response = await postMonday(
+		body,
+		`getting clientid from item is ${itemId}`
+	)
+	const value = response.data.items[0]
+
+	const clientObj =
+		!!value && value.column_values.find(item => item.id === "client_nr_")
+
+	const clientId = !!clientObj.value && clientObj.value.replace(/['"]+/g, "")
+
+	return clientId
 }
 
 module.exports.getResult = getResult
@@ -1652,3 +1688,4 @@ module.exports.getNewContactInfo = getNewContactInfo
 module.exports.getGroupFirstItem = getGroupFirstItem
 module.exports.copyClientInfo = copyClientInfo
 module.exports.parseObjForFirebase = parseObjForFirebase
+module.exports.getClientId = getClientId

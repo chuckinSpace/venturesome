@@ -1,8 +1,6 @@
 const sgMail = require("@sendgrid/mail")
 sgMail.setApiKey(process.env.SG_API_KEY)
 require("dotenv").config()
-/* const VENTURESOME_TEMPLATE_ID = "d-61e27a20903f47f7bb06b49b12710526"
-const MONEYTREE_TEMPLATE_ID = "d-e1874833f3814ed0a1b8b540f18f24ba" */
 
 const sendOnboardingEmail = async (
 	contactEmail,
@@ -16,20 +14,33 @@ const sendOnboardingEmail = async (
 	let projectOrAccount = ""
 	let noun = ""
 	let lineColor = ""
+	let eurenEure = ""
 	if (companyAssigned === "VENTURESOME") {
+		if (!!pmObj.phone && pmObj.phone.toLowerCase() === "female") {
+			projectOrAccount = "Projektmanagerin"
+			noun = "Sie"
+			eurenEure = "eure zuständige"
+		} else {
+			projectOrAccount = "Projektmanager"
+			noun = "Er"
+			eurenEure = "euren zuständigen"
+		}
 		emailFrom = "office@venturesome.ch"
-		projectOrAccount = "Projektmanager"
 		lineColor = "#2CB4FF"
 	} else if (companyAssigned === "moneytree") {
+		if (!!pmObj.phone && pmObj.phone.toLowerCase() === "female") {
+			projectOrAccount = "Account Managerin"
+			noun = "Sie"
+			eurenEure = "eure zuständige"
+		} else {
+			projectOrAccount = "Account Manager"
+			noun = "Er"
+			eurenEure = "euren zuständigen"
+		}
 		emailFrom = "office@moneytree.ch"
-		projectOrAccount = "Account Manager"
 		lineColor = "#36CE78"
 	}
-	if (!!pmObj.phone && pmObj.phone.toLowerCase() === "female") {
-		noun = "Sie"
-	} else {
-		noun = "Er"
-	}
+
 	const pmFirstName = pmObj.name.split(" ")[0]
 	const msg = {
 		from: emailFrom,
@@ -58,7 +69,8 @@ const sendOnboardingEmail = async (
 					smMobile: smObj.mobile,
 					erSie: noun,
 					projectOrAccount: projectOrAccount,
-					lineColor: lineColor
+					lineColor: lineColor,
+					eurenEure: eurenEure
 				}
 			}
 		]

@@ -3,7 +3,7 @@
 		- position and categoryu make mandatory
 		- position from onboardgin not copying to monday DB
 		- start date and gift on second projects? from what date
-		- add error to monday board and email to me	
+	
 		- google drive on old project ?
 
 */
@@ -133,8 +133,6 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 		throw new Error("Error the completing onboarding process")
 	}
 })
-const test = async () => {}
-/* test() */
 
 const createClientObj = async (
 	clientId,
@@ -736,6 +734,7 @@ exports.updateContactDb = functions.https.onRequest(async (req, res) => {
 	const itemId = req.body.event.pulseId
 	const columnId = req.body.event.columnId
 	const value = req.body.event.value
+	const boardId = req.body.event.boardId
 	console.log(req.body.event)
 	if (
 		columnId === "client_nr_" ||
@@ -750,6 +749,18 @@ exports.updateContactDb = functions.https.onRequest(async (req, res) => {
 		columnId === "date4"
 	) {
 		console.log("client Info detected, no changes allowed")
+		console.log("value coming", value.personsAndTeams)
+		const clientId = await monday.getClientId(itemId)
+		if (columnId === "people") {
+			const objToSend = await monday.parseObjForFirebase(columnId, value)
+			await firebase.updateFirebase(
+				"clients",
+				"idNumber",
+				clientId,
+				objToSend,
+				"updatgin sm id on client"
+			)
+		}
 		res.send({ message: "success" })
 	} else {
 		console.log("contact info detected about to change database")
@@ -769,6 +780,13 @@ exports.updateContactDb = functions.https.onRequest(async (req, res) => {
 		res.send({ message: "success" })
 	}
 })
+/* const test = async () => {
+	const clientId = await monday.getClientId(467214504)
+		const objToSend = await monday.parseObjForFirebase(columnId, value)
+			console.log(objToSend)
+
+}
+test() */
 exports.consulting = functions.https.onRequest(async (req, res) => {
 	console.log("consulting workflow")
 	const itemId = req.body.event.pulseId
