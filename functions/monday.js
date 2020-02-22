@@ -382,7 +382,7 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 const test = async () => {
 	await getValuesFromMonday(413267102, 442535972, true)
 }
-test()
+/* test() */
 /* const getResult = async (boardId, itemId, consulting) => {
 	try {
 		console.log("get result ", boardId, itemId)
@@ -1204,6 +1204,8 @@ const databaseMigration = async () => {
 
 			await firebase.createDocument("clients", clientObj, "create client")
 		})
+		// call google ids to firebase
+		// call toggl ids to firebase
 		return clientsArray
 	} catch (error) {
 		console.log(error)

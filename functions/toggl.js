@@ -4,6 +4,7 @@ const WID = process.env.TOGGL_WID
 const monday = require("./monday")
 const constants = require("./constants")
 const sendGrid = require("./sendGrid")
+const firebase = require("./firebase")
 
 const createClient = async (clientName, clientNumber, itemId, action) => {
 	console.log("creating toggl client", clientName)
@@ -105,6 +106,58 @@ const createProject = async (
 				err.message
 			)
 		})
+}
+const getClientsId = async () => {
+	let options = {
+		method: "GET",
+		url: `https://www.toggl.com/api/v8/workspaces/${WID}/clients`,
+		auth: {
+			user: process.env.TOGGL_USER,
+			pass: "api_token"
+		}
+	}
+
+	return rp(options)
+		.then(response => {
+			return JSON.parse(response)
+		})
+		.catch(err => {
+			console.log("geting clients", err.message)
+		})
+}
+
+const toggleIdsToFirebase = async () => {
+	try {
+		const ids = await getClientsId()
+
+		const togglIds = ids.map(client => {
+			const togglObj = {
+				clientId: "",
+				togglId: ""
+			}
+			const name = client.name.split(" ", 1)
+			togglObj.clientId = name
+			togglObj.togglId = client.id
+
+			return togglObj
+		})
+		togglIds.map(async client => {
+			await firebase.updateFirebase(
+				"clients",
+				"idNumber",
+				client.clientId[0],
+				{ togglClientId: client.togglId },
+				"saving toggl id to firebase"
+			)
+		})
+	} catch (error) {
+		console.error(error)
+	}
+}
+try {
+	/* 	toggleIdsToFirebase() */
+} catch (error) {
+	console.error(error)
 }
 
 module.exports.createClient = createClient

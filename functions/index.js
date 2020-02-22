@@ -1,10 +1,10 @@
 /*
  TODO:   -add category to onboarding and database
 		- position and categoryu make mandatory
-		- position from onboardgin not copying to monday DB
+		- for old clients we need toggl id on the client
 		- start date and gift on second projects? from what date
 	
-		- google drive on old project ?
+		
 
 */
 const functions = require("firebase-functions")
