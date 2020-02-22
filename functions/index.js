@@ -889,47 +889,9 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 						itemId
 					)
 
-					if (projectObj.companyAssigned === "VENTURESOME") {
-						//add task "send welcome card" with address on update
-						await monday.sendWelcome(
-							clientObj,
-							"VENTURESOME",
-							projectObj.pmId,
-							contactObj
-						)
-						//add to Video project Overview
-						/* 	await monday.addVideoProjectBoard(
-							clientObj.idNumber,
-							yearCreated,
-							projectObj.clientProjectNumber,
-							clientObj.name,
-							projectObj.name,
-							projectObj.pmId,
-							clientObj.tag
-						)  */
-						//create frameio project
-					} else if (projectObj.companyAssigned === "moneytree") {
-						await monday.sendWelcome(
-							clientObj,
-							"moneytree",
-							projectObj.pmId,
-							contactObj
-						)
-						await monday.addMoneyTreeAccount(
-							clientObj.idNumber,
-							yearCreated,
-							projectObj.clientProjectNumber,
-							clientObj.name,
-							projectObj.name,
-							projectObj.pmId,
-							clientObj.tag
-						)
-						console.log("new client money tree before setting tlg to completed")
-					}
-
 					// add to Project overview Inbox always
 
-					await monday.addProjectOverview(
+					await monday.addProjectOverviewConsulting(
 						clientObj.idNumber,
 						yearCreated,
 						projectObj.clientProjectNumber,
@@ -982,20 +944,6 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 						projectObj,
 						"create project"
 					)
-
-					if (projectObj.companyAssigned === "VENTURESOME") {
-						// slack to not needed, onboarding not needed, monday db
-					} else if (projectObj.companyAssigned === "moneytree") {
-						await monday.addMoneyTreeAccount(
-							clientObj.idNumber,
-							yearCreated,
-							projectObj.clientProjectNumber,
-							clientObj.name,
-							projectObj.name,
-							projectObj.pmId,
-							clientObj.tag
-						)
-					}
 
 					// add to Project overview Inbox always
 					const firebaseClient = await firebase.getClientInfo(

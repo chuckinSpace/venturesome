@@ -9,6 +9,7 @@ import TableContainer from "@material-ui/core/TableContainer"
 import TableHead from "@material-ui/core/TableHead"
 import TableRow from "@material-ui/core/TableRow"
 import Paper from "@material-ui/core/Paper"
+import { Grid, Typography } from "@material-ui/core"
 
 const Home = ({ history }) => {
 	useFirestoreConnect([
@@ -18,7 +19,16 @@ const Home = ({ history }) => {
 	const clients = useSelector(state => state.firestore.ordered.clients)
 
 	if (!isLoaded(clients)) {
-		return <div>Loading...</div>
+		return (
+			<Grid
+				container
+				justify="center"
+				alignItems="center"
+				alignContent="center"
+			>
+				<Typography>Loading...</Typography>
+			</Grid>
+		)
 	} else {
 		/* const clientCell = clients.map(client => {
 			return (

@@ -687,6 +687,80 @@ const addProjectOverview = async (
 	}
 }
 
+const addProjectOverviewConsulting = async (
+	clientNumber,
+	year,
+	clientProjectNumber,
+	clientName,
+	projectName,
+	pmId,
+	createdAt,
+	smId,
+	companyAssigned,
+	tag
+) => {
+	let dateTime = moment(createdAt).format("YYYY-MM-DD")
+	let giftDate = moment(createdAt)
+		.add(3, "M")
+		.format("YYYY-MM-DD")
+
+	let columValues = ""
+	console.log(
+		"bedfore creating project overview",
+		clientNumber,
+		year,
+		clientProjectNumber,
+		clientName,
+		projectName,
+		pmId,
+		createdAt,
+		smId,
+		companyAssigned
+	)
+
+	columValues = JSON.stringify({
+		person: { id: pmId },
+		datum4: { date: dateTime },
+		pm: { id: smId },
+		tags: { text: "testTag", tag_ids: [tag] },
+		status5: { label: "Consulting" }
+	})
+
+	const body = {
+		query: `
+      mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
+        create_item (
+          board_id: $boardId,
+          group_id: $groupId,
+          item_name: $itemName,
+          column_values: $columnValues
+        ) {
+          id
+        }
+      }
+      `,
+		variables: {
+			boardId: PROJECT_OVERVIEW_ID,
+			groupId: "new_group2147",
+			itemName: `TEST${clientNumber} | ${clientName} | Consulting`,
+			columnValues: columValues
+		}
+	}
+	try {
+		const response = await postMonday(
+			body,
+			"adding item to Inbox Project Overview"
+		)
+		const overviewId = response.data.create_item.id
+		return parseInt(overviewId)
+	} catch (error) {
+		throw new Error(
+			"error when creating board for Video Project overview",
+			error
+		)
+	}
+}
+
 const addMoneyTreeAccount = async (
 	clientNumber,
 	year,
@@ -1558,6 +1632,7 @@ const parseObjForFirebase = async (columnId, value) => {
 		}
 	}
 }
+
 module.exports.getResult = getResult
 module.exports.updateForms = updateForms
 module.exports.getSubmissionData = getSubmissionData
@@ -1566,6 +1641,7 @@ module.exports.setMondayClientId = setMondayClientId
 module.exports.getBoardByClientId = getBoardByClientId
 module.exports.addVideoProjectBoard = addVideoProjectBoard
 module.exports.addProjectOverview = addProjectOverview
+module.exports.addProjectOverviewConsulting = addProjectOverviewConsulting
 module.exports.addMoneyTreeAccount = addMoneyTreeAccount
 module.exports.saveClientToMondayDatabase = saveClientToMondayDatabase
 module.exports.createTag = createTag
