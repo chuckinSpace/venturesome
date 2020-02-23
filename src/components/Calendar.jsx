@@ -20,8 +20,8 @@ function Calendar() {
 			<Scheduler
 				data={[
 					{
-						startDate: "2020-02-21 10:00",
-						endDate: "2020-02-21 11:00",
+						startDate: "2020-02-23 10:00",
+						endDate: "2020-02-23 11:00",
 						title: "Meeting"
 					},
 					{
@@ -33,7 +33,7 @@ function Calendar() {
 				height={400}
 			>
 				<ViewState
-					defaultCurrentDate={new Date()}
+					defaultCurrentDate="2020-02-23"
 					defaultCurrentViewName="Week"
 				/>
 

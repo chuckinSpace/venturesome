@@ -6,6 +6,7 @@ const Databox = ({ history, client }) => {
 	const handleReport = () => {
 		history.push(`/clients/${client.idNumber}/databox`)
 	}
+	const handleTextReport = () => {}
 	return (
 		<Grid container style={{ marginLeft: 20 }}>
 			<Grid item xs={8}>
@@ -32,6 +33,23 @@ const Databox = ({ history, client }) => {
 					style={{ marginLeft: 20 }}
 					allowFullScreen
 				/>
+			</Grid>
+			<Grid
+				item
+				xs={12}
+				container
+				justify="flex-end"
+				alignContent="flex-end"
+				alignItems="flex-end"
+				style={{ marginRight: 20 }}
+			>
+				<Button
+					variant="outlined"
+					color="primary"
+					onClick={() => handleTextReport()}
+				>
+					TEXT REPORT
+				</Button>
 			</Grid>
 		</Grid>
 	)
