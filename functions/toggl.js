@@ -155,7 +155,7 @@ const toggleIdsToFirebase = async () => {
 	}
 }
 try {
-	/* 	toggleIdsToFirebase() */
+	toggleIdsToFirebase()
 } catch (error) {
 	console.error(error)
 }

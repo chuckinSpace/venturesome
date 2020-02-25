@@ -29,7 +29,7 @@ function App() {
 					<Route exact path="/onboarding" component={Onboarding} />
 					<Route exact path="/clients/:id/archives" component={Archives} />
 					<Route exact path="/clients/:id/databox" component={Databox} />
-					<Redirect strict from="/" to="/login" />
+					<Redirect strict from="/" to="/clients/112" />
 				</Switch>
 			</Grid>
 		</Router>

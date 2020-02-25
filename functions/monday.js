@@ -47,13 +47,17 @@ const setMondayClientId = async (boardId, itemId, clientId) => {
 
 	const body = {
 		query: `
-    mutation ($boardId: Int!, $itemId: Int!,$columnId :String!, $value: JSON!, ) {
-      change_column_value(
-        board_id: $boardId, item_id: $itemId, column_id: $columnId, value: $value) {
-        id
-      }
-    }
-    `,
+    		mutation ($boardId: Int!, $itemId: Int!,$columnId :String!, $value: JSON!, ) {
+     			 change_column_value(
+						board_id: $boardId, 
+						item_id: $itemId, 
+						column_id: $columnId, 
+						value: $value
+						) {
+       					   id
+     				      }
+   				       }
+    		`,
 		variables: {
 			boardId: boardId,
 			itemId: itemId,
@@ -70,13 +74,17 @@ const changeMondayStatus = async (cellId, label, itemId, action) => {
 
 	const body = {
 		query: `
-    mutation ($boardId: Int!, $itemId: Int!, $columnValues: JSON!, $columnId :String!) {
-      change_column_value(
-        board_id: $boardId, item_id: $itemId, column_id: $columnId, value: $columnValues) {
-        id
-      }
-    }
-    `,
+    		mutation ($boardId: Int!, $itemId: Int!, $columnValues: JSON!, $columnId :String!) {
+      			change_column_value(
+					board_id: $boardId, 
+					item_id: $itemId, 
+					column_id: $columnId, 
+					value: $columnValues) 
+					{
+        				id
+      				}
+    		}
+    		`,
 		variables: {
 			boardId: onboardingId,
 			itemId: itemId,
@@ -379,18 +387,6 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 		return 0
 	}
 }
-const test = async () => {
-	await getValuesFromMonday(413267102, 442535972, true)
-}
-/* test() */
-/* const getResult = async (boardId, itemId, consulting) => {
-	try {
-		console.log("get result ", boardId, itemId)
-		return await getValuesFromMonday(boardId, itemId, consulting)
-	} catch (error) {
-		console.log(error)
-	}
-} */
 
 //Update forms from type form functions
 
@@ -694,17 +690,17 @@ const addProjectOverview = async (
 
 	const body = {
 		query: `
-      mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
-        create_item (
-          board_id: $boardId,
-          group_id: $groupId,
-          item_name: $itemName,
-          column_values: $columnValues
-        ) {
-          id
-        }
-      }
-      `,
+      			mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
+        			create_item (
+        				  board_id: $boardId,
+        				  group_id: $groupId,
+        				  item_name: $itemName,
+       					  column_values: $columnValues
+       					 ) {
+          					id
+       					 	}
+     				 }
+     				 `,
 		variables: {
 			boardId: PROJECT_OVERVIEW_ID,
 			groupId: P_OVER_INBOX_GROUP_ID,
@@ -770,17 +766,17 @@ const addProjectOverviewConsulting = async (
 
 	const body = {
 		query: `
-      mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
-        create_item (
-          board_id: $boardId,
-          group_id: $groupId,
-          item_name: $itemName,
-          column_values: $columnValues
-        ) {
-          id
-        }
-      }
-      `,
+      		mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
+       			 create_item (
+        			  board_id: $boardId,
+        			  group_id: $groupId,
+        			  item_name: $itemName,
+       				  column_values: $columnValues
+     				  ){
+     				     id
+						}
+					}
+				`,
 		variables: {
 			boardId: PROJECT_OVERVIEW_ID,
 			groupId: "new_group2147",
@@ -998,7 +994,7 @@ const databaseMigration = async () => {
 					boards(ids:463586872) {
 						groups {
 							title
-						items(limit: 120) {
+						items(limit: 130) {
 							name
 							id
 								column_values {
@@ -1017,6 +1013,7 @@ const databaseMigration = async () => {
 		const clientsArray = []
 		const result = await postMonday(body, `querying monday database`)
 		const clients = result.data.boards[0].groups
+
 		let globalItemId = ""
 		await clients.map(async client => {
 			const clientObj = {
@@ -1052,7 +1049,7 @@ const databaseMigration = async () => {
 				const clientIdObj = contact.column_values.find(
 					item => item.id === "client_nr_"
 				)
-				console.log(client.items)
+
 				const id = contact.id
 				!!id && (globalItemId = parseInt(id))
 
@@ -1065,7 +1062,7 @@ const databaseMigration = async () => {
 				const clientId =
 					!!clientIdObj.value && clientIdObj.value.replace(/['"]+/g, "")
 				!!clientId && (clientObj.idNumber = clientId)
-
+				console.log(clientId)
 				const category = contact.column_values.find(item => item.id === "text1")
 				!!category.value &&
 					(clientObj.category = category.value.replace(/['"]+/g, ""))
@@ -1192,9 +1189,7 @@ const databaseMigration = async () => {
 					contactObj,
 					"creating contact firebase"
 				)
-				/* console.log(contactId) */
-				/* clientObj.contacts.push(contactId)
-				console.log("clientObj after push", clientObj.contacts) */
+
 				return contactObj
 			})
 			if (clientObj.tag === "") {
@@ -1211,13 +1206,13 @@ const databaseMigration = async () => {
 		console.log(error)
 	}
 }
-/* const test = async () => {
+const test = async () => {
 	try {
 		await databaseMigration()
 	} catch (error) {
 		console.error(error)
 	}
-} */
+}
 /* test() */
 const databaseFirebaseToMonday = async () => {
 	// create group
@@ -1700,12 +1695,12 @@ const getClientId = async itemId => {
 	const body = {
 		query: `query {
 		items (ids: ${itemId}) {
-		column_values {
-		  title
-		  id
-		  value
-		}
-		}
+			column_values {
+		  		title
+		  		id
+		  		value
+				}
+			}
 		}`
 	}
 	const response = await postMonday(
