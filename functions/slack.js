@@ -7,17 +7,21 @@ const sendGrid = require("./sendGrid")
 
 // Create a new instance of the WebClient class with the token read from your environment variable
 /* const web = new WebClient(process.env.SLACK_TOKEN) */
-const web = new WebClient(process.env.SLACK_TOKEN)
+const web = new WebClient(process.env.SLACK_NICK_TOKEN)
 const createSlackChannel = async (users, clientName, itemId, action) => {
 	console.log("in create slack channel, users coming", users, clientName)
 	try {
 		const newChannel = await web.groups.create({ name: clientName })
 		const channelId = await newChannel.group.id
+		//adding me for testing period
+		users.push({ id: "URR2P0WTX" })
 		console.log(channelId, "channel id")
 
-		await users.map(user =>
-			web.groups.invite({ channel: channelId, user: user.id })
-		)
+		await users.map(user => {
+			if (user.id !== "UL4CCS4AE") {
+				web.groups.invite({ channel: channelId, user: user.id })
+			}
+		})
 
 		await monday.changeMondayStatus(
 			constants.SLACK_FORM_STATUS,
@@ -43,12 +47,17 @@ const createSlackChannel = async (users, clientName, itemId, action) => {
 }
 const test = async () => {
 	try {
-		const newChannel = await web.groups.create({ name: "TEST" })
+		await createSlackChannel(
+			[{ id: "UL4CCS4AE" }],
+			"TEST-Carlos",
+			473132564,
+			"creating channel"
+		)
 	} catch (error) {
 		console.log(error)
 	}
 }
-test()
+/* test() */
 const sendClientInvite = async (clientEmail, channelId, itemId, action) => {
 	try {
 		var options = {
@@ -97,6 +106,7 @@ const sendClientInvite = async (clientEmail, channelId, itemId, action) => {
 }
 
 const getUserbyEmail = async (userEmail, itemId, action) => {
+	console.log("in users email", userEmail, action)
 	try {
 		const response = await web.users.lookupByEmail({ email: userEmail })
 		await monday.changeMondayStatus(
@@ -231,7 +241,7 @@ const slackCreationWorkflow = async (clientFirebase, itemId) => {
 				itemId,
 				"sending messages slack"
 			)
-			/* await sendWelcomeMessage(clientChannelId, "client", clientFirebase.name) */
+
 			await sendClientInvite(
 				clientFirebase.slackEmail,
 				clientChannelId.toString(),

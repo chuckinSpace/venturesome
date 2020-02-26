@@ -1,3 +1,6 @@
+/*TODO: nick back to bcc
+ */
+
 const sgMail = require("@sendgrid/mail")
 sgMail.setApiKey(process.env.SG_API_KEY)
 require("dotenv").config()
@@ -61,6 +64,9 @@ const sendOnboardingEmail = async (
 				bcc: [
 					{
 						email: "carlos.moyano@venturesome.ch"
+					},
+					{
+						email: "nick.metzger@venturesome.ch"
 					}
 				],
 				dynamic_template_data: {
