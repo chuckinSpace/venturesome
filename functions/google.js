@@ -2,7 +2,7 @@ const fs = require("fs")
 const readline = require("readline")
 const { google } = require("googleapis")
 require("dotenv").config()
-/* const request = require("request") */
+
 const firebase = require("./firebase")
 
 // If modifying these scopes, delete token.json.
@@ -165,7 +165,7 @@ async function createFolder(auth) {
 			const xxProject = fileMetadata(
 				`${yearCreated}_${data.clientProjectNumber
 					.toString()
-					.padStart(2, "0")}_${data.name}`,
+					.padStart(2, "0")} ${data.name}`,
 				projekteGewonnenId.data.id
 			)
 			const xxProjectId = await generateFolder(xxProject)
@@ -233,7 +233,7 @@ async function createFolder(auth) {
 			const xxProjectGewonnen1 = fileMetadata(
 				`${yearCreated}_${data.clientProjectNumber
 					.toString()
-					.padStart(2, "0")}_${data.name}`,
+					.padStart(2, "0")} ${data.name}`,
 				data.projectsFolderId
 			)
 			const xxProjectGewonnenId1 = await generateFolder(xxProjectGewonnen1)
@@ -288,31 +288,5 @@ async function createFolder(auth) {
 		)
 	}
 }
-
-/* function listFiles(auth) {
-	const teamDriveId = process.env.TEAM_DRIVE_ID
-	const key = auth.credentials.access_token
-
-	var headers = {
-		Authorization: `Bearer ${key}`,
-		Accept: "application/json"
-	}
-
-	var options = {
-		url: `https://www.googleapis.com/drive/v2/files/0AGMJwxMDT3DFUk9PVA/children?maxResults=100&key=AIzaSyCk6ISCQmGU7swxw9W-1nRlBBy7X_0Yl6s`,
-		headers: headers
-	}
-
-	function callback(error, response, body) {
-		console.log("here", body, response)
-		if (error) console.log("error", error)
-		if (!error && response.statusCode == 200) {
-			console.log("no error", body)
-		}
-	}
-
-	request(options, callback)
-}
- */
 
 module.exports.createFolderTree = createFolderTree

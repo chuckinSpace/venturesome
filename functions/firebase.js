@@ -77,13 +77,7 @@ const createDocument = async (collection, object, action) => {
 		)
 	}
 }
-const test = async () => {
-	console.log(
-		await createDocument("contacts", { clientId: 1 }, "creating contact")
-	)
-}
-/* test()
- */
+
 const getPrimaryContactId = async clientId => {
 	console.log("getPrimaryContact")
 
@@ -109,56 +103,6 @@ const updateContact = async (itemId, objectToStore, action) => {
 		console.error(error, action)
 	}
 }
-
-//creates the project on firebase "projects" collection using the project obj
-/* const createProject = async project => {
-	console.log("project obj going to firebase", project)
-	db.collection("projects")
-		.add(project)
-		.then(doc => console.log("success creating project on firebase", doc.id))
-		.catch(err => console.log("error creating project on firebase", err))
-} */
-
-//saves the client id on "staging" collection on firebase
-/* const saveIdstaging = async clientId => {
-	console.log("stagin client id in firebase", clientId)
-	try {
-		const doc = await db.collection("staging").add({
-			clientId: clientId,
-			createdAt: new Date()
-		})
-		const docId = doc.id
-		return docId
-	} catch (error) {
-		console.log("Error when stagind client id ", error)
-	}
-} */
-
-// retrieves the client id from "staging"
-/* const getStagedClientId = async () => {
-	let clientId = ""
-	const querySnapshot = await db
-		.collection("staging")
-		.orderBy("createdAt", "asc")
-		.limit(1)
-		.get()
-	querySnapshot.forEach(doc => (clientId = doc.data().clientId))
-	// delete staged client
-	return clientId
-} */
-// deletes the client id from staging
-/* const deleteStagedClient = async clientId => {
-	let stagedClient = db.collection("staging").where("clientId", "==", clientId)
-	stagedClient
-		.get()
-		.then(function(querySnapshot) {
-			querySnapshot.forEach(function(doc) {
-				doc.ref.delete()
-			})
-		})
-		.then(() => console.log("item succesfully removed"))
-		.catch(err => console.log("error removing staged client", err))
-} */
 
 const updateFirebase = async (
 	collection,
@@ -236,10 +180,6 @@ const getContactId = async itemId => {
 		console.error(error)
 	}
 }
-/* const test = async () => {
-	console.log(await getContactInfo("112"))
-}
-test() */
 
 //exports
 module.exports.getClientId = getClientId

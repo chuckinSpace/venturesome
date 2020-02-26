@@ -227,7 +227,7 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 		}
 
 		const phoneObj = values.find(item => item.id === "phone_number")
-		console.log("phone obj", phoneObj)
+
 		if (!!JSON.parse(phoneObj.value)) {
 			mondayObj.phone = JSON.parse(phoneObj.value).phone
 		} else {
@@ -309,7 +309,6 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 
 		const managerObj = values.find(item => item.id === "person")
 		if (!!JSON.parse(managerObj.value).personsAndTeams[0]) {
-			console.log("asiggning manager id", managerObj)
 			mondayObj.pmId = JSON.parse(
 				managerObj.value
 			).personsAndTeams[0].id.toString()
@@ -358,15 +357,15 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 
 		//getting itemIdfor the correct Form
 		const linkItem = values.find(item => item.id === "link_to_item")
-		const linkObj = JSON.parse(linkItem.value)
-		console.log(linkObj)
-		if (mondayObj.isNewClient) {
-			if (!linkObj.linkedPulseIds) {
-				if (!consulting) throw new Error("missing Form Info")
-				if (mondayObj.isNewClient) throw new Error("missing Form Info")
-			} else {
-				const formItemId = linkObj.linkedPulseIds[0].linkedPulseId
-				mondayObj.formLink = await getLink(formItemId)
+		console.log(linkItem)
+		if (!!linkItem.value && !!JSON.parse(linkItem.value).linkedPulseIds) {
+			console.log("passed")
+			const linkObj = JSON.parse(linkItem.value)
+			const formItemId = linkObj.linkedPulseIds[0].linkedPulseId
+			mondayObj.formLink = await getLink(formItemId)
+		} else {
+			if (mondayObj.isNewClient && !consulting) {
+				throw new Error("missing Form Info")
 			}
 		}
 
@@ -387,7 +386,10 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 		return 0
 	}
 }
-
+const test = async () => {
+	await getValuesFromMonday(413267102, 473370771, false)
+}
+/* test() */
 //Update forms from type form functions
 
 const updateForms = async forms => {
@@ -621,13 +623,13 @@ const addVideoProjectBoard = async (
 		variables: {
 			boardId: VIDEO_PROJECTS_OVERVIEW_BOARD_ID,
 			groupId: GROUP_ID_P_OVER_CURR_VIDEO_PROJ,
-			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber
+			itemName: `${clientNumber}_${year}_${clientProjectNumber
 				.toString()
 				.padStart(2, "0")} | ${clientName} | ${projectName}`,
 			columnValues: JSON.stringify({
 				status: { label: "On it!" },
 				person: { personsAndTeams: [{ id: pmId, kind: "person" }] },
-				tags: { text: "testTag", tag_ids: [tag] }
+				tags: { text: "{test}Tag", tag_ids: [tag] }
 			})
 		}
 	}
@@ -676,7 +678,7 @@ const addProjectOverview = async (
 			person: { id: pmId },
 			datum4: { date: dateTime },
 			pm: { id: smId },
-			tags: { text: "testTag", tag_ids: [tag] }
+			tags: { text: "{test}Tag", tag_ids: [tag] }
 		})
 	} else if (companyAssigned === "moneytree") {
 		columValues = JSON.stringify({
@@ -684,7 +686,7 @@ const addProjectOverview = async (
 			datum4: { date: dateTime },
 			datum: { date: giftDate },
 			pm: { id: smId },
-			tags: { text: "testTag", tag_ids: [tag] }
+			tags: { text: "{test}Tag", tag_ids: [tag] }
 		})
 	}
 
@@ -704,7 +706,7 @@ const addProjectOverview = async (
 		variables: {
 			boardId: PROJECT_OVERVIEW_ID,
 			groupId: P_OVER_INBOX_GROUP_ID,
-			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber
+			itemName: `${clientNumber}_${year}_${clientProjectNumber
 				.toString()
 				.padStart(2, "0")} | ${clientName} | ${projectName}`,
 			columnValues: columValues
@@ -760,7 +762,7 @@ const addProjectOverviewConsulting = async (
 		person: { id: pmId },
 		datum4: { date: dateTime },
 		pm: { id: smId },
-		tags: { text: "testTag", tag_ids: [tag] },
+		tags: { text: "{test}Tag", tag_ids: [tag] },
 		status5: { label: "Consulting" }
 	})
 
@@ -780,7 +782,7 @@ const addProjectOverviewConsulting = async (
 		variables: {
 			boardId: PROJECT_OVERVIEW_ID,
 			groupId: "new_group2147",
-			itemName: `TEST${clientNumber} | ${clientName} | Consulting`,
+			itemName: `${clientNumber} | ${clientName} | Consulting`,
 			columnValues: columValues
 		}
 	}
@@ -833,13 +835,13 @@ const addMoneyTreeAccount = async (
 		variables: {
 			boardId: MONEY_TREE_ACCOUNTS_BOARD_ID,
 			groupId: MONEY_TREE_ACCOUNTS_GROUP_ID,
-			itemName: `TEST${clientNumber}_${year}_${clientProjectNumber
+			itemName: `${clientNumber}_${year}_${clientProjectNumber
 				.toString()
 				.padStart(2, "0")} | ${clientName} | ${projectName}`,
 			columnValues: JSON.stringify({
 				strategie_session: { label: "On it!" },
 				person: { personsAndTeams: [{ id: pmId, kind: "person" }] },
-				tags: { text: "testTag", tag_ids: [tag] }
+				tags: { text: "{test}Tag", tag_ids: [tag] }
 			})
 		}
 	}
@@ -869,7 +871,7 @@ const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
     `,
 		variables: {
 			boardId: CLIENT_DATABASE_BOARD_ID,
-			groupName: `TEST${clientFirebase.idNumber} | ${clientFirebase.name}`
+			groupName: `${clientFirebase.idNumber} | ${clientFirebase.name}`
 		}
 	}
 
@@ -890,7 +892,7 @@ const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
 				},
 				due_date: { date: contactObj.birthday },
 				client_nr_: contactObj.clientId,
-				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
+				tags7: { text: "{test}Tag", tag_ids: [clientFirebase.tag] },
 				date4: { date: dateTime },
 				date: { date: giftDate },
 				text: clientFirebase.name,
@@ -919,7 +921,7 @@ const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
 				},
 				due_date: { date: contactObj.birthday },
 				client_nr_: contactObj.clientId,
-				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
+				tags7: { text: "{test}Tag", tag_ids: [clientFirebase.tag] },
 				date4: { date: dateTime },
 				text: clientFirebase.name,
 				people: {
@@ -1206,14 +1208,7 @@ const databaseMigration = async () => {
 		console.log(error)
 	}
 }
-const test = async () => {
-	try {
-		await databaseMigration()
-	} catch (error) {
-		console.error(error)
-	}
-}
-/* test() */
+
 const databaseFirebaseToMonday = async () => {
 	// create group
 	try {
@@ -1270,7 +1265,7 @@ const databaseFirebaseToMonday = async () => {
 							countryCode: address.country.countryCode,
 							countryName: address.country.countryName
 						},
-						tags7: { text: "testTag", tag_ids: [tag] },
+						tags7: { text: "{test}Tag", tag_ids: [tag] },
 						text1: category,
 						people: {
 							personsAndTeams: [{ id: 8109061, kind: "person" }]
@@ -1390,6 +1385,7 @@ const getPmMondayInfo = async pmId => {
 					photo_original
 					mobile_phone
 					email
+					id
 				title
 					 }
 				}`
@@ -1404,7 +1400,8 @@ const getPmMondayInfo = async pmId => {
 		photo: pmInfo.photo_original,
 		mobile: pmInfo.mobile_phone,
 		email: pmInfo.email,
-		title: pmInfo.title
+		title: pmInfo.title,
+		id: pmInfo.id
 	}
 	return pmInfoObj
 }
@@ -1439,7 +1436,7 @@ const sendWelcome = async (clientObj, companyAssigned, pmId, contactObj) => {
 			groupId: "new_group",
 			itemName: name,
 			columnValues: JSON.stringify({
-				tags: { text: "testTag", tag_ids: [clientObj.tag] },
+				tags: { text: "{test}Tag", tag_ids: [clientObj.tag] },
 				person3: { id: pmId },
 				date: { date: deadline },
 				status1: { label: "Urgent and Important" },
@@ -1630,7 +1627,7 @@ const copyClientInfo = async (clientInfo, boardId, itemId) => {
 			itemId: itemId,
 			columnValues: JSON.stringify({
 				client_nr_: clientId,
-				tags7: { text: "testTag", tag_ids: [tag] },
+				tags7: { text: "{test}Tag", tag_ids: [tag] },
 				date4: { date: startDate },
 				people: {
 					personsAndTeams: [{ id: smId, kind: "person" }]

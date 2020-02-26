@@ -1,6 +1,3 @@
-/* TODO: ON ERROR WORKFLOW FIRST FUNCTION FINISHED
- */
-
 require("dotenv").config()
 var request = require("request")
 const { WebClient } = require("@slack/web-api")
@@ -9,14 +6,14 @@ const constants = require("./constants")
 const sendGrid = require("./sendGrid")
 
 // Create a new instance of the WebClient class with the token read from your environment variable
+/* const web = new WebClient(process.env.SLACK_TOKEN) */
 const web = new WebClient(process.env.SLACK_TOKEN)
-
 const createSlackChannel = async (users, clientName, itemId, action) => {
 	console.log("in create slack channel, users coming", users, clientName)
 	try {
 		const newChannel = await web.groups.create({ name: clientName })
 		const channelId = await newChannel.group.id
-		console.log(channelId, "channel id", typeof users)
+		console.log(channelId, "channel id")
 
 		await users.map(user =>
 			web.groups.invite({ channel: channelId, user: user.id })
@@ -44,7 +41,14 @@ const createSlackChannel = async (users, clientName, itemId, action) => {
 		)
 	}
 }
-
+const test = async () => {
+	try {
+		const newChannel = await web.groups.create({ name: "TEST" })
+	} catch (error) {
+		console.log(error)
+	}
+}
+test()
 const sendClientInvite = async (clientEmail, channelId, itemId, action) => {
 	try {
 		var options = {
@@ -202,13 +206,13 @@ const slackCreationWorkflow = async (clientFirebase, itemId) => {
 			//create 2 channel add slackUsers to both and invite client to 1
 			const companyChannelId = await createSlackChannel(
 				slackIds,
-				`TEST-intern-${clientFirebase.idNumber}-${clientFirebase.name}`,
+				`intern-${clientFirebase.idNumber}-${clientFirebase.name}`,
 				itemId,
 				"creating Internal Channel"
 			)
 			const clientChannelId = await createSlackChannel(
 				slackIds,
-				`TEST-${clientFirebase.idNumber}-${clientFirebase.name}`,
+				`${clientFirebase.idNumber}-${clientFirebase.name}`,
 				itemId,
 				"creating Client channel"
 			)
@@ -238,7 +242,7 @@ const slackCreationWorkflow = async (clientFirebase, itemId) => {
 			//create one private channel add slackUsers
 			const companyChannelId = await createSlackChannel(
 				slackIds,
-				`TEST-intern-${clientFirebase.idNumber}-${clientFirebase.name}`,
+				`intern-${clientFirebase.idNumber}-${clientFirebase.name}`,
 				itemId,
 				"creating Intern channel"
 			)

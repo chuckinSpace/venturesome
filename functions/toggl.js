@@ -154,11 +154,11 @@ const toggleIdsToFirebase = async () => {
 		console.error(error)
 	}
 }
-try {
+/* try {
 	toggleIdsToFirebase()
 } catch (error) {
 	console.error(error)
-}
+} */
 
 module.exports.createClient = createClient
 module.exports.createProject = createProject
