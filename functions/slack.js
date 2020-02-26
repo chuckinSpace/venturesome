@@ -45,19 +45,7 @@ const createSlackChannel = async (users, clientName, itemId, action) => {
 		)
 	}
 }
-const test = async () => {
-	try {
-		await createSlackChannel(
-			[{ id: "UL4CCS4AE" }],
-			"TEST-Carlos",
-			473132564,
-			"creating channel"
-		)
-	} catch (error) {
-		console.log(error)
-	}
-}
-/* test() */
+
 const sendClientInvite = async (clientEmail, channelId, itemId, action) => {
 	try {
 		var options = {

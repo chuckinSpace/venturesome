@@ -1070,3 +1070,7 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 		console.error(error)
 	}
 })
+
+exports.testFunction = functions.https.onRequest(async (req, res) => {
+	return true
+})

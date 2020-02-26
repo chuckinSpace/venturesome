@@ -386,10 +386,7 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 		return 0
 	}
 }
-const test = async () => {
-	await getValuesFromMonday(413267102, 473370771, false)
-}
-/* test() */
+
 //Update forms from type form functions
 
 const updateForms = async forms => {
@@ -740,9 +737,6 @@ const addProjectOverviewConsulting = async (
 	tag
 ) => {
 	let dateTime = moment(createdAt).format("YYYY-MM-DD")
-	let giftDate = moment(createdAt)
-		.add(3, "M")
-		.format("YYYY-MM-DD")
 
 	let columValues = ""
 	console.log(

@@ -119,7 +119,7 @@ const updateFirebase = async (
 			.where(whereParam, "==", whereIqualTo)
 		const snapObj = await getSnapshot.get()
 		for (let client of snapObj.docs) {
-			let clients = await client.ref
+			await client.ref
 				.update(objectToStore)
 				.then(data => console.log("update finished", data))
 		}
