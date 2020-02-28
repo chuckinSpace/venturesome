@@ -187,8 +187,8 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 	try {
 		const response = await postMonday(body, "getValuesFromMonday")
 		const values = await response.data.boards[0].items[0].column_values
+		console.log("values", values)
 		const name = response.data.boards[0].items[0].name
-		let onlyProject = false
 		mondayObj.itemId = itemId
 
 		const isNewClientItem = values.find(item => item.id === CLIENT_ID_ID)
@@ -197,7 +197,7 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 			mondayObj.clientId = isNewClientItem.value.replace(/['"]+/g, "")
 		}
 		mondayObj.isNewClient = isNewClient
-		if (!mondayObj.isNewClient) onlyProject = true
+
 		if (mondayObj.isNewClient) {
 			console.log("in new client setting mname", name)
 			/* const clientNameObj = values.find(item => item.id === "text") */
@@ -332,8 +332,7 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 			const slackUsers = slackObj.personsAndTeams
 			const slackIds = slackUsers.map(user => user.id)
 			if (slackIds.length === 0) {
-				if (!consulting && !onlyProject) throw new Error("missing Slack Users")
-				/* if (mondayObj.isNewClient) throw new Error("missing Form Info") */
+				if (!consulting && !isNewClient) throw new Error("missing Slack Users")
 			} else {
 				const getUsers = async () => {
 					return Promise.all(slackIds.map(id => getPmInfo(id)))
@@ -351,8 +350,6 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 					.then(() => (mondayObj.slackUsers = slackEmails))
 					.catch(err => console.log(err))
 			}
-		} else {
-			throw new Error("missing slack users")
 		}
 
 		//getting itemIdfor the correct Form
@@ -1707,6 +1704,94 @@ const getClientId = async itemId => {
 
 	return clientId
 }
+const getGroupId = async itemId => {
+	console.log("getGroupId", itemId)
+	if (!!itemId && itemId !== "") {
+		const body = {
+			query: `query {
+					items(ids: ${itemId}) {
+					  group {
+						id
+					  }
+					}
+				  }	  
+			`
+		}
+		const response = await postMonday(
+			body,
+			`getting groupId from item is ${itemId}`
+		)
+
+		return response.data.items[0].group.id
+	} else {
+		return
+	}
+}
+
+const addContactToDbGroup = async (groupId, mondayObj) => {
+	console.log("addContactToDbGroup", groupId, mondayObj)
+	if (!!groupId && !!mondayObj) {
+		console.log("addContactToDbGroup", groupId, mondayObj)
+		const columnValues = JSON.stringify({
+			phone: {
+				phone: mondayObj.phone,
+				countryShortName: mondayObj.country.countryCode
+			},
+			email: {
+				email: mondayObj.email,
+				text: `${mondayObj.contactFirstName} ${mondayObj.contactLastName}`
+			},
+			people: {
+				personsAndTeams: [{ id: mondayObj.smId, kind: "person" }]
+			},
+			text17: mondayObj.contactPosition
+		})
+		const body = {
+			query: `
+	  mutation ($boardId: Int!, $groupId: String!, $itemName: String!, $columnValues: JSON!) {
+				create_item (
+							  board_id: $boardId,
+							group_id: $groupId,
+							item_name: $itemName,
+							column_values: $columnValues
+							) {
+							id
+							}
+						}
+						`,
+			variables: {
+				boardId: CLIENT_DATABASE_BOARD_ID,
+				groupId: groupId,
+				itemName: `${mondayObj.contactFirstName} ${mondayObj.contactLastName}`,
+				columnValues: columnValues
+			}
+		}
+		try {
+			const response = await postMonday(body, `adding item to group ${groupId}`)
+			return response.data.create_item.id
+		} catch (error) {
+			console.log(error)
+		}
+	} else {
+		return
+	}
+}
+const test = async () => {
+	const mondayObj = {
+		phone: "6472688409",
+		country: {
+			countryCode: "CH"
+		},
+		email: "carlosmoyanor@gmail.com",
+		contactFirstName: "Carlos",
+		contactLastName: "Moyano",
+		smId: 6083153,
+		contactPosition: "CEO"
+	}
+
+	await addContactToDbGroup("114___mrbrunch", mondayObj)
+}
+/* test() */
 
 module.exports.getValuesFromMonday = getValuesFromMonday
 module.exports.updateForms = updateForms
@@ -1728,3 +1813,6 @@ module.exports.getGroupFirstItem = getGroupFirstItem
 module.exports.copyClientInfo = copyClientInfo
 module.exports.parseObjForFirebase = parseObjForFirebase
 module.exports.getClientId = getClientId
+module.exports.postMonday = postMonday
+module.exports.getGroupId = getGroupId
+module.exports.addContactToDbGroup = addContactToDbGroup

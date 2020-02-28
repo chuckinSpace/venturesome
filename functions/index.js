@@ -1,6 +1,7 @@
 /*
  TODO:  
 		- se ond contact from onboardgin, addin to monday DB or task on Teamboard
+        - contact its being created on monday db when email is not same in firebase, but the new contact is not being created properly on firebase
 */
 const functions = require("firebase-functions")
 const googleDrive = require("./google")
@@ -485,6 +486,17 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 		} else {
 			//old client
 
+			const prevContactObj = await firebase.checkNewContact(mondayObj)
+			console.log("contact Item id", prevContactObj)
+			if (!prevContactObj.found) {
+				console.log("about to create item", prevContactObj)
+				//get group for that client
+				const groupId = await monday.getGroupId(prevContactObj.itemId)
+				//add contact to the group
+				await monday.addContactToDbGroup(groupId, mondayObj)
+				//create contact on firebase
+			}
+
 			//set all not needed items to completed first for existing clients
 			await monday.changeMondayStatus(
 				constants.ONBOARDING_FORM_STATUS,
@@ -755,6 +767,8 @@ exports.newMondayContactDb = functions.https.onRequest(async (req, res) => {
 		// copy all client info to new item clientName,clientNr,address,ZIP,City,Country, startdatum, SM,Kundennummer
 		const clientInfo = await monday.getNewContactInfo(firstItemId)
 
+		//get info from new item created (if any) for autoamtic case and create contactObj with what info, missing email, phone
+
 		console.log("clientInfo", clientInfo)
 		// create new contactObj with client id on firestore
 		await firebase.createDocument(
@@ -798,7 +812,7 @@ exports.updateContactDb = functions.https.onRequest(async (req, res) => {
 		columnId === "date4"
 	) {
 		console.log("client Info detected, no changes allowed")
-		console.log("value coming", value.personsAndTeams)
+
 		const clientId = await monday.getClientId(itemId)
 		if (columnId === "people") {
 			const objToSend = await monday.parseObjForFirebase(columnId, value)
@@ -1069,8 +1083,4 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 	} catch (error) {
 		console.error(error)
 	}
-})
-
-exports.testFunction = functions.https.onRequest(async (req, res) => {
-	return true
 })

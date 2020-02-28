@@ -181,6 +181,44 @@ const getContactId = async itemId => {
 	}
 }
 
+const checkNewContact = async mondayObj => {
+	console.log("checkNewContact mondayObj", mondayObj)
+	let prevContactItemId = {
+		found: false,
+		itemId: ""
+	}
+
+	if (!!mondayObj && !!mondayObj.clientId) {
+		const { email, clientId } = mondayObj
+
+		if (email !== "") {
+			const contactsSnap = await db
+				.collection("contacts")
+				.where("clientId", "==", clientId)
+				.get()
+			contactsSnap.forEach(doc => {
+				if (doc.exists) {
+					if (doc.data().email.email === email) {
+						console.log("email found on database")
+						prevContactItemId.found = true
+						prevContactItemId.itemId = doc.data().itemId
+					} else {
+						console.log("email not found on the database")
+						prevContactItemId.itemId = doc.data().itemId
+						return prevContactItemId
+					}
+				} else {
+					console.log("no contact found database")
+					return prevContactItemId
+				}
+			})
+		}
+		return prevContactItemId
+	} else {
+		return prevContactItemId
+	}
+}
+
 //exports
 module.exports.getClientId = getClientId
 module.exports.getInternalProjectId = getInternalProjectId
@@ -193,3 +231,4 @@ module.exports.getContactInfo = getContactInfo
 module.exports.getPrimaryContactId = getPrimaryContactId
 module.exports.updateContact = updateContact
 module.exports.getContactId = getContactId
+module.exports.checkNewContact = checkNewContact

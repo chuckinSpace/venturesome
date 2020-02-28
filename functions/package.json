@@ -7,7 +7,7 @@
 		"start": "functions-framework",
 		"deploy": "firebase deploy --only functions",
 		"logs": "firebase functions:log",
-		"test": "jest --watchAll --env node"
+		"test": "jest --watchAll --detectOpenHandles --env node"
 	},
 	"engines": {
 		"node": "8"
