@@ -1651,13 +1651,13 @@ const parseObjForFirebase = async (columnId, value) => {
 		return { position: !!value ? value.value : "" }
 	} else if (columnId === OFFICE_PHONE) {
 		return {
-			mobilePhone: {
+			officePhone: {
 				number: !!value ? value.phone : ""
 			}
 		}
 	} else if (columnId === MOBILE_PHONE) {
 		return {
-			officePhone: {
+			mobilePhone: {
 				number: !!value ? value.phone : ""
 			}
 		}
@@ -1744,7 +1744,8 @@ const addContactToDbGroup = async (groupId, mondayObj) => {
 			people: {
 				personsAndTeams: [{ id: mondayObj.smId, kind: "person" }]
 			},
-			text17: mondayObj.contactPosition
+			text17: mondayObj.contactPosition,
+			client_nr_: mondayObj.clientId
 		})
 		const body = {
 			query: `
@@ -1776,21 +1777,91 @@ const addContactToDbGroup = async (groupId, mondayObj) => {
 		return
 	}
 }
-const test = async () => {
-	const mondayObj = {
-		phone: "6472688409",
-		country: {
-			countryCode: "CH"
-		},
-		email: "carlosmoyanor@gmail.com",
-		contactFirstName: "Carlos",
-		contactLastName: "Moyano",
-		smId: 6083153,
-		contactPosition: "CEO"
+
+const getNewContactObj = async itemId => {
+	const getInfo = {
+		query: `
+		{
+			items(ids: ${itemId}) {
+			  name
+				column_values {
+				id
+				title
+				value
+			  }
+			}
+		  }`
 	}
 
-	await addContactToDbGroup("114___mrbrunch", mondayObj)
+	const response = await postMonday(getInfo, `retrieving contact from new item`)
+	const contactInfo = response.data.items[0]
+	console.log("getNewContactObj", contactInfo)
+	//clientName,clientNr,address,ZIP,City,Country, startdatum, SM,Kundennummer
+	const contactObj = {
+		clientId: "",
+		firstName: "",
+		lastName: "",
+		position: "",
+		email: {
+			email: "",
+			text: ""
+		},
+		mobilePhone: {
+			countryShortName: "",
+			number: ""
+		},
+		officePhone: {
+			countryShortName: "",
+			number: ""
+		},
+		isPrimary: false,
+		itemId: itemId
+	}
+	//clientNr
+	const clientNumberObj = contactInfo.column_values.find(
+		item => item.id === "client_nr_"
+	)
+	const clientNumber =
+		!!clientNumberObj.value && clientNumberObj.value.replace(/['"]+/g, "")
+	!!clientNumber && (contactObj.clientId = clientNumber)
+
+	//contact first name and last name
+	const contactName = contactInfo.name
+	const array = contactName.split(" ", [2])
+	const first = array[0]
+	const last = array[1]
+	!!contactName && (contactObj.firstName = first)
+	!!contactName && (contactObj.lastName = last)
+
+	//Position
+	const positionObj = contactInfo.column_values.find(
+		item => item.id === "text17"
+	)
+	const position =
+		!!positionObj.value && positionObj.value.replace(/['"]+/g, "")
+	!!position && (contactObj.position = position)
+
+	const emailObj = contactInfo.column_values.find(item => item.id === "email")
+
+	const email = !!emailObj.value && JSON.parse(emailObj.value)
+
+	!!email && (contactObj.email.email = email.email)
+	!!email &&
+		(contactObj.email.text = `${contactObj.firstName} ${contactObj.lastName}`)
+
+	const mobilePhoneObj = contactInfo.column_values.find(
+		item => item.id === "phone"
+	)
+	const mobilePhone =
+		!!JSON.parse(mobilePhoneObj.value) && JSON.parse(mobilePhoneObj.value).phone
+	!!mobilePhone && (contactObj.mobilePhone.number = mobilePhone)
+
+	return contactObj
 }
+const test = async () => {
+	console.log(await getNewContactObj(473646859))
+}
+
 /* test() */
 
 module.exports.getValuesFromMonday = getValuesFromMonday
@@ -1816,3 +1887,4 @@ module.exports.getClientId = getClientId
 module.exports.postMonday = postMonday
 module.exports.getGroupId = getGroupId
 module.exports.addContactToDbGroup = addContactToDbGroup
+module.exports.getNewContactObj = getNewContactObj

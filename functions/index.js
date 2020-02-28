@@ -768,17 +768,12 @@ exports.newMondayContactDb = functions.https.onRequest(async (req, res) => {
 		const clientInfo = await monday.getNewContactInfo(firstItemId)
 
 		//get info from new item created (if any) for autoamtic case and create contactObj with what info, missing email, phone
-
+		const newContactObj = await monday.getNewContactObj(itemId)
 		console.log("clientInfo", clientInfo)
 		// create new contactObj with client id on firestore
 		await firebase.createDocument(
 			"contacts",
-			{
-				clientId: clientInfo.clientId,
-				itemId: itemId,
-				firstName: first,
-				lastName: last
-			},
+			newContactObj,
 			"creating new contact from monday"
 		)
 		// copy client info to new item on monday

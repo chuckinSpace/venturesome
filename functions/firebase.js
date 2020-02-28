@@ -202,15 +202,20 @@ const checkNewContact = async mondayObj => {
 						console.log("email found on database")
 						prevContactItemId.found = true
 						prevContactItemId.itemId = doc.data().itemId
+						console.log("prevContactItemId before return", prevContactItemId)
+						return prevContactItemId
 					} else {
 						console.log("email not found on the database")
-						prevContactItemId.itemId = doc.data().itemId
-						return prevContactItemId
+						if (!prevContactItemId.found) {
+							prevContactItemId.itemId = doc.data().itemId
+							prevContactItemId.found = false
+						}
 					}
 				} else {
 					console.log("no contact found database")
 					return prevContactItemId
 				}
+				return prevContactItemId
 			})
 		}
 		return prevContactItemId
