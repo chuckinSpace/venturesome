@@ -186,8 +186,9 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 	}
 	try {
 		const response = await postMonday(body, "getValuesFromMonday")
+
 		const values = await response.data.boards[0].items[0].column_values
-		console.log("values", values)
+
 		const name = response.data.boards[0].items[0].name
 		mondayObj.itemId = itemId
 
@@ -383,7 +384,11 @@ const getValuesFromMonday = async (boardId, itemId, consulting = false) => {
 		return 0
 	}
 }
+const test = async () => {
+	console.log(await getValuesFromMonday(413267102, 477550694, false))
+}
 
+/* test() */
 //Update forms from type form functions
 
 const updateForms = async forms => {
@@ -623,7 +628,7 @@ const addVideoProjectBoard = async (
 			columnValues: JSON.stringify({
 				status: { label: "On it!" },
 				person: { personsAndTeams: [{ id: pmId, kind: "person" }] },
-				tags: { text: "{test}Tag", tag_ids: [tag] }
+				tags: { text: "testTag", tag_ids: [tag] }
 			})
 		}
 	}
@@ -672,7 +677,7 @@ const addProjectOverview = async (
 			person: { id: pmId },
 			datum4: { date: dateTime },
 			pm: { id: smId },
-			tags: { text: "{test}Tag", tag_ids: [tag] }
+			tags: { text: "testTag", tag_ids: [tag] }
 		})
 	} else if (companyAssigned === "moneytree") {
 		columValues = JSON.stringify({
@@ -680,7 +685,7 @@ const addProjectOverview = async (
 			datum4: { date: dateTime },
 			datum: { date: giftDate },
 			pm: { id: smId },
-			tags: { text: "{test}Tag", tag_ids: [tag] }
+			tags: { text: "testTag", tag_ids: [tag] }
 		})
 	}
 
@@ -753,7 +758,7 @@ const addProjectOverviewConsulting = async (
 		person: { id: pmId },
 		datum4: { date: dateTime },
 		pm: { id: smId },
-		tags: { text: "{test}Tag", tag_ids: [tag] },
+		tags: { text: "testTag", tag_ids: [tag] },
 		status5: { label: "Consulting" }
 	})
 
@@ -832,7 +837,7 @@ const addMoneyTreeAccount = async (
 			columnValues: JSON.stringify({
 				strategie_session: { label: "On it!" },
 				person: { personsAndTeams: [{ id: pmId, kind: "person" }] },
-				tags: { text: "{test}Tag", tag_ids: [tag] }
+				tags: { text: "testTag", tag_ids: [tag] }
 			})
 		}
 	}
@@ -883,7 +888,7 @@ const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
 				},
 				due_date: { date: contactObj.birthday },
 				client_nr_: contactObj.clientId,
-				tags7: { text: "{test}Tag", tag_ids: [clientFirebase.tag] },
+				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
 				date4: { date: dateTime },
 				date: { date: giftDate },
 				text: clientFirebase.name,
@@ -912,7 +917,7 @@ const saveClientToMondayDatabase = async (clientFirebase, contactObj) => {
 				},
 				due_date: { date: contactObj.birthday },
 				client_nr_: contactObj.clientId,
-				tags7: { text: "{test}Tag", tag_ids: [clientFirebase.tag] },
+				tags7: { text: "testTag", tag_ids: [clientFirebase.tag] },
 				date4: { date: dateTime },
 				text: clientFirebase.name,
 				people: {
@@ -1256,7 +1261,7 @@ const databaseFirebaseToMonday = async () => {
 							countryCode: address.country.countryCode,
 							countryName: address.country.countryName
 						},
-						tags7: { text: "{test}Tag", tag_ids: [tag] },
+						tags7: { text: "testTag", tag_ids: [tag] },
 						text1: category,
 						people: {
 							personsAndTeams: [{ id: 8109061, kind: "person" }]
@@ -1427,7 +1432,7 @@ const sendWelcome = async (clientObj, companyAssigned, pmId, contactObj) => {
 			groupId: "new_group",
 			itemName: name,
 			columnValues: JSON.stringify({
-				tags: { text: "{test}Tag", tag_ids: [clientObj.tag] },
+				tags: { text: "testTag", tag_ids: [clientObj.tag] },
 				person3: { id: pmId },
 				date: { date: deadline },
 				status1: { label: "Urgent and Important" },
@@ -1618,7 +1623,7 @@ const copyClientInfo = async (clientInfo, boardId, itemId) => {
 			itemId: itemId,
 			columnValues: JSON.stringify({
 				client_nr_: clientId,
-				tags7: { text: "{test}Tag", tag_ids: [tag] },
+				tags7: { text: "testTag", tag_ids: [tag] },
 				date4: { date: startDate },
 				people: {
 					personsAndTeams: [{ id: smId, kind: "person" }]
@@ -1858,11 +1863,6 @@ const getNewContactObj = async itemId => {
 
 	return contactObj
 }
-const test = async () => {
-	console.log(await getNewContactObj(473646859))
-}
-
-/* test() */
 
 module.exports.getValuesFromMonday = getValuesFromMonday
 module.exports.updateForms = updateForms

@@ -94,6 +94,9 @@ const sendOnboardingEmail = async (
 	}
 	try {
 		console.log("msg before sending", msg)
+		console.log("msg before sending", msg.personalizations)
+		console.log("TO:  before sending", msg.personalizations.to)
+		console.log("client email before sendind sendgrid", contactEmail)
 		return sgMail.send(msg)
 	} catch (error) {
 		console.log("error on sendgrip api", error)

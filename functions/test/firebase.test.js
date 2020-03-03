@@ -35,7 +35,7 @@ describe("firebase", () => {
 				clientId: "099"
 			}
 			const result = await firebase.checkNewContact(mondayObj)
-			console.log(result)
+
 			expect(result.found).toBe(true)
 			expect(result.itemId).toBeTruthy()
 			expect(result.itemId).toBeGreaterThan(0)
