@@ -277,7 +277,7 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 			clientId = firebaseClientId
 
 			//We append the client id to the form link to send the oboarding email, making sure we format the URL correctly with encodeURIComponent
-			const urlName = encodeURIComponent(mondayObj.clientName.trim())
+			const urlName = encodeURIComponent(mondayObj.contactFirstName.trim())
 			mondayObj.formLink = `${mondayObj.formLink}?clientid=${firebaseClientId}&clientname=${urlName}`
 		}
 		//we create a tag to be stored in monday
