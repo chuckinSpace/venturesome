@@ -383,6 +383,16 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					projectObj.pmId,
 					clientObj.tag
 				)
+				// add Datensicherung item clienNumber,clientName, projectname, clientProjectNumber,year, tag
+				await monday.createDatensicherungItem(
+					clientObj.idNumber,
+					clientObj.name,
+					projectObj.name,
+					projectObj.clientProjectNumber,
+					yearCreated,
+					clientObj.tag
+				)
+
 				//create frameio project
 				await frameio.createFrameIoProject(
 					`${
@@ -535,7 +545,16 @@ exports.onClientSigned = functions.https.onRequest(async (req, res) => {
 					projectObj.pmId,
 					clientObj.tag
 				)
-
+				// add Datensicherung item
+				console.log("before Datensicherung")
+				await monday.createDatensicherungItem(
+					clientObj.idNumber,
+					clientObj.name,
+					projectObj.name,
+					projectObj.clientProjectNumber,
+					yearCreated,
+					clientObj.tag
+				)
 				//create toggle project
 				const firebaseClient = await firebase.getClientInfo(clientObj.idNumber)
 

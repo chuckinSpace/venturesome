@@ -1864,6 +1864,56 @@ const getNewContactObj = async itemId => {
 	return contactObj
 }
 
+const createDatensicherungItem = async (
+	clientNumber,
+	clientName,
+	projectName,
+	clientProjectNumber,
+	year,
+	tag
+) => {
+	const boardId = 443156345
+	const groupId = "new_group69961"
+	const itemName = `${clientNumber}_${year}_${clientProjectNumber
+		.toString()
+		.padStart(2, "0")} | ${clientName} | ${projectName}`
+	const columnValues = JSON.stringify({
+		tags: { text: "testTag", tag_ids: [tag] }
+	})
+
+	const createItem = {
+		query: `
+		mutation($boardId: Int!, $groupId: String!,$itemName: String! ,$columnValues: JSON!) 
+		{
+			create_item (
+				board_id: $boardId, 
+				group_id: $groupId, 
+				item_name: $itemName,
+				column_values: $columnValues
+				) 
+				{
+					id
+				}
+		}
+	 		 
+  `,
+		variables: {
+			boardId: boardId,
+			groupId: groupId,
+			itemName: itemName,
+			columnValues: columnValues
+		}
+	}
+	console.log(
+		"before creating  Datensicherung",
+		boardId,
+		groupId,
+		itemName,
+		columnValues
+	)
+	await postMonday(createItem, `creating item on Datensicherung`)
+}
+
 module.exports.getValuesFromMonday = getValuesFromMonday
 module.exports.updateForms = updateForms
 module.exports.getSubmissionData = getSubmissionData
@@ -1888,3 +1938,4 @@ module.exports.postMonday = postMonday
 module.exports.getGroupId = getGroupId
 module.exports.addContactToDbGroup = addContactToDbGroup
 module.exports.getNewContactObj = getNewContactObj
+module.exports.createDatensicherungItem = createDatensicherungItem
