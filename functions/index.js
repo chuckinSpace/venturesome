@@ -39,109 +39,103 @@ exports.fetchForms = functions.https.onRequest(async (req, res) => {
 			TYPEFORM=>INTEGROMAT=>MONDAY=>WEBHOOK=>HERE
 			this section only will be hit when a typeform submission is received for a new client
 		*/
-		try {
-			//MONDAY
-			const submissionObj = await monday.getSubmissionData(boardId, itemId)
-			console.log("submission obj before going to firebase", submissionObj)
 
-			//FIREBASE retrieve the primary contactID, that is the one created on automation, and add info coming from typeform submission
-			const contactId = await firebase.getPrimaryContactId(
-				submissionObj.clientId
-			)
-			console.log("contact", contactId)
+		//MONDAY
+		const submissionObj = await monday.getSubmissionData(boardId, itemId)
+		console.log("submission obj before going to firebase", submissionObj)
 
-			await firebase.updateContact(
-				contactId,
-				{
-					birthday: submissionObj.birthday,
-					mobilePhone: {
-						number: submissionObj.phone
-					}
-				},
-				"storing contact info from form"
-			)
-			await firebase.updateFirebase(
-				"clients",
-				"idNumber",
-				submissionObj.clientId,
-				{
-					slackEmail: submissionObj.email,
-					slack: submissionObj.slack,
-					onboardingCompletedOn: new Date()
-				},
-				"storing client info from form"
-			)
+		//FIREBASE retrieve the primary contactID, that is the one created on automation, and add info coming from typeform submission
+		const contactId = await firebase.getPrimaryContactId(submissionObj.clientId)
+		console.log("contact", contactId)
 
-			// save the client to Mondays database
-			const clientFirebase = await firebase.getClientInfo(
-				submissionObj.clientId
-			)
-			await monday.changeMondayStatus(
-				constants.ONBOARDING_FORM_STATUS,
-				"Completed",
-				clientFirebase.mondayItemIdDeal,
-				"onboarding form"
-			)
+		await firebase.updateContact(
+			contactId,
+			{
+				birthday: submissionObj.birthday,
+				mobilePhone: {
+					number: submissionObj.phone
+				}
+			},
+			"storing contact info from form"
+		)
+		await firebase.updateFirebase(
+			"clients",
+			"idNumber",
+			submissionObj.clientId,
+			{
+				slackEmail: submissionObj.email,
+				slack: submissionObj.slack,
+				onboardingCompletedOn: new Date()
+			},
+			"storing client info from form"
+		)
 
-			if (!!clientFirebase) {
-				console.log("about to run save client to database on monday")
-				const contactInfo = await firebase.getContactInfo(
-					submissionObj.clientId
-				)
-				const itemId = await monday.saveClientToMondayDatabase(
-					clientFirebase,
-					contactInfo
-				)
-				const primaryContactId = await firebase.getPrimaryContactId(
-					submissionObj.clientId
-				)
-				console.log("primary contact id", primaryContactId)
-				await firebase.updateContact(
-					primaryContactId,
-					{ itemId: itemId },
-					"storing itemid on primary contact after submission"
-				)
+		// save the client to Mondays database
+		const clientFirebase = await firebase.getClientInfo(submissionObj.clientId)
+		await monday.changeMondayStatus(
+			constants.ONBOARDING_FORM_STATUS,
+			"Completed",
+			clientFirebase.mondayItemIdDeal,
+			"onboarding form"
+		)
 
-				await monday.changeMondayStatus(
-					constants.MONDAY_DB_FORM_STATUS,
-					"Completed",
-					clientFirebase.mondayItemIdDeal,
-					"mondayDb"
-				)
-			} else {
-				console.log("client not found on firebase ", submissionObj.clientId)
-				sendGrid.sendErrorEmail(
-					"firebase.getClientInfo",
-					`getting client from firebase after receiving submission form clientId =${submissionObj.clientId}`,
-					"client not found"
-				)
-			}
-
-			//after onboarding from the client is complete we create slack channels
-
-			await slack.slackCreationWorkflow(
+		if (!!clientFirebase) {
+			console.log("about to run save client to database on monday")
+			const contactInfo = await firebase.getContactInfo(submissionObj.clientId)
+			const itemId = await monday.saveClientToMondayDatabase(
 				clientFirebase,
-				clientFirebase.mondayItemIdDeal
+				contactInfo
 			)
-			await sendGrid.onboardingNotification(submissionObj)
+			const primaryContactId = await firebase.getPrimaryContactId(
+				submissionObj.clientId
+			)
+			console.log("primary contact id", primaryContactId)
+			await firebase.updateContact(
+				primaryContactId,
+				{ itemId: itemId },
+				"storing itemid on primary contact after submission"
+			)
+
 			await monday.changeMondayStatus(
-				constants.SLACK_FORM_STATUS,
+				constants.MONDAY_DB_FORM_STATUS,
 				"Completed",
 				clientFirebase.mondayItemIdDeal,
-				"slack"
+				"mondayDb"
 			)
-			await monday.changeMondayStatus(
-				constants.START_FORM_STATUS,
-				"Onboarding Completed",
-				clientFirebase.mondayItemIdDeal,
-				"Onboardign completed"
+		} else {
+			console.log("client not found on firebase ", submissionObj.clientId)
+			sendGrid.sendErrorEmail(
+				"firebase.getClientInfo",
+				`getting client from firebase after receiving submission form clientId =${submissionObj.clientId}`,
+				"client not found"
 			)
-		} catch (e) {
-			throw new Error("Error the completing onboarding process")
 		}
-		res.send({ message: "success" })
-	} catch (error) {
-		throw new Error("Error the completing onboarding process")
+
+		//after onboarding from the client is complete we create slack channels
+
+		await sendGrid.onboardingNotification(submissionObj)
+
+		await slack.slackCreationWorkflow(
+			clientFirebase,
+			clientFirebase.mondayItemIdDeal
+		)
+
+		await monday.changeMondayStatus(
+			constants.SLACK_FORM_STATUS,
+			"Completed",
+			clientFirebase.mondayItemIdDeal,
+			"slack"
+		)
+		await monday.changeMondayStatus(
+			constants.START_FORM_STATUS,
+			"Onboarding Completed",
+			clientFirebase.mondayItemIdDeal,
+			"Onboarding completed"
+		)
+		res.send({ message: "finished onboarding script succesfully" })
+	} catch (e) {
+		console.error("Error the completing onboarding process", e)
+		res.send({ message: "onboarding script finished with errors" })
 	}
 })
 

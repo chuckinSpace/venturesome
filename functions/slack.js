@@ -15,11 +15,19 @@ const createSlackChannel = async (users, clientName, itemId, action) => {
 		const channelId = await newChannel.group.id
 		//adding me for testing period
 		users.push({ id: "URR2P0WTX" })
+
 		console.log(channelId, "channel id")
 
-		await users.map(user => {
+		await users.map(async user => {
 			if (user.id !== "UL4CCS4AE") {
-				web.groups.invite({ channel: channelId, user: user.id })
+				try {
+					await web.groups.invite({
+						channel: channelId,
+						user: user.id
+					})
+				} catch (error) {
+					console.log("error creating slack channel", error.data.error)
+				}
 			}
 		})
 
@@ -31,7 +39,7 @@ const createSlackChannel = async (users, clientName, itemId, action) => {
 		)
 		return channelId
 	} catch (err) {
-		console.log(err)
+		console.log("error in slack create channel", err)
 		monday.changeMondayStatus(
 			constants.SLACK_FORM_STATUS,
 			"Error",
@@ -47,6 +55,7 @@ const createSlackChannel = async (users, clientName, itemId, action) => {
 }
 
 const sendClientInvite = async (clientEmail, channelId, itemId, action) => {
+	console.log("sending invite to client", clientEmail)
 	try {
 		var options = {
 			method: "POST",
