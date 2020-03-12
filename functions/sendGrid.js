@@ -19,7 +19,7 @@ const sendOnboardingEmail = async (
 	let lineColor = ""
 	let eurenEure = ""
 	let templateId = ""
-	if (pmObj.id === smObj.id) {
+	if (!!pmObj && pmObj.id === smObj.id) {
 		templateId = "d-a7ff85405c504132bed16f33aa034878"
 	} else {
 		templateId = "d-2f1aadef566b4c07a4602ed01b136e9b"
@@ -48,8 +48,11 @@ const sendOnboardingEmail = async (
 		}
 		emailFrom = "office@moneytree.ch"
 		lineColor = "#36CE78"
+	} else if (companyAssigned === "Consulting") {
+		templateId = "d-f47f7fc09f144e4cb67e77f55901b8ad"
+		emailFrom = "nick.metzger@venturesome.ch"
+		lineColor = "#2CB4FF"
 	}
-
 	const pmFirstName = pmObj.name.split(" ")[0]
 	const msg = {
 		from: emailFrom,
@@ -95,7 +98,7 @@ const sendOnboardingEmail = async (
 	try {
 		console.log("msg before sending", msg)
 		console.log("msg before sending", msg.personalizations)
-		console.log("TO:  before sending", msg.personalizations.to)
+		console.log("TO:  before sending", msg.personalizations[0].to)
 		console.log("client email before sendind sendgrid", contactEmail)
 		return sgMail.send(msg)
 	} catch (error) {

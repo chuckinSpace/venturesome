@@ -997,6 +997,17 @@ exports.consulting = functions.https.onRequest(async (req, res) => {
 					projectObj.companyAssigned,
 					clientObj.tag
 				)
+				const pmObj = await monday.getPmMondayInfo(projectObj.pmId)
+				const smObj = await monday.getPmMondayInfo(clientObj.smId)
+				projectObj.companyAssigned = "Consulting"
+				await sendGrid.sendOnboardingEmail(
+					mondayObj.email,
+					contactObj.firstName,
+					clientObj.formLink,
+					projectObj.companyAssigned,
+					pmObj,
+					smObj
+				)
 
 				await monday.changeMondayStatus(
 					constants.MONDAY_BOARDS_FORM_STATUS,
