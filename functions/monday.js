@@ -1651,36 +1651,42 @@ const parseObjForFirebase = async (columnId, value) => {
 	const EMAIL = "email"
 	const BIRTHDATE = "due_date"
 	const SM = "people"
-
-	if (columnId === POSITION) {
-		return { position: !!value ? value.value : "" }
-	} else if (columnId === OFFICE_PHONE) {
-		return {
-			officePhone: {
-				number: !!value ? value.phone : ""
+	const CATEGORY = "text1"
+	try {
+		if (columnId === POSITION) {
+			return { position: !!value ? value.value : "" }
+		} else if (columnId === OFFICE_PHONE) {
+			return {
+				officePhone: {
+					number: !!value ? value.phone : ""
+				}
 			}
-		}
-	} else if (columnId === MOBILE_PHONE) {
-		return {
-			mobilePhone: {
-				number: !!value ? value.phone : ""
+		} else if (columnId === MOBILE_PHONE) {
+			return {
+				mobilePhone: {
+					number: !!value ? value.phone : ""
+				}
 			}
-		}
-	} else if (columnId === EMAIL) {
-		return {
-			email: {
-				email: !!value.email ? value.email : "",
-				text: !!value.text ? value.text : ""
+		} else if (columnId === EMAIL) {
+			return {
+				email: {
+					email: !!value.email ? value.email : "",
+					text: !!value.text ? value.text : ""
+				}
 			}
+		} else if (columnId === BIRTHDATE) {
+			return {
+				birthday: !!value ? value.date : ""
+			}
+		} else if (columnId === SM) {
+			return {
+				smId: !!value.personsAndTeams[0] ? value.personsAndTeams[0].id : ""
+			}
+		} else if (columnId === CATEGORY) {
+			return { category: !!value ? value.value : "" }
 		}
-	} else if (columnId === BIRTHDATE) {
-		return {
-			birthday: !!value ? value.date : ""
-		}
-	} else if (columnId === SM) {
-		return {
-			smId: !!value.personsAndTeams[0] ? value.personsAndTeams[0].id : ""
-		}
+	} catch (error) {
+		console.error(error)
 	}
 }
 
@@ -1914,6 +1920,32 @@ const createDatensicherungItem = async (
 	await postMonday(createItem, `creating item on Datensicherung`)
 }
 
+const getName = async itemId => {
+	console.log("item id on function", itemId)
+	const intId = parseInt(itemId)
+	const body = {
+		query: `
+		query { 
+			items (ids: [${intId}]) {
+			name
+			
+			}
+		}
+    `
+	}
+	const response = await postMonday(body, `getting namefrom ${itemId}`)
+
+	const name = response.data.items[0].name
+	const fName = name.split(" ")[0]
+	const lName = name.split(" ")[1]
+
+	return { firstName: fName, lastName: lName }
+}
+/* const test1 = async () => {
+	console.log(await getName(500294455))
+}
+test1() */
+
 module.exports.getValuesFromMonday = getValuesFromMonday
 module.exports.updateForms = updateForms
 module.exports.getSubmissionData = getSubmissionData
@@ -1939,3 +1971,4 @@ module.exports.getGroupId = getGroupId
 module.exports.addContactToDbGroup = addContactToDbGroup
 module.exports.getNewContactObj = getNewContactObj
 module.exports.createDatensicherungItem = createDatensicherungItem
+module.exports.getName = getName

@@ -807,48 +807,69 @@ exports.updateContactDb = functions.https.onRequest(async (req, res) => {
 	const value = req.body.event.value
 	const boardId = req.body.event.boardId
 	console.log(req.body.event)
-	if (
-		columnId === "client_nr_" ||
-		columnId === "text" ||
-		columnId === "adresse" ||
-		columnId === "text12" ||
-		columnId === "text3" ||
-		columnId === "text6" ||
-		columnId === "country" ||
-		columnId === "tags7" ||
-		columnId === "people" ||
-		columnId === "date4"
-	) {
-		console.log("client Info detected, no changes allowed")
+	try {
+		if (
+			columnId === "client_nr_" ||
+			columnId === "text" ||
+			columnId === "adresse" ||
+			columnId === "text12" ||
+			columnId === "text3" ||
+			columnId === "text6" ||
+			columnId === "country" ||
+			columnId === "tags7" ||
+			columnId === "people" ||
+			columnId === "date4" ||
+			columnId === "text1"
+		) {
+			console.log("client Info detected, no changes allowed")
 
-		const clientId = await monday.getClientId(itemId)
-		if (columnId === "people") {
+			const clientId = await monday.getClientId(itemId)
+			if (columnId === "people") {
+				const objToSend = await monday.parseObjForFirebase(columnId, value)
+				await firebase.updateFirebase(
+					"clients",
+					"idNumber",
+					clientId,
+					objToSend,
+					"updatgin sm id on client"
+				)
+			} else if (columnId === "text1") {
+				const objToSend = await monday.parseObjForFirebase(columnId, value)
+				await firebase.updateFirebase(
+					"clients",
+					"idNumber",
+					clientId,
+					objToSend,
+					"updatgin category id on client"
+				)
+			}
+		} else {
+			console.log("contact info detected about to change database")
+			// get the contact tuo update by itemId
+			const contactId = await firebase.getContactId(itemId)
+			console.log("contactid", contactId)
+			//use new data coming to update the contacts info
 			const objToSend = await monday.parseObjForFirebase(columnId, value)
-			await firebase.updateFirebase(
-				"clients",
-				"idNumber",
-				clientId,
+			console.log("obj to send", objToSend)
+			//update firestore
+			await firebase.updateContact(
+				contactId,
 				objToSend,
-				"updatgin sm id on client"
+				`updating contact with ${objToSend}`
 			)
 		}
-		res.send({ message: "success" })
-	} else {
-		console.log("contact info detected about to change database")
-		// get the contact tuo update by itemId
+		//always update name
+		const nameObj = await monday.getName(itemId)
 		const contactId = await firebase.getContactId(itemId)
-		console.log("contactid", contactId)
-		//use new data coming to update the contacts info
-		const objToSend = await monday.parseObjForFirebase(columnId, value)
-		console.log("obj to send", objToSend)
-		//update firestore
 		await firebase.updateContact(
 			contactId,
-			objToSend,
-			`updating contact with ${objToSend}`
+			nameObj,
+			`updating contact with ${nameObj}`
 		)
-
 		res.send({ message: "success" })
+	} catch (error) {
+		console.error(error)
+		res.send({ message: "error" })
 	}
 })
 
