@@ -281,7 +281,7 @@ async function createFolder(auth) {
 			console.log("sucess creating new project on old client")
 		}
 	} catch (error) {
-		throw new Error(
+		console.error(
 			"error when trying to create google drive folder tree",
 			error,
 			data
